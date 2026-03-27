@@ -330,11 +330,10 @@ const integrationController = {
     // --- WhatsApp Specific ---
     getWhatsAppConfig: async (req, res) => {
         try {
-            // Use same model as getWhatsAppTemplates (consistent — avoids parseInt mismatch)
             const configs = await ChannelConfig.findAll(req.user.id, 'whatsapp');
             res.json({
                 success: true,
-                data: configs[0] || null
+                data: configs // Return all configs instead of just [0]
             });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
@@ -343,46 +342,85 @@ const integrationController = {
 
     saveWhatsAppConfig: async (req, res) => {
         try {
-            const { phoneNumberId, businessAccountId, accessToken, apiUrl, apiVersion, webhookVerifyToken, provider, status, businessId } = req.body;
+            const { 
+                id, account_name, phoneNumberId, businessAccountId, accessToken, 
+                apiUrl, apiVersion, webhookVerifyToken, provider, status, businessId 
+            } = req.body;
             const userId = parseInt(req.user.id);
+            const currentApiVersion = apiVersion || "v19.0";
 
-            const dbStatus = (status === 'active') ? 'Active' : 'Inactive';
+            // --- Real-time Meta Credentials Verification ---
+            try {
+                let verificationUrl = apiUrl || "https://graph.facebook.com";
+                const isDefaultMeta = !verificationUrl || verificationUrl === "https://graph.facebook.com";
+                
+                let requestOptions = {
+                    params: { access_token: accessToken } // Default for Meta
+                };
 
-            const configData = JSON.stringify({
+                if (isDefaultMeta) {
+                    verificationUrl = `https://graph.facebook.com/${currentApiVersion}/${phoneNumberId}`;
+                } else {
+                    // Custom gateway (e.g., crmapp.seeviewapi.com)
+                    // Match the authentication style used in templates fetcher
+                    const cleanBase = verificationUrl.replace(/\/$/, '');
+                    verificationUrl = `${cleanBase}/${currentApiVersion}/${phoneNumberId}`;
+                    
+                    requestOptions = {
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'API-KEY': accessToken,
+                            'Content-Type': 'application/json'
+                        }
+                    };
+                }
+
+                const verification = await axios.get(verificationUrl, requestOptions);
+
+                if (!verification.data || (!verification.data.id && !verification.data.id_phone)) {
+                    throw new Error("Invalid Meta response");
+                }
+            } catch (err) {
+                console.error('WhatsApp Pre-save Verification Error:', err.response?.data || err.message);
+                const metaMsg = err.response?.data?.error?.message || "Invalid WhatsApp credentials (Phone ID or Access Token)";
+                return res.status(400).json({ 
+                    success: false, 
+                    message: `Verification Failed: ${metaMsg}. Please check your credentials.`
+                });
+            }
+
+            // Automically set new valid accounts to 'Active'. For updates, respect the user's status choice.
+            const dbStatus = (!id || status === 'active') ? 'Active' : 'Inactive';
+            
+            const configData = {
                 phoneNumberId,
                 businessAccountId,
-                apiUrl,
-                apiVersion,
+                apiUrl: apiUrl || "https://graph.facebook.com",
+                apiVersion: currentApiVersion,
                 webhookVerifyToken,
                 provider,
                 status,
                 businessId
-            });
+            };
 
-            // SELECT first — then UPDATE existing row by ID, or INSERT new
-            const [existing] = await pool.query(
-                'SELECT id FROM channel_configs WHERE user_id = ? AND channel_type = ? LIMIT 1',
-                [userId, 'whatsapp']
-            );
-
-            if (existing.length > 0) {
-                // UPDATE existing row by primary key (100% reliable)
+            if (id) {
+                // UPDATE existing row
                 await pool.query(
                     `UPDATE channel_configs 
                      SET api_key = ?, config_data = ?, status = ?, account_name = ?
-                     WHERE id = ?`,
-                    [accessToken, configData, dbStatus, 'Primary WhatsApp', existing[0].id]
+                     WHERE id = ? AND user_id = ?`,
+                    [accessToken, JSON.stringify(configData), dbStatus, account_name || 'WhatsApp Account', id, userId]
                 );
             } else {
                 // INSERT new row
                 await pool.query(
                     `INSERT INTO channel_configs (user_id, channel_type, account_name, api_key, config_data, status)
-                     VALUES (?, 'whatsapp', 'Primary WhatsApp', ?, ?, ?)`,
-                    [userId, accessToken, configData, dbStatus]
+                     VALUES (?, 'whatsapp', ?, ?, ?, ?)`,
+                    [userId, account_name || 'New WhatsApp Account', accessToken, JSON.stringify(configData), dbStatus]
                 );
             }
 
-            res.json({ success: true, message: 'WhatsApp configuration saved successfully' });
+            res.json({ success: true, message: 'WhatsApp configuration verified and saved successfully' });
         } catch (error) {
             console.error('Save WhatsApp Config Error:', error);
             res.status(500).json({ success: false, message: error.message });
@@ -391,10 +429,20 @@ const integrationController = {
 
     sendWhatsAppTestMessage: async (req, res) => {
         try {
-            const { phone, config } = req.body;
-            const accessToken = config.accessToken;
-            const phoneNumberId = config.phoneNumberId;
-            const apiVersion = config.apiVersion || 'v19.0';
+            const { phone, config, configId } = req.body;
+            let finalConfig = config;
+
+            if (configId) {
+                const dbConfig = await ChannelConfig.findById(configId, req.user.id);
+                if (dbConfig) {
+                    const parsedData = typeof dbConfig.config_data === 'string' ? JSON.parse(dbConfig.config_data) : dbConfig.config_data;
+                    finalConfig = { ...parsedData, accessToken: dbConfig.api_key };
+                }
+            }
+
+            const accessToken = finalConfig.accessToken;
+            const phoneNumberId = finalConfig.phoneNumberId;
+            const apiVersion = finalConfig.apiVersion || 'v19.0';
 
             let finalUrl = config.apiUrl;
             if (!finalUrl || finalUrl === 'https://graph.facebook.com') {
@@ -438,10 +486,17 @@ const integrationController = {
 
     getWhatsAppTemplates: async (req, res) => {
         try {
-            const configs = await ChannelConfig.findAll(req.user.id, 'whatsapp');
-            if (configs.length === 0) return res.status(404).json({ message: 'WhatsApp not configured' });
+            const { configId } = req.query;
+            let config;
 
-            const config = configs[0];
+            if (configId) {
+                config = await ChannelConfig.findById(configId, req.user.id);
+            } else {
+                const configs = await ChannelConfig.findAll(req.user.id, 'whatsapp');
+                config = configs[0];
+            }
+
+            if (!config) return res.status(404).json({ message: 'WhatsApp not configured' });
             const configData = typeof config.config_data === 'string' ? JSON.parse(config.config_data) : config.config_data;
             const wabaId = configData.businessAccountId;
             const accessToken = config.api_key;
@@ -510,12 +565,18 @@ const integrationController = {
 
     sendWhatsAppMessage: async (req, res) => {
         try {
-            const { phone, templateName, languageCode, components, leadId } = req.body;
+            const { phone, templateName, languageCode, components, leadId, configId } = req.body;
 
-            const configs = await ChannelConfig.findAll(req.user.id, 'whatsapp');
-            if (configs.length === 0) return res.status(404).json({ message: 'WhatsApp not configured' });
+            let config;
+            if (configId) {
+                config = await ChannelConfig.findById(configId, req.user.id);
+            } else {
+                const configs = await ChannelConfig.findAll(req.user.id, 'whatsapp');
+                config = configs[0];
+            }
 
-            const config = configs[0];
+            if (!config) return res.status(404).json({ message: 'WhatsApp not configured' });
+
             const configData = typeof config.config_data === 'string' ? JSON.parse(config.config_data) : config.config_data;
             const accessToken = config.api_key;
             const phoneNumberId = configData.phoneNumberId;
@@ -554,8 +615,8 @@ const integrationController = {
                 channel_type: 'whatsapp_msg',
                 reference_id: leadId || null,
                 status: 'success',
-                message: `Template ${templateName} sent to ${phone}`,
-                raw_data: { templateName, phone, response: response.data }
+                message: `Template ${templateName} sent to ${phone} via ${config.account_name}`,
+                raw_data: { templateName, phone, response: response.data, config_id: config.id, account_name: config.account_name }
             });
 
             res.json({ success: true, data: response.data, message: "Message sent successfully" });

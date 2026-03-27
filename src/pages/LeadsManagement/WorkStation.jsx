@@ -763,6 +763,12 @@ export default function WorkStation() {
   };
 
   const handleWhatsAppClick = (lead) => {
+    if (!lead.mobile_number && !lead.phone) {
+      setLeadForMobileUpdate(lead);
+      setNewMobileNumber("");
+      setIsAddMobileModalOpen(true);
+      return;
+    }
     setSelectedLeadForWhatsApp(lead);
     setIsWhatsAppModalOpen(true);
   };
@@ -1633,7 +1639,7 @@ export default function WorkStation() {
         isOpen={isAddMobileModalOpen}
         onClose={() => setIsAddMobileModalOpen(false)}
         title="Add Mobile Number"
-        subtitle={`Please add a mobile number for ${leadForMobileUpdate?.name || leadForMobileUpdate?.full_name || leadForMobileUpdate?.organization_name || 'this lead'} to proceed with the call.`}
+        subtitle={`Please add a mobile number for ${leadForMobileUpdate?.name || leadForMobileUpdate?.full_name || leadForMobileUpdate?.organization_name || 'this lead'} to proceed.`}
         maxWidth="max-w-md"
         icon={<Phone size={24} />}
         footer={
