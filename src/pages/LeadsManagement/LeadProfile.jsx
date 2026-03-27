@@ -1272,7 +1272,7 @@ export default function CRMLeadDetail() {
       </div>
       <AddNoteModal
         open={open}
-        onClose={() => setOpen(false)} // ✅ IMPORTANT
+        onClose={() => setOpen(false)}
         onSave={handleSave}
       />
 
@@ -1283,43 +1283,135 @@ export default function CRMLeadDetail() {
         onSave={handleLeadInfoSave}
       />
     </>
-
   );
 }
 
 // --- WhatsApp Tab Component --------------------------------------------------
 import SendWhatsAppModal from "../../components/LeadManagement/SendWhatsAppModal";
+import { MessageSquare, Zap, RefreshCw } from 'lucide-react';
+import { useGetLogsQuery } from "../../store/api/integrationApi";
 
 function WhatsAppTab({ lead, navigate }) {
   const { data: waConfig, isLoading } = useGetWhatsAppConfigQuery();
+  const { data: logsData } = useGetLogsQuery({ channel_type: 'whatsapp_msg', limit: 100 });
   const [showSendModal, setShowSendModal] = React.useState(false);
-  const isConfigured = !isLoading && waConfig?.success && waConfig?.data !== null;
+  
+  // Check if at least one account is configured
+  const isConfigured = !isLoading && waConfig?.success && Array.isArray(waConfig.data) && waConfig.data.length > 0;
+  
+  // Find last WhatsApp message for this lead
+  const leadLogs = React.useMemo(() => {
+    return logsData?.data?.filter(log => log.reference_id === lead.id) || [];
+  }, [logsData, lead.id]);
+  
+  const lastLog = leadLogs[0];
+  const lastUsedAccount = lastLog?.raw_data?.account_name || null;
 
   return (
     <div className="flex-1 bg-gray-50 p-8 overflow-auto">
-      <h2 className="text-xl font-bold text-gray-800 mb-4">WhatsApp Messenger</h2>
-      <div className="bg-white rounded-lg border border-gray-200 p-10 flex flex-col items-center justify-center text-center gap-4">
-        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-          <FaWhatsapp size={32} className="text-white" />
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
+               <FaWhatsapp className="text-green-500" /> WhatsApp Messenger
+            </h2>
+            {lastUsedAccount && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full border border-blue-100 shadow-sm animate-fadeIn">
+                 <span className="text-[10px] font-black uppercase tracking-widest">Last Interaction via:</span>
+                 <span className="text-xs font-bold">{lastUsedAccount}</span>
+              </div>
+            )}
         </div>
-        <h3 className="text-lg font-bold text-gray-900">WhatsApp Messenger</h3>
-        <p className="text-sm text-gray-500 max-w-sm">
-          Send approved templates, dynamic messages, and track conversations directly within the lead profile.
-        </p>
-        <div className="flex items-center gap-3 mt-2">
-          {isLoading ? (
-            <span className="text-sm text-gray-400 animate-pulse">Checking configuration...</span>
-          ) : isConfigured ? (
-            <button onClick={() => setShowSendModal(true)} className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors shadow-sm">
-              <FaWhatsapp size={18} /> Send Template Message
-            </button>
-          ) : (
-            <button onClick={() => navigate("/channel-integration?tab=whatsapp")} className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors shadow-sm">
-              <FaWhatsapp size={18} /> Connect WhatsApp
-            </button>
-          )}
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Messages Sent</p>
+                <p className="text-2xl font-black text-gray-900">{leadLogs.length}</p>
+            </div>
+            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Active Accounts</p>
+                <p className="text-2xl font-black text-green-600">
+                    {waConfig?.data?.filter(c => c.status === 'Active').length || 0}
+                </p>
+            </div>
+            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Latest Status</p>
+                <p className="text-2xl font-black text-blue-600 capitalize">
+                    {lastLog?.status || 'None'}
+                </p>
+            </div>
         </div>
+
+        <div className="bg-white rounded-xl border border-gray-200 p-12 flex flex-col items-center justify-center text-center gap-6 shadow-sm">
+          <div className="relative">
+            <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center shadow-xl z-10 relative">
+              <FaWhatsapp size={40} className="text-white" />
+            </div>
+            <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-20"></div>
+          </div>
+          
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold text-gray-900">Reach Out via WhatsApp</h3>
+            <p className="text-sm text-gray-500 max-w-sm leading-relaxed">
+              Engage with your leads instantly using pre-approved templates from any of your connected WhatsApp Business accounts.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {isLoading ? (
+              <div className="flex items-center gap-2 px-6 py-3 bg-gray-100 rounded-lg text-gray-400 font-bold animate-pulse">
+                <RefreshCw size={18} className="animate-spin" /> Checking Config...
+              </div>
+            ) : isConfigured ? (
+              <button 
+                onClick={() => {
+                  if (!lead.mobile_number && !lead.phone) {
+                    toast.error("Please add a mobile number to the lead's profile to proceed with WhatsApp.");
+                    // Optional: open edit modal directly if context allows, but tab is nested
+                    return;
+                  }
+                  setShowSendModal(true);
+                }} 
+                className="flex items-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition-all shadow-[0_4px_14px_0_rgba(34,197,94,0.39)] hover:shadow-lg active:scale-95"
+              >
+                <FaWhatsapp size={20} /> Send Message Now
+              </button>
+            ) : (
+              <button 
+                onClick={() => navigate("/channel-integration?tab=whatsapp")} 
+                className="flex items-center gap-2 px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg transition-all shadow-[0_4px_14px_0_rgba(249,115,22,0.39)] hover:shadow-lg active:scale-95"
+              >
+                <Zap size={20} /> Configure WhatsApp First
+              </button>
+            )}
+          </div>
+        </div>
+        
+        {leadLogs.length > 0 && (
+          <div className="mt-10">
+              <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Recent WhatsApp Activity</h4>
+              <div className="space-y-3">
+                {leadLogs.slice(0, 5).map((log, idx) => (
+                  <div key={idx} className="bg-white border border-gray-100 p-4 rounded-lg flex items-center justify-between shadow-sm hover:border-orange-100 transition-colors">
+                      <div className="flex items-center gap-4">
+                          <div className="p-2 bg-green-50 text-green-600 rounded-sm">
+                              <MessageSquare size={16} />
+                          </div>
+                          <div>
+                              <p className="text-sm font-bold text-gray-900">{log.raw_data?.templateName || 'Template Sent'}</p>
+                              <p className="text-[10px] font-semibold text-gray-400">via {log.raw_data?.account_name || 'Primary Account'}</p>
+                          </div>
+                      </div>
+                      <div className="text-right">
+                          <p className="text-xs font-bold text-gray-700">{new Date(log.created_at).toLocaleDateString()}</p>
+                          <p className="text-[10px] text-green-500 font-black uppercase tracking-widest">{log.status}</p>
+                      </div>
+                  </div>
+                ))}
+              </div>
+          </div>
+        )}
       </div>
+
       {showSendModal && isConfigured && (
         <SendWhatsAppModal isOpen={true} onClose={() => setShowSendModal(false)} lead={lead} />
       )}

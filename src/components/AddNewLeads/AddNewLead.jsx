@@ -127,7 +127,8 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
     pipeline_id: "",
     stage_id: "",
     referral_mobile: "",
-    lead_owner: ""
+    lead_owner: "",
+    created_at: new Date().toISOString().split('T')[0]
   });
 
   const selectedPipeline = (formData && pipelines) ? pipelines.find(p => p.id == formData.pipeline_id) : null;
@@ -256,7 +257,8 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
         owner_name: leadToEdit.owner_name || leadToEdit.employee_name || "",
         pipeline_id: leadToEdit.pipeline_id || "",
         stage_id: leadToEdit.stage_id || "",
-        referral_mobile: leadToEdit.referral_mobile || ""
+        referral_mobile: leadToEdit.referral_mobile || "",
+        created_at: leadToEdit.created_at ? leadToEdit.created_at.split('T')[0] : new Date().toISOString().split('T')[0]
       });
     }
   }, [leadToEdit]);
@@ -1560,6 +1562,21 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                   <option value="Justdial">Justdial</option>
                   <option value="Website">Website</option>
                 </select>
+              </div>
+
+              <div className="group">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Calendar size={14} className="text-[#FF7B1D]" />
+                  Lead Date
+                </label>
+                <input
+                  type="date"
+                  name="created_at"
+                  className={inputStyles}
+                  value={formData.created_at}
+                  onChange={handleChange}
+                />
+                <p className="text-[10px] text-gray-400 mt-1 italic">Defaults to current date if not selected</p>
               </div>
 
               <div className="group">

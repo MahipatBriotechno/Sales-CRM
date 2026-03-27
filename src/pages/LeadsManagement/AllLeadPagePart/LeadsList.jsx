@@ -16,6 +16,7 @@ export default function LeadsListView({
   handleHitCall,
   handleReborn,
   handleShowAssignmentHistory,
+  handleWhatsAppClick,
   pageType = "All" // New prop to determine column layout
 }) {
   const getStatusBadge = (tag, isTrending, stageName) => {
@@ -387,7 +388,11 @@ export default function LeadsListView({
                                   <ActionGuard permission="leads_view_own" module="Leads Management" type="read">
                                     <button onClick={() => {
                                       const phone = lead.mobile_number || lead.phone;
-                                      if (phone) window.open(`https://wa.me/${phone.replace(/\D/g, "")}`, "_blank");
+                                      if (phone) {
+                                        window.open(`https://wa.me/${phone.replace(/\D/g, "")}`, "_blank");
+                                      } else if (handleWhatsAppClick) {
+                                        handleWhatsAppClick(lead);
+                                      }
                                     }} className="p-1.5 bg-green-50 hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm"><FaWhatsapp size={14} /></button>
                                   </ActionGuard>
                                   <ActionGuard permission="leads_view_own" module="Leads Management" type="read">

@@ -161,7 +161,10 @@ export const integrationApi = createApi({
             }),
         }),
         getWhatsAppTemplates: builder.query({
-            query: () => 'whatsapp/templates',
+            query: (configId) => ({
+                url: 'whatsapp/templates',
+                params: { configId }
+            }),
             providesTags: ['ChannelConfig'],
         }),
         sendWhatsAppMessage: builder.mutation({
