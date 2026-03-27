@@ -130,7 +130,7 @@ const Lead = {
                 org_address || company_address, org_city, org_state, org_pincode, company_address, org_country,
                 primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
                 description, owner || assigned_to, owner_name, referral_mobile, customFieldsJson, contactPersonsJson, lead_owner || null, assigner_name || null,
-                nextCallDate, new Date()
+                nextCallDate, data.created_at ? new Date(data.created_at) : new Date()
             ]
         );
         return result.insertId;
@@ -196,7 +196,7 @@ const Lead = {
                 primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
                 description, owner || assigned_to, owner_name, referral_mobile, customFieldsJson, contactPersonsJson, lead_owner || null, assigner_name || null,
                 data.next_call_at ? new Date(data.next_call_at) : null,
-                new Date()
+                data.created_at ? new Date(data.created_at) : new Date()
             ];
         });
 
@@ -401,7 +401,7 @@ const Lead = {
             'description', 'assigned_to', 'assigned_at', 'is_read', 'priority', 'last_call_at', 'next_call_at', 'call_count',
             'not_connected_count', 'connected_count', 'drop_reason', 'call_success_rate',
             'follow_up_frequency', 'response_quality', 'conversion_probability', 'is_trending',
-            'referral_mobile', 'custom_fields', 'contact_persons', 'owner_name', 'lead_owner', 'assigner_name', 'duplicate_reason'
+            'referral_mobile', 'custom_fields', 'contact_persons', 'owner_name', 'lead_owner', 'assigner_name', 'duplicate_reason', 'created_at'
         ];
 
         // Handle mobile_number change logic
@@ -431,7 +431,7 @@ const Lead = {
                     const jsonValue = typeof data[key] === 'string' ? data[key] : JSON.stringify(data[key] || []);
                     updates.push(`${key} = ?`);
                     values.push(jsonValue);
-                } else if (key === 'next_call_at' && data[key]) {
+                } else if ((key === 'next_call_at' || key === 'created_at') && data[key]) {
                     updates.push(`${key} = ?`);
                     values.push(new Date(data[key]));
                 } else {
