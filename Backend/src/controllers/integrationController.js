@@ -342,9 +342,9 @@ const integrationController = {
 
     saveWhatsAppConfig: async (req, res) => {
         try {
-            const { 
-                id, account_name, phoneNumberId, businessAccountId, accessToken, 
-                apiUrl, apiVersion, webhookVerifyToken, provider, status, businessId 
+            const {
+                id, account_name, phoneNumberId, businessAccountId, accessToken,
+                apiUrl, apiVersion, webhookVerifyToken, provider, status, businessId
             } = req.body;
             const userId = parseInt(req.user.id);
             const currentApiVersion = apiVersion || "v19.0";
@@ -353,7 +353,7 @@ const integrationController = {
             try {
                 let verificationUrl = apiUrl || "https://graph.facebook.com";
                 const isDefaultMeta = !verificationUrl || verificationUrl === "https://graph.facebook.com";
-                
+
                 let requestOptions = {
                     params: { access_token: accessToken } // Default for Meta
                 };
@@ -365,7 +365,7 @@ const integrationController = {
                     // Match the authentication style used in templates fetcher
                     const cleanBase = verificationUrl.replace(/\/$/, '');
                     verificationUrl = `${cleanBase}/${currentApiVersion}/${phoneNumberId}`;
-                    
+
                     requestOptions = {
                         headers: {
                             'Authorization': `Bearer ${accessToken}`,
@@ -383,15 +383,15 @@ const integrationController = {
             } catch (err) {
                 console.error('WhatsApp Pre-save Verification Error:', err.response?.data || err.message);
                 const metaMsg = err.response?.data?.error?.message || "Invalid WhatsApp credentials (Phone ID or Access Token)";
-                return res.status(400).json({ 
-                    success: false, 
+                return res.status(400).json({
+                    success: false,
                     message: `Verification Failed: ${metaMsg}. Please check your credentials.`
                 });
             }
 
             // Automically set new valid accounts to 'Active'. For updates, respect the user's status choice.
             const dbStatus = (!id || status === 'active') ? 'Active' : 'Inactive';
-            
+
             const configData = {
                 phoneNumberId,
                 businessAccountId,
