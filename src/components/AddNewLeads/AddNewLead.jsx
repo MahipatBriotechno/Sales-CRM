@@ -16,7 +16,8 @@ import {
   Trash2,
   Image as ImageIcon,
   Calendar,
-  Upload
+  Upload,
+  Clock
 } from "lucide-react";
 import { useCreateLeadMutation, useUpdateLeadMutation } from "../../store/api/leadApi";
 import { useGetPipelinesQuery } from "../../store/api/pipelineApi";
@@ -128,7 +129,8 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
     stage_id: "",
     referral_mobile: "",
     lead_owner: "",
-    created_at: new Date().toISOString().split('T')[0]
+    created_at: new Date().toISOString().split('T')[0],
+    created_time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
   });
 
   const selectedPipeline = (formData && pipelines) ? pipelines.find(p => p.id == formData.pipeline_id) : null;
@@ -258,7 +260,10 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
         pipeline_id: leadToEdit.pipeline_id || "",
         stage_id: leadToEdit.stage_id || "",
         referral_mobile: leadToEdit.referral_mobile || "",
-        created_at: leadToEdit.created_at ? leadToEdit.created_at.split('T')[0] : new Date().toISOString().split('T')[0]
+        created_at: leadToEdit.created_at ? leadToEdit.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+        created_time: leadToEdit.created_at 
+          ? new Date(leadToEdit.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+          : new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
       });
     }
   }, [leadToEdit]);
@@ -553,6 +558,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
       custom_fields: JSON.stringify(customFields.filter(cf => cf.label && cf.value)),
       contact_persons: leadType === "Organization" ? JSON.stringify(contactPersons) : null,
       lead_owner: assignmentType === "Self" ? formData.lead_owner : null,
+      created_at: `${formData.created_at}T${formData.created_time || "00:00"}:00`,
       // owner_name: formData.lead_owner,
       // owner: formData.lead_owner
     };
@@ -1567,16 +1573,28 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
               <div className="group">
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                   <Calendar size={14} className="text-[#FF7B1D]" />
-                  Lead Date
+                  Lead Date & Time
                 </label>
-                <input
-                  type="date"
-                  name="created_at"
-                  className={inputStyles}
-                  value={formData.created_at}
-                  onChange={handleChange}
-                />
-                <p className="text-[10px] text-gray-400 mt-1 italic">Defaults to current date if not selected</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="date"
+                    name="created_at"
+                    className={inputStyles}
+                    value={formData.created_at}
+                    onChange={handleChange}
+                  />
+                  <div className="relative">
+                    <input
+                      type="time"
+                      name="created_time"
+                      className={inputStyles + " pr-10"}
+                      value={formData.created_time}
+                      onChange={handleChange}
+                    />
+                    <Clock size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1 italic">Defaults to current date & time if not selected</p>
               </div>
 
               <div className="group">
