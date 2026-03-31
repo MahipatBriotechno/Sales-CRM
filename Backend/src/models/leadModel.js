@@ -260,7 +260,7 @@ const Lead = {
         return result.affectedRows;
     },
 
-    findAll: async (userId, page = 1, limit = 10, search = '', status = 'All', pipelineId = null, tag = null, type = null, subview = 'All', priority = 'All', services = 'All', dateFrom = null, dateTo = null) => {
+    findAll: async (userId, page = 1, limit = 10, search = '', status = 'All', pipelineId = null, tag = null, type = null, subview = 'All', priority = 'All', services = 'All', dateFrom = null, dateTo = null, name = '', mobile_number = '') => {
         const offset = (page - 1) * limit;
         let query = `
             SELECT l.*, l.lead_owner, p.name as pipeline_name, s.name as stage_name, COALESCE(e.employee_name, l.assigned_to) as employee_name,
@@ -282,6 +282,8 @@ const Lead = {
         if (services && services !== 'All') { query += ' AND l.interested_in = ?'; params.push(services); }
         if (dateFrom) { query += ' AND l.created_at >= ?'; params.push(dateFrom); }
         if (dateTo) { query += ' AND l.created_at <= ?'; params.push(dateTo + ' 23:59:59'); }
+        if (name) { query += ' AND l.name LIKE ?'; params.push(`%${name}%`); }
+        if (mobile_number) { query += ' AND l.mobile_number LIKE ?'; params.push(`%${mobile_number}%`); }
 
         if (search) {
             query += ' AND (l.name LIKE ? OR l.email LIKE ? OR l.mobile_number LIKE ?)';
@@ -322,6 +324,8 @@ const Lead = {
         if (services && services !== 'All') { countQuery += ' AND l.interested_in = ?'; countParams.push(services); }
         if (dateFrom) { countQuery += ' AND l.created_at >= ?'; countParams.push(dateFrom); }
         if (dateTo) { countQuery += ' AND l.created_at <= ?'; countParams.push(dateTo + ' 23:59:59'); }
+        if (name) { countQuery += ' AND l.name LIKE ?'; countParams.push(`%${name}%`); }
+        if (mobile_number) { countQuery += ' AND l.mobile_number LIKE ?'; countParams.push(`%${mobile_number}%`); }
 
         if (search) {
             countQuery += ' AND (l.name LIKE ? OR l.email LIKE ? OR l.mobile_number LIKE ?)';

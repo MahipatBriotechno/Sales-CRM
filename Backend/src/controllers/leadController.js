@@ -69,8 +69,8 @@ const createLead = async (req, res) => {
 const getLeads = async (req, res) => {
     try {
         await Lead.checkMissedLeads(req.user.id);
-        const { page, limit, search, status, pipeline_id, tag, type, subview, priority, services, dateFrom, dateTo } = req.query;
-        const data = await Lead.findAll(req.user.id, page, limit, search, status, pipeline_id, tag, type, subview, priority, services, dateFrom, dateTo);
+        const { page, limit, search, status, pipeline_id, tag, type, subview, priority, services, dateFrom, dateTo, name, mobile_number } = req.query;
+        const data = await Lead.findAll(req.user.id, page, limit, search, status, pipeline_id, tag, type, subview, priority, services, dateFrom, dateTo, name, mobile_number);
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ message: error.message });
