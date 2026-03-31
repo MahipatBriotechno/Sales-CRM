@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { FiHome, FiGrid } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
-import { Download, Upload, Filter, UserPlus, List, Trash2, Users, Server, Type, Phone, Loader2, ChevronLeft, ChevronRight, Mail, AlertCircle, PlusIcon } from "lucide-react";
+import { Download, Upload, Filter, UserPlus, List, Trash2, Users, Server, Type, Phone, Loader2, ChevronLeft, ChevronRight, Mail, AlertCircle, PlusIcon, X } from "lucide-react";
 import Modal from "../../components/common/Modal";
 import AddLeadPopup from "../../components/AddNewLeads/AddNewLead";
 import BulkUploadLeads from "../../components/AddNewLeads/BulkUpload";
@@ -46,6 +46,8 @@ export default function WonLeads() {
     const [filterGender, setFilterGender] = useState("All");
     const [filterCity, setFilterCity] = useState("");
     const [filterValue, setFilterValue] = useState("");
+    const [filterName, setFilterName] = useState("");
+    const [filterMobile, setFilterMobile] = useState("");
     const itemsPerPage = 7;
     const [showBulkUploadPopup, setShowBulkUploadPopup] = useState(false);
     const [leadToEdit, setLeadToEdit] = useState(null);
@@ -73,6 +75,8 @@ export default function WonLeads() {
         gender: filterGender,
         city: filterCity,
         value: filterValue,
+        name: filterName,
+        mobile_number: filterMobile,
     });
 
     useEffect(() => {
@@ -92,6 +96,8 @@ export default function WonLeads() {
                 gender: filterGender,
                 city: filterCity,
                 value: filterValue,
+                name: filterName,
+                mobile_number: filterMobile,
             });
         }
     }, [isFilterOpen, filterType, filterPriority, filterServices, filterDateFrom, filterDateTo, filterSubtype, filterStatus, filterSource, filterOwner, filterIndustry, filterPipeline, filterGender, filterCity, filterValue]);
@@ -124,6 +130,8 @@ export default function WonLeads() {
         setFilterGender(tempFilters.gender);
         setFilterCity(tempFilters.city);
         setFilterValue(tempFilters.value);
+        setFilterName(tempFilters.name);
+        setFilterMobile(tempFilters.mobile_number);
         setIsFilterOpen(false);
         setCurrentPage(1);
     };
@@ -144,6 +152,8 @@ export default function WonLeads() {
             gender: "All",
             city: "",
             value: "",
+            name: "",
+            mobile_number: "",
         });
     };
 
@@ -171,6 +181,8 @@ export default function WonLeads() {
         gender: filterGender,
         city: filterCity,
         value: filterValue,
+        name: filterName,
+        mobile_number: filterMobile,
     });
 
     const [deleteLead] = useDeleteLeadMutation();
@@ -362,20 +374,20 @@ export default function WonLeads() {
                                 <div className="relative" ref={dropdownRef}>
                                     <button
                                         onClick={() => {
-                                            if (filterStatus !== "All" || filterType !== "All" || filterPriority !== "All" || filterPipeline !== "" || filterCity !== "" || filterValue !== "" || filterDateFrom !== "" || filterDateTo !== "") {
+                                            if (filterStatus !== "All" || filterType !== "All" || filterPriority !== "All" || filterPipeline !== "" || filterCity !== "" || filterValue !== "" || filterDateFrom !== "" || filterDateTo !== "" || filterName !== "" || filterMobile !== "") {
                                                 handleResetFilters();
                                                 handleApplyFilters();
                                             } else {
                                                 setIsFilterOpen(!isFilterOpen);
                                             }
                                         }}
-                                        className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || (filterStatus !== "All" || filterType !== "All" || filterPriority !== "All" || filterPipeline !== "" || filterCity !== "" || filterValue !== "" || filterDateFrom !== "" || filterDateTo !== "")
+                                        className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || (filterStatus !== "All" || filterType !== "All" || filterPriority !== "All" || filterPipeline !== "" || filterCity !== "" || filterValue !== "" || filterDateFrom !== "" || filterDateTo !== "" || filterName !== "" || filterMobile !== "")
                                             ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                                             : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                                             }`}
                                         title="Filters"
                                     >
-                                        {(filterStatus !== "All" || filterType !== "All" || filterPriority !== "All" || filterPipeline !== "" || filterCity !== "" || filterValue !== "" || filterDateFrom !== "" || filterDateTo !== "") ? <AlertCircle size={18} /> : <Filter size={18} />}
+                                        {(filterStatus !== "All" || filterType !== "All" || filterPriority !== "All" || filterPipeline !== "" || filterCity !== "" || filterValue !== "" || filterDateFrom !== "" || filterDateTo !== "" || filterName !== "" || filterMobile !== "") ? <X size={18} strokeWidth={3} /> : <Filter size={18} strokeWidth={2.5} />}
                                     </button>
 
                                     {isFilterOpen && (
@@ -394,37 +406,33 @@ export default function WonLeads() {
                                             {/* Content - Scrollable */}
                                             <div className="max-h-[70vh] overflow-y-auto p-5">
                                                 <div className="space-y-6">
-                                                    {/* Navigation Section */}
-                                                    <div>
-                                                        <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-3 border-b pb-1">Lead Categories</span>
-                                                        <div className="grid grid-cols-2 gap-2">
-                                                            {[
-                                                                { name: "All Leads", path: "/crm/leads/all", icon: <Users size={16} /> },
-                                                                { name: "New Leads", path: "/crm/leads/new", icon: <UserPlus size={16} /> },
-                                                                { name: "Not Connected", path: "/crm/leads/not-connected", icon: <Server size={16} /> },
-                                                                { name: "Follow Up", path: "/crm/leads/follow-up", icon: <Loader2 size={16} /> },
-                                                                { name: "Missed", path: "/crm/leads/missed", icon: <Phone size={16} /> },
-                                                                { name: "Assigned", path: "/crm/leads/assigned", icon: <UserPlus size={16} /> },
-                                                                { name: "Dropped", path: "/crm/leads/dropped", icon: <Trash2 size={16} /> },
-                                                                { name: "Duplicates", path: "/crm/leads/duplicates", icon: <Trash2 size={16} /> },
-                                                                { name: "Trending", path: "/crm/leads/trending", icon: <Users size={16} /> },
-                                                                { name: "Won", path: "/crm/leads/won", icon: <UserPlus size={16} /> },
-                                                                { name: "Analysis", path: "/crm/leads/analysis", icon: <Server size={16} /> },
-                                                            ].map((cat) => (
-                                                                <button
-                                                                    key={cat.path}
-                                                                    onClick={() => navigate(cat.path)}
-                                                                    className={`flex items-center gap-3 px-3 py-2 rounded-sm text-sm transition-all text-left ${window.location.pathname === cat.path
-                                                                        ? "bg-orange-50 text-orange-600 font-bold"
-                                                                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                                                                        }`}
-                                                                >
-                                                                    <span className={window.location.pathname === cat.path ? "text-orange-500" : "text-gray-400"}>
-                                                                        {cat.icon}
-                                                                    </span>
-                                                                    {cat.name}
-                                                                </button>
-                                                            ))}
+                                                    <div className="grid grid-cols-2 gap-6">
+                                                        {/* Lead Name Filter */}
+                                                        <div>
+                                                            <label className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">
+                                                                Lead Name
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                value={tempFilters.name}
+                                                                onChange={(e) => setTempFilters(prev => ({ ...prev, name: e.target.value }))}
+                                                                placeholder="Enter lead name"
+                                                                className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                                                            />
+                                                        </div>
+
+                                                        {/* Mobile Number Filter */}
+                                                        <div>
+                                                            <label className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">
+                                                                Mobile Number
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                value={tempFilters.mobile_number}
+                                                                onChange={(e) => setTempFilters(prev => ({ ...prev, mobile_number: e.target.value }))}
+                                                                placeholder="Enter mobile number"
+                                                                className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                                                            />
                                                         </div>
                                                     </div>
 

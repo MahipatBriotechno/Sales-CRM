@@ -27,7 +27,7 @@ export const leadApi = createApi({
         getLeads: builder.query({
             query: ({
                 page = 1, limit = 10, status = 'All', search = '', pipeline_id = '', tag = 'All', type = 'All',
-                subview = 'All', priority = 'All', services = 'All', dateFrom = '', dateTo = ''
+                subview = 'All', priority = 'All', services = 'All', dateFrom = '', dateTo = '', name = '', mobile_number = ''
             }) => {
                 let url = `leads?page=${page}&limit=${limit}`;
                 if (status && status !== 'All') url += `&status=${status}`;
@@ -40,6 +40,8 @@ export const leadApi = createApi({
                 if (services && services !== 'All') url += `&services=${services}`;
                 if (dateFrom) url += `&dateFrom=${dateFrom}`;
                 if (dateTo) url += `&dateTo=${dateTo}`;
+                if (name) url += `&name=${name}`;
+                if (mobile_number) url += `&mobile_number=${mobile_number}`;
                 return url;
             },
             transformResponse: (response) => {
