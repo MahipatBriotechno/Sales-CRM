@@ -23,6 +23,7 @@ import {
   Zap,
   UserPlus,
   PhoneIncoming,
+  Upload,
 } from "lucide-react";
 import {
   BarChart,
@@ -42,11 +43,28 @@ import {
 } from "recharts";
 import { useGetCRMStatsQuery } from "../../store/api/crmDashboardApi";
 import { Loader2, RefreshCw } from "lucide-react";
+import AddLeadPopup from "../../components/AddNewLeads/AddNewLead";
+import BulkUploadLeads from "../../components/AddNewLeads/BulkUpload";
+import ActionGuard from "../../components/common/ActionGuard";
 
 export default function CRMDashboard() {
   const navigate = useNavigate();
   const [viewPeriod, setViewPeriod] = React.useState('6m');
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [openLeadMenu, setOpenLeadMenu] = React.useState(false);
+  const [showBulkUploadPopup, setShowBulkUploadPopup] = React.useState(false);
+  const addLeadMenuRef = React.useRef(null);
   const { data: stats, isLoading, isFetching, refetch } = useGetCRMStatsQuery(viewPeriod);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (addLeadMenuRef.current && !addLeadMenuRef.current.contains(event.target)) {
+        setOpenLeadMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   if (isLoading) {
     return (
@@ -133,10 +151,43 @@ export default function CRMDashboard() {
                 <RefreshCw size={18} className={isFetching ? "animate-spin" : ""} />
               </button>
 
-              <button className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700">
-                <Plus size={20} />
-                Add new lead
-              </button>
+
+              <div className="relative" ref={addLeadMenuRef}>
+                <ActionGuard permission="leads_create" module="Leads Management" type="create">
+                  <button
+                    onClick={() => setOpenLeadMenu(!openLeadMenu)}
+                    className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                  >
+                    <Plus size={20} />
+                    Add new lead
+                  </button>
+                </ActionGuard>
+                {openLeadMenu && (
+                  <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 shadow-xl rounded-sm z-50 overflow-hidden divide-y divide-gray-100 animate-fadeIn">
+                    <button
+                      onClick={() => {
+                        setOpenLeadMenu(false);
+                        setIsModalOpen(true);
+                      }}
+                      className="w-full flex items-center gap-3 text-left px-5 py-3.5 hover:bg-orange-50 text-sm font-bold text-gray-700 hover:text-orange-600 transition font-primary"
+                    >
+                      <UserPlus size={18} />
+                      Add Single Lead
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setOpenLeadMenu(false);
+                        setShowBulkUploadPopup(true);
+                      }}
+                      className="w-full flex items-center gap-3 text-left px-5 py-3.5 hover:bg-orange-50 text-sm font-bold text-gray-700 hover:text-orange-600 transition font-primary"
+                    >
+                      <Upload size={18} />
+                      Bulk Upload
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -144,6 +195,8 @@ export default function CRMDashboard() {
 
       {/* Dashboard Content */}
       <div className="max-w-9xl mx-auto px-4 mt-2 flex flex-col xl:flex-row gap-3">
+        {isModalOpen && <AddLeadPopup isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />}
+        {showBulkUploadPopup && <BulkUploadLeads onClose={() => setShowBulkUploadPopup(false)} />}
 
         {/* Main Content Area */}
         <div className="flex-1 space-y-4">
@@ -313,8 +366,18 @@ export default function CRMDashboard() {
               <div className="flex-1 flex flex-col justify-center">
                 <div className="space-y-4">
                   {funnelData.map((stage, i) => (
-                    <div key={i} className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-200 hover:shadow-md transition-all group flex flex-col">
-                      <div className="flex items-center justify-between mb-3">
+                    <div
+                      key={i}
+                      onClick={() => {
+                        const name = stage.name.toLowerCase();
+                        if (name.includes("total")) navigate("/crm/leads/all");
+                        else if (name.includes("contacted")) navigate("/crm/leads/not-connected");
+                        else if (name.includes("won")) navigate("/crm/leads/won");
+                        else navigate("/crm/leads/work-station");
+                      }}
+                      className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-200 hover:shadow-md transition-all group flex flex-col cursor-pointer hover:scale-[1.01] active:scale-95"
+                    >
+                      <div className="flex items-center justify-between mb-3 text-black">
                         <span className="text-sm font-bold text-gray-800 capitalize">{stage.name}</span>
                         <div className="flex items-center gap-3">
                           <span className="text-sm font-bold text-orange-600">{stage.value}</span>
