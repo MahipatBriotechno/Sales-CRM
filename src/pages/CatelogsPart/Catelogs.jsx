@@ -633,33 +633,33 @@ export default function CatalogsPage() {
 
 
           {/* Statement Card */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
             <NumberCard
+              variant="matrix"
               title="Total Employee"
               number={dashboardData?.data?.summary?.totalEmployees?.value || "0"}
-              icon={<Users className="text-blue-600" size={24} />}
-              iconBgColor="bg-blue-100"
+              icon={<Users size={24} />}
               lineBorderClass="border-blue-500"
             />
             <NumberCard
+              variant="matrix"
               title="Total Catalogs"
               number={pagination.total || "0"}
-              icon={<LayoutGrid className="text-green-600" size={24} />}
-              iconBgColor="bg-green-100"
+              icon={<LayoutGrid size={24} />}
               lineBorderClass="border-green-500"
             />
             <NumberCard
+              variant="matrix"
               title="Total Leads"
               number={dashboardData?.data?.summary?.totalLeads?.value || "0"}
-              icon={<Handshake className="text-orange-600" size={24} />}
-              iconBgColor="bg-orange-100"
+              icon={<Handshake size={24} />}
               lineBorderClass="border-orange-500"
             />
             <NumberCard
+              variant="matrix"
               title="Total Active"
               number={catalogs.filter(c => c.status === 'Active').length || "0"}
-              icon={<Target className="text-purple-600" size={24} />}
-              iconBgColor="bg-purple-100"
+              icon={<Target size={24} />}
               lineBorderClass="border-purple-500"
             />
           </div>

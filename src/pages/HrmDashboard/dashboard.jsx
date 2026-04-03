@@ -163,7 +163,7 @@ export default function HRMDashboard() {
           {/* Dashboard Content */}
           <div className="max-w-[100%] mx-auto px-4 mt-2 pb-4 space-y-6">
             {/* KPI Matrices */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Total Employees */}
               <div className="rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 border-t-blue-500 bg-blue-50/50 transition-all duration-300">
                 <div className="flex items-center justify-between">

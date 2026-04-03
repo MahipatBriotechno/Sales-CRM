@@ -56,7 +56,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
   const handleItemClick = (path) => {
     setActiveItem(path);
-    if (window.innerWidth < 768) setIsOpen(false);
+    if (window.innerWidth <= 1024) setIsOpen(false);
 
     // Force re-fetch for specific routes by invalidating RTK Query tags
     if (path === "/hrm/department") {
@@ -664,12 +664,23 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
   return (
     <>
+      {/* Mobile Backdrop Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[35] xl:hidden transition-all duration-300 animate-fadeIn"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
       {/* Mobile Toggle */}
       <button
-        className="fixed top-4 left-4 z-50 md:hidden text-2xl text-white"
+        className={`fixed top-[15px] left-4 z-[60] xl:hidden flex items-center justify-center transition-all duration-300 ${isOpen
+          ? "w-10 h-10 bg-[#FF7B1D] rounded-xl text-white shadow-lg shadow-orange-200"
+          : "text-white"
+          }`}
         onClick={() => setIsOpen(!isOpen)}
       >
-        {isOpen ? <X strokeWidth={8} /> : <Menu strokeWidth={3} />}
+        {isOpen ? <X strokeWidth={3} size={24} /> : <Menu strokeWidth={2.5} size={28} />}
       </button>
 
       {/* Sidebar Container */}
@@ -677,11 +688,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         onMouseEnter={() => !isLocked && setIsHovered(true)}
         onMouseLeave={() => !isLocked && setIsHovered(false)}
         className={`fixed top-0 left-0 h-screen bg-white shadow-xl flex transition-all duration-300 z-40 ${isOpen ? "translate-x-0" : "-translate-x-full"
-          } md:translate-x-0 ${isLocked || isHovered ? "w-[280px]" : "w-[68px]"}`}
+          } xl:translate-x-0 w-[280px] ${isLocked || isHovered ? "xl:w-[280px]" : "xl:w-[68px]"}`}
       >
         {/* Module Rail - Left */}
         <div className="w-[68px] bg-[#f8f9fa] border-r border-[#eee] flex flex-col items-center py-4 gap-4 z-10 no-scrollbar overflow-y-auto !overflow-hidden">
-          <div className="mb-4">
+          <div className="mb-4 hidden md:block">
             <div className="w-10 h-10 bg-[#FF7B1D] rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-orange-200">
               {user?.name?.charAt(0).toUpperCase()}
             </div>
@@ -734,7 +745,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               </h2>
               <button
                 onClick={() => dispatch(toggleSidebarLock())}
-                className={`p-1.5 rounded-lg transition-all hidden md:block ${isLocked ? "text-[#FF7B1D] bg-orange-50" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"}`}
+                className={`p-1.5 rounded-lg transition-all hidden xl:block ${isLocked ? "text-[#FF7B1D] bg-orange-50" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"}`}
                 title={isLocked ? "Unlock Sidebar" : "Lock Sidebar"}
               >
                 {isLocked ? <Lock size={16} /> : <Unlock size={16} />}
@@ -845,7 +856,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       {
         isOpen && (
           <div
-            className="fixed inset-0 bg-black opacity-40 z-30 md:hidden"
+            className="fixed inset-0 bg-black/40 z-30 xl:hidden animate-fadeIn"
             onClick={() => setIsOpen(false)}
           />
         )

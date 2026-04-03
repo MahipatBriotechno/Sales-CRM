@@ -67,7 +67,7 @@ const ApplicantViewModal = ({ applicant, onClose }) => {
         {/* CONTENT SECTION */}
         <div className="p-8">
           {/* QUICK INFO CARDS - 4 Cards in a Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {/* Location Card */}
             <div className="bg-blue-50 p-4 rounded-sm border border-blue-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
               <div className="bg-blue-600 p-2 rounded-sm text-white mb-2 group-hover:scale-110 transition-transform">

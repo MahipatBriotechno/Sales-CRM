@@ -511,7 +511,7 @@ export default function SalaryManagement() {
 
         <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <NumberCard
               title="Total Payroll"
               number={`₹${Math.round(totalPayroll).toLocaleString()}`}
@@ -575,7 +575,7 @@ export default function SalaryManagement() {
                       <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Employee</th>
                       <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Designation</th>
                       <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Department</th>
-                      <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 text-right">Net Salary</th>
+                      <th className="py-3 px-4 font-semibold border-b border-orange-400 text-right">Net Salary</th>
                       <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Status</th>
                       <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Pay Date</th>
                       <th className="py-3 px-4 font-semibold text-right border-b border-orange-400">Action</th>
