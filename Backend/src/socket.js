@@ -6,8 +6,28 @@ let ioInstance;
 const initializeSocket = (server) => {
     const io = new Server(server, {
         cors: {
-            origin: "*", // Adjust in production
-            methods: ["GET", "POST"]
+            origin: (origin, callback) => {
+                const allowedOrigins = [
+                    'http://localhost:5173',
+                    'http://localhost:3000',
+                    'http://localhost:5174',
+                    process.env.FRONTEND_URL,
+                ].filter(Boolean).map(url => url.trim().replace(/\/$/, ""));
+
+                if (!origin) return callback(null, true);
+                
+                const cleanedOrigin = origin.trim().replace(/\/$/, "");
+                const isAllowed = allowedOrigins.includes(cleanedOrigin);
+
+                if (isAllowed || process.env.NODE_ENV === 'development') {
+                    callback(null, true);
+                } else {
+                    console.error(`Socket CORS Error: Origin ${origin} is not allowed.`);
+                    callback(new Error('Not allowed by CORS'));
+                }
+            },
+            methods: ["GET", "POST"],
+            credentials: true
         }
     });
 
