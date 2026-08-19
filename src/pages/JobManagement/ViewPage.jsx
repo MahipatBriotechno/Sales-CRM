@@ -82,7 +82,7 @@ const JobViewModal = ({ job, onClose }) => {
         <div className="p-8 space-y-8 font-sans overflow-y-auto">
 
           {/* QUICK INFO CARDS - Original Colored Style */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-blue-50 p-4 rounded-sm border border-blue-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
               <div className="bg-blue-600 p-2 rounded-sm text-white mb-2 group-hover:scale-110 transition-transform">
                 <MapPin size={20} />

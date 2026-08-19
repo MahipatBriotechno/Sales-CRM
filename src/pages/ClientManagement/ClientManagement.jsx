@@ -739,7 +739,7 @@ export default function AllClientPage() {
 
         {/* Stats Cards */}
         <div className="max-w-8xl mx-auto px-4 pb-4 pt-2 mt-0 font-primary w-full flex-1">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
             {/* Total Clients */}
             <div
               className={`rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 bg-white transition-all duration-300 border-t-blue-500 bg-blue-50/50`}

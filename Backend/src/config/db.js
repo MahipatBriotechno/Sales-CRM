@@ -8,7 +8,7 @@ const pool = mysql.createPool({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: process.env.DB_PORT || 3307,
+    port: process.env.DB_PORT || 3306,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
@@ -20,7 +20,7 @@ const connectDB = async () => {
     try {
         const connection = await pool.getConnection();
         console.log('MySQL Connected...');
-        
+
         // Create notifications table if it doesn't exist
         await pool.query(`
             CREATE TABLE IF NOT EXISTS notifications (
@@ -107,7 +107,7 @@ const connectDB = async () => {
         `);
 
         console.log('Integration tables checked/created.');
-        
+
         connection.release();
     } catch (error) {
         console.error('MySQL connection error:', error);

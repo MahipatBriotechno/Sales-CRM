@@ -22,7 +22,33 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:5174',
+    process.env.FRONTEND_URL,
+].filter(Boolean).map(url => url.trim().replace(/\/$/, ""));
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        const cleanedOrigin = origin.trim().replace(/\/$/, "");
+        const isAllowed = allowedOrigins.includes(cleanedOrigin);
+
+        if (isAllowed || process.env.NODE_ENV === 'development') {
+            return callback(null, true);
+        } else {
+            console.error(`CORS Error: Origin ${origin} is not allowed. Allowed Origins: ${allowedOrigins.join(', ')}`);
+            return callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'X-Auth-Token'],
+    exposedHeaders: ['Set-Cookie']
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 

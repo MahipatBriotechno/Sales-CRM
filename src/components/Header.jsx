@@ -137,9 +137,11 @@ const Header = () => {
   const { sidebarLocked: isLocked } = useSelector((state) => state.ui);
 
   return (
-    <header className={`fixed top-0 left-0 right-0 ${isLocked ? "md:left-[280px]" : "md:left-[68px]"} h-[70px] flex items-center px-4 lg:px-8 z-40 bg-[#2b303b] transition-all duration-300`}>
+    <header className={`fixed top-0 left-0 right-0 ${isLocked ? "xl:left-[280px]" : "xl:left-[68px]"} h-[70px] flex items-center px-2 md:px-4 lg:px-8 z-40 bg-[#2b303b] transition-all duration-300`}>
+      {/* Mobile Toggle Spacer */}
+      <div className="w-14 xl:hidden flex-shrink-0" />
       {/* Left Clock */}
-      <div className="flex flex-col min-w-[120px]">
+      <div className="hidden xl:flex flex-col min-w-[120px] flex-shrink-0">
         <span className="text-[17px] font-bold text-white leading-none tracking-tight">
           {currentTime.toLocaleTimeString("en-US", {
             hour: "2-digit",
@@ -158,10 +160,10 @@ const Header = () => {
       </div>
 
       {/* Spacer to push search to center */}
-      <div className="flex-1" />
+      <div className="hidden xl:flex xl:flex-1" />
 
-      {/* Global Search - Centered & Widened */}
-      <div className="relative w-full max-w-[600px] px-4">
+      {/* Global Search - Responsive width */}
+      <div className="relative flex-1 md:flex-[2] lg:flex-1 max-w-[600px] px-1 md:px-4 min-w-[100px]">
         <div className="relative w-full group">
           <input
             ref={searchInputRef}
@@ -170,17 +172,17 @@ const Header = () => {
             onChange={(e) => setSearchValue(e.target.value)}
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-            placeholder="Search leads, employees, or dashboards..."
-            className="w-full h-11 pl-4 pr-24 rounded-xl bg-[#363c48] border border-gray-600/20 text-white placeholder-gray-400 text-sm outline-none focus:ring-1 focus:ring-gray-400/30 transition-all shadow-sm"
+            placeholder="Search..."
+            className="w-full h-10 md:h-11 pl-4 pr-3 md:pr-24 rounded-xl bg-[#363c48] border border-gray-600/20 text-white placeholder-gray-400 text-xs md:text-sm outline-none focus:ring-1 focus:ring-gray-400/30 transition-all shadow-sm"
           />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-60">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden xl:flex items-center gap-1 opacity-60">
             <span className="text-[10px] font-bold text-gray-300 bg-gray-500/30 px-2 py-0.5 rounded border border-gray-400/20 shadow-sm">CTRL + /</span>
           </div>
         </div>
 
-        {/* Search Results Dropdown */}
+        {/* Search Results Dropdown - Responsive width */}
         {searchValue && isSearchFocused && (
-          <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-lg shadow-2xl border border-gray-100 overflow-y-auto max-h-[70vh] animate-fadeIn py-2 z-50 custom-scrollbar">
+          <div className="absolute top-full left-0 right-[-100px] md:right-0 mt-3 bg-white rounded-lg shadow-2xl border border-gray-100 overflow-y-auto max-h-[70vh] animate-fadeIn py-2 z-50 custom-scrollbar mx-2 md:mx-0">
             {searchResults.length > 0 ? (
               searchResults.map((cat, idx) => (
                 <div key={idx} className="mb-2 last:mb-0">
@@ -192,13 +194,13 @@ const Header = () => {
                     <button
                       key={i}
                       onClick={() => go(item.path)}
-                      className="w-full px-4 py-2.5 flex items-center justify-between group hover:bg-[#FF7B1D]/5 transition-colors"
+                      className="w-full px-4 py-3 flex items-center justify-between group hover:bg-[#FF7B1D]/5 transition-colors"
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 group-hover:text-[#FF7B1D] group-hover:bg-white transition-all border border-transparent group-hover:border-orange-100">
                           <FiFileText size={14} />
                         </div>
-                        <span className="text-sm font-medium text-gray-700 group-hover:text-[#FF7B1D]">{item.name}</span>
+                        <span className="text-sm font-semibold text-gray-700 group-hover:text-[#FF7B1D] truncate max-w-[200px] md:max-w-none">{item.name}</span>
                       </div>
                       <FiGrid size={12} className="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
@@ -219,15 +221,15 @@ const Header = () => {
       </div>
 
       {/* Spacer to keep search centered */}
-      <div className="flex-1" />
+      <div className="hidden xl:flex xl:flex-1" />
 
       {/* Right Content */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-1.5 md:gap-4 flex-shrink-0 ml-auto md:ml-0">
         {/* Action Icons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 md:gap-2">
           <button
             onClick={toggleFullScreen}
-            className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+            className="hidden md:flex p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all"
             title="Fullscreen"
           >
             <FiMaximize size={20} />
@@ -236,7 +238,7 @@ const Header = () => {
           <div className="relative" ref={appsRef}>
             <button
               onClick={() => setAppsOpen(!appsOpen)}
-              className={`p-2 rounded-lg transition-all ${appsOpen ? "bg-white/20 text-white" : "text-white/80 hover:text-white hover:bg-white/10"}`}
+              className={`hidden sm:flex p-2 rounded-lg transition-all ${appsOpen ? "bg-white/20 text-white" : "text-white/80 hover:text-white hover:bg-white/10"}`}
               title="Apps"
             >
               <FiGrid size={20} />

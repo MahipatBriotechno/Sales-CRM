@@ -3,19 +3,25 @@ import { FileText } from "lucide-react";
 
 const NumberCard = ({ title, number, lineBorderClass, icon, iconBgColor, up, down, children, onClick, variant = "default" }) => {
   if (variant === "matrix") {
-    // Extract the color name (e.g., 'blue' from 'border-blue-500')
-    const colorName = lineBorderClass?.split("-")[1] || "orange";
-    const topBorderClass = `border-t-${colorName}-500`;
-    const iconTextColor = `text-${colorName}-500`;
-    const bgColorClass = `bg-${colorName}-50/50`;
+    // Determine color mapping based on lineBorderClass
+    const colorMap = {
+      "border-blue-500": { border: "border-t-blue-500", text: "text-blue-500", bg: "bg-blue-50/50" },
+      "border-green-500": { border: "border-t-green-500", text: "text-green-500", bg: "bg-green-50/50" },
+      "border-orange-500": { border: "border-t-orange-500", text: "text-orange-500", bg: "bg-orange-50/50" },
+      "border-purple-500": { border: "border-t-purple-500", text: "text-purple-500", bg: "bg-purple-50/50" },
+      "border-red-500": { border: "border-t-red-500", text: "text-red-500", bg: "bg-red-50/50" },
+      "border-yellow-500": { border: "border-t-yellow-500", text: "text-yellow-500", bg: "bg-yellow-50/50" },
+    };
+
+    const style = colorMap[lineBorderClass] || colorMap["border-orange-500"];
 
     return (
-      <div className={`rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 ${topBorderClass} ${bgColorClass} transition-all duration-300 hover:shadow-md cursor-pointer`} onClick={onClick}>
+      <div className={`rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 ${style.border} ${style.bg} transition-all duration-300 hover:shadow-md cursor-pointer`} onClick={onClick}>
         <div className="flex items-center justify-between font-primary">
           <div className="flex items-center gap-2.5">
             <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm flex items-center justify-center shrink-0">
               {icon && React.isValidElement(icon)
-                ? React.cloneElement(icon, { size: 18, className: iconTextColor })
+                ? React.cloneElement(icon, { size: 18, className: style.text })
                 : icon}
             </div>
             <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight">{title}</h3>

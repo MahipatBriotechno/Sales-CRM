@@ -202,7 +202,7 @@ export default function CRMDashboard() {
         <div className="flex-1 space-y-4">
 
           {/* Row 1: KPI Matrices */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Total Quotations */}
             <div className="rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 border-t-blue-500 bg-blue-50/50 transition-all duration-300 hover:shadow-md">
               <div className="flex items-center justify-between">
@@ -273,7 +273,7 @@ export default function CRMDashboard() {
           </div>
 
           {/* Row 2: Efficiency Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {dynamicEfficiencyMetrics.map((metric, idx) => (
               <div key={idx} className={`rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 ${metric.colorClass} transition-all duration-300 hover:shadow-md`}>
                 <div className="flex items-center justify-between">
