@@ -79,7 +79,7 @@ export function ContactsList({ contacts, selectedChat, onChatSelect }) {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar">
+    <div className="h-full overflow-y-auto custom-scrollbar">
       <div className="py-3 px-3 space-y-1">
         {contacts.map((contact) => (
           <div
@@ -284,7 +284,7 @@ export function ChatMessages({
   const reactions = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
   return (
-    <div className="flex-1 px-6 py-6 bg-[#fcfcfc] custom-scrollbar overflow-y-auto">
+    <div className="px-6 py-6 bg-[#fcfcfc] min-h-full custom-scrollbar">
       <div className="space-y-6">
         {messages.map((msg, idx) => {
           const isMe = !!((Number(msg.sender_id) === Number(currentUserId) && msg.sender_type === currentUserType) || msg.sender === "me");
@@ -803,30 +803,32 @@ export function ChatInput({
 // Empty State Component
 export function EmptyState() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-12 bg-white text-center font-primary">
-      <div className="w-32 h-32 bg-orange-50 rounded-3xl flex items-center justify-center mb-8 shadow-inner transition-transform hover:scale-105 duration-500 group">
-        <MessageCircle size={64} className="text-[#FF7B1D] group-hover:rotate-12 transition-transform" strokeWidth={1.5} />
-      </div>
-      <h2 className="text-3xl font-semibold text-black mb-3 tracking-tight">Your Conversations</h2>
-      <p className="text-gray-600 max-w-sm font-medium leading-relaxed mb-10">
-        Select a chat to view your message history or start a new connection with your team.
-      </p>
+    <div className="flex-1 overflow-y-auto custom-scrollbar bg-white flex flex-col h-full">
+      <div className="m-auto flex flex-col items-center justify-center p-6 md:p-12 text-center font-primary w-full max-w-2xl">
+        <div className="w-24 h-24 md:w-32 md:h-32 bg-orange-50 rounded-3xl flex items-center justify-center mb-6 md:mb-8 shadow-inner transition-transform hover:scale-105 duration-500 group flex-shrink-0">
+          <MessageCircle className="text-[#FF7B1D] group-hover:rotate-12 transition-transform w-12 h-12 md:w-16 md:h-16" strokeWidth={1.5} />
+        </div>
+        <h2 className="text-2xl md:text-3xl font-semibold text-black mb-3 tracking-tight">Your Conversations</h2>
+        <p className="text-sm md:text-base text-gray-600 max-w-sm font-medium leading-relaxed mb-8 md:mb-10">
+          Select a chat to view your message history or start a new connection with your team.
+        </p>
 
-      <div className="flex flex-wrap justify-center gap-4 max-w-lg">
-        {[
-          { icon: Search, label: "Search Contacts", desc: "Find anyone in your team" },
-          { icon: Star, label: "Starred Items", desc: "Access your saved gems" },
-        ].map((item, i) => (
-          <div key={i} className="bg-white border-2 border-orange-50 p-5 rounded-3xl flex items-center gap-4 hover:border-[#FF7B1D] hover:shadow-xl hover:shadow-orange-500/10 transition-all cursor-pointer group w-64">
-            <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-[#FF7B1D] group-hover:bg-[#FF7B1D] group-hover:text-white transition-all duration-300">
-              <item.icon size={20} />
+        <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 w-full px-4">
+          {[
+            { icon: Search, label: "Search Contacts", desc: "Find anyone in your team" },
+            { icon: Star, label: "Starred Items", desc: "Access your saved gems" },
+          ].map((item, i) => (
+            <div key={i} className="bg-white border-2 border-orange-50 p-4 md:p-5 rounded-2xl md:rounded-3xl flex items-center gap-4 hover:border-[#FF7B1D] hover:shadow-xl hover:shadow-orange-500/10 transition-all cursor-pointer group w-full sm:w-64">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-orange-50 flex items-center justify-center text-[#FF7B1D] group-hover:bg-[#FF7B1D] group-hover:text-white transition-all duration-300 flex-shrink-0">
+                <item.icon size={20} />
+              </div>
+              <div className="text-left flex-1 min-w-0">
+                <p className="text-sm font-semibold text-black truncate">{item.label}</p>
+                <p className="text-[10px] text-gray-500 font-medium truncate">{item.desc}</p>
+              </div>
             </div>
-            <div className="text-left">
-              <p className="text-sm font-semibold text-black">{item.label}</p>
-              <p className="text-[10px] text-gray-500 font-medium">{item.desc}</p>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

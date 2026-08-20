@@ -934,7 +934,7 @@ export default function MessengerPage() {
       <div className="flex-1 min-h-0 m-5 bg-white overflow-hidden border-2 border-[#FF7B1D]/20 rounded-xl flex flex-col font-primary shadow-[0_32px_64px_-16px_rgba(255,123,29,0.08)]">
         <div className="flex flex-1 min-h-0">
           {/* Sidebar */}
-          <div className="w-[380px] bg-gray-50/10 flex flex-col h-full border-r-2 border-orange-50/80">
+          <div className="w-[380px] bg-gray-50/10 flex flex-col min-h-0 border-r-2 border-orange-50/80">
             {/* Header */}
             <div className="px-6 pt-8 pb-4 bg-white shrink-0">
               <div className="flex items-center justify-between mb-6">
@@ -1004,8 +1004,8 @@ export default function MessengerPage() {
               </div>
             </div>
 
-            {/* Contacts List */}
-            <div className="flex-1 overflow-hidden">
+            {/* Contacts List — flex-1 + min-h-0 so it scrolls within sidebar */}
+            <div className="flex-1 min-h-0 overflow-hidden">
               <ContactsList
                 contacts={filteredContacts}
                 selectedChat={selectedChat}
@@ -1015,7 +1015,7 @@ export default function MessengerPage() {
           </div>
 
           {/* Chat Area */}
-          <div className="flex-1 flex flex-col bg-white h-full">
+          <div className="flex-1 flex flex-col bg-white min-h-0">
             {selectedChat ? (
               <>
                 {/* Chat Header */}
@@ -1039,8 +1039,8 @@ export default function MessengerPage() {
                 </div>
 
                 {/* Messages Area */}
-                <div className="flex-1 flex overflow-hidden">
-                  <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 flex overflow-hidden min-h-0">
+                  <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
                     <ChatMessages
                       messages={filteredMessages}
                       typingIndicator={typingIndicator}
@@ -1066,7 +1066,7 @@ export default function MessengerPage() {
                   </div>
 
                   {showChatInfo && (
-                    <div className="flex-shrink-0 overflow-y-auto">
+                    <div className="flex-shrink-0 overflow-y-auto custom-scrollbar">
                       <ChatInfoSidebar
                         selectedChat={selectedChat}
                         messages={messages}

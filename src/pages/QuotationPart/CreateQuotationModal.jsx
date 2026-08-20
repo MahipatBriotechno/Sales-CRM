@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { X, Plus, Trash2, Search, User, Building2, Tag, Calendar, Hash, Mail, Phone, Building, FileText, CheckCircle, MapPin, UserCheck, Briefcase, CreditCard, ScrollText, FileCheck } from "lucide-react";
 import { useGetCatalogsQuery } from "../../store/api/catalogApi";
-import { useGetAllTermsQuery } from "../../store/api/termApi";
 import { useGetBusinessInfoQuery } from "../../store/api/businessApi";
 import { useGetClientsQuery } from "../../store/api/clientApi";
 import Modal from "../../components/common/Modal";
@@ -30,12 +29,10 @@ export default function CreateQuotationModal({
   const clientDropdownRef = useRef(null);
 
   const { data: catalogsData } = useGetCatalogsQuery({ limit: 100, status: 'Active' });
-  const { data: termsData } = useGetAllTermsQuery({ limit: 100 });
   const { data: businessInfo } = useGetBusinessInfoQuery();
   const { data: clientsData } = useGetClientsQuery({ status: 'active' });
 
   const catalogs = catalogsData?.catalogs || [];
-  const termsList = Array.isArray(termsData) ? termsData : [];
   const clients = clientsData?.data || [];
 
   useEffect(() => {
@@ -154,12 +151,6 @@ export default function CreateQuotationModal({
     }));
     setClientSearch(name);
     setShowClientDropdown(false);
-  };
-
-  const handlePolicyChange = (e) => {
-    const selectedId = parseInt(e.target.value);
-    const selected = termsList.find(t => t.id === selectedId);
-    setFormData(prev => ({ ...prev, terms_and_conditions: selected ? selected.description : "" }));
   };
 
   const validateAndSubmit = () => {
@@ -763,40 +754,19 @@ export default function CreateQuotationModal({
               <ScrollText size={18} />
             </div>
             <h3 className="text-sm font-black text-gray-800 uppercase tracking-[0.1em]">
-              Terms & Conditions
+              Specific Instructions / Notes
             </h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Active Template</label>
-              <select
-                name="terms_and_conditions_id"
-                onChange={handlePolicyChange}
-                className={`${inputStyles} border-gray-200 bg-slate-50 shadow-inner`}
-              >
-                <option value="">Select a saved terms template...</option>
-                {termsList.map(term => (
-                  <option key={term.id} value={term.id}>{term.title || `Terms ${term.id}`}</option>
-                ))}
-              </select>
-              <div className="mt-3 p-3 bg-blue-50/50 rounded border border-blue-100/50">
-                <p className="text-[10px] text-blue-600 font-bold flex items-center gap-2">
-                  <CheckCircle size={12} /> These terms will be printed on the quotation PDF.
-                </p>
-              </div>
-            </div>
-            <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Specific Instructions / Notes</label>
-              <textarea
-                name="terms_and_conditions"
-                value={formData.terms_and_conditions}
-                onChange={handleInputChange}
-                rows="4"
-                className={`${inputStyles} py-4 border-gray-200 shadow-sm resize-none italic font-medium leading-relaxed`}
-                placeholder="Type your quotation terms or special delivery notes here..."
-              />
-            </div>
+          <div className="w-full">
+            <textarea
+              name="terms_and_conditions"
+              value={formData.terms_and_conditions}
+              onChange={handleInputChange}
+              rows="4"
+              className={`${inputStyles} py-4 border-gray-200 shadow-sm resize-none italic font-medium leading-relaxed`}
+              placeholder="Type your quotation terms or special delivery notes here..."
+            />
           </div>
         </section>
       </div>
