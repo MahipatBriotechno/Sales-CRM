@@ -45,6 +45,19 @@ const languagesList = [
   "Khmer", "Turkmen", "Assamese", "Madurese", "Hausa", "Punjabi", "Javanese", "Wu Chinese", "Korean",
 ].sort();
 
+const formatTime12Hr = (timeStr) => {
+  if (!timeStr) return "";
+  const [hourStr, minuteStr] = timeStr.split(":");
+  if (!hourStr || !minuteStr) return timeStr;
+  
+  let hour = parseInt(hourStr, 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12;
+  hour = hour ? hour : 12;
+  const paddedHour = hour.toString().padStart(2, "0");
+  return `${paddedHour}:${minuteStr} ${ampm}`;
+};
+
 const CollapsibleSection = ({ id, title, icon: Icon, children, isCollapsed, onToggle }) => {
   return (
     <div className="border border-gray-200 rounded-lg bg-white shadow-sm overflow-hidden mb-6">
@@ -316,7 +329,7 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
             <div className="relative">
               <select name="shift" value={formData.shift} onChange={handleChange} className={selectStyles}>
                 <option value="">Select Shift</option>
-                {shiftsLoading ? <option disabled>Loading...</option> : shifts.map((shift) => <option key={shift.id} value={shift.id}>{shift.shift_name} ({shift.check_in_time}-{shift.check_out_time})</option>)}
+                {shiftsLoading ? <option disabled>Loading...</option> : shifts.map((shift) => <option key={shift.id} value={shift.id}>{shift.shift_name} ({formatTime12Hr(shift.check_in_time)} - {formatTime12Hr(shift.check_out_time)})</option>)}
               </select>
               <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>

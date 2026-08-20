@@ -10,7 +10,9 @@ import {
   X,
   CheckCircle,
   XCircle,
-  MoreVertical
+  MoreVertical,
+  Sun,
+  Timer
 } from "lucide-react";
 import { FiHome } from "react-icons/fi";
 import NumberCard from "../../components/NumberCard";
@@ -26,6 +28,19 @@ import EditShiftModal from "../../components/Shift/EditShiftModal";
 import ViewShiftModal from "../../components/Shift/ViewShiftModal";
 import DeleteShiftModal from "../../components/Shift/DeleteShiftModal";
 import DashboardLayout from "../../components/DashboardLayout";
+
+const formatTime12Hr = (timeStr) => {
+  if (!timeStr) return "";
+  const [hourStr, minuteStr] = timeStr.split(":");
+  if (!hourStr || !minuteStr) return timeStr;
+  
+  let hour = parseInt(hourStr, 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12;
+  hour = hour ? hour : 12;
+  const paddedHour = hour.toString().padStart(2, "0");
+  return `${paddedHour}:${minuteStr} ${ampm}`;
+};
 
 export default function ShiftManagement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -104,6 +119,8 @@ export default function ShiftManagement() {
   );
 
   const activeShiftsCount = shifts.length; // Can add active/inactive logic later if needed
+  const halfDayShiftsCount = shifts.filter(s => s.half_day_enable).length;
+  const overtimeShiftsCount = shifts.filter(s => s.overtime_enable).length;
 
   const handleEdit = (shift) => {
     setSelectedShift(shift);
@@ -296,6 +313,20 @@ export default function ShiftManagement() {
               iconBgColor="bg-green-100"
               lineBorderClass="border-green-500"
             />
+            <NumberCard
+              title="Half Day Shifts"
+              number={halfDayShiftsCount}
+              icon={<Sun size={24} className="text-orange-500" />}
+              iconBgColor="bg-orange-100"
+              lineBorderClass="border-orange-500"
+            />
+            <NumberCard
+              title="Overtime Shifts"
+              number={overtimeShiftsCount}
+              icon={<Timer size={24} className="text-purple-500" />}
+              iconBgColor="bg-purple-100"
+              lineBorderClass="border-purple-500"
+            />
           </div>
 
       {/* Table */}
@@ -336,8 +367,8 @@ export default function ShiftManagement() {
                       {shift.shift_name}
                     </td>
                     <td className="py-3 px-4">
-                      <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-medium">
-                        {shift.check_in_time} - {shift.check_out_time}
+                      <span className="bg-orange-50 text-orange-600 border border-orange-200 px-2.5 py-1 rounded-sm text-[11px] font-bold shadow-sm whitespace-nowrap">
+                        {formatTime12Hr(shift.check_in_time)} - {formatTime12Hr(shift.check_out_time)}
                       </span>
                     </td>
                     <td className="py-3 px-4">
