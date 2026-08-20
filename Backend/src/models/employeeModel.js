@@ -5,7 +5,7 @@ const Employee = {
         const {
             employee_name, profile_picture, date_of_birth, age, gender,
             father_name, mother_name, marital_status, joining_date,
-            department_id, designation_id, employee_type, work_type,
+            department_id, designation_id, shift_id, employee_type, work_type,
             mobile_number, alternate_mobile_number, email,
             work_email, work_mobile_number, linkedin_url, skype_id,
             permanent_address, correspondence_address,
@@ -33,7 +33,7 @@ const Employee = {
             `INSERT INTO employees (
                 employee_id, employee_name, profile_picture, date_of_birth, age, gender,
                 father_name, mother_name, marital_status, joining_date,
-                department_id, designation_id, employee_type, work_type,
+                department_id, designation_id, shift_id, employee_type, work_type,
                 mobile_number, alternate_mobile_number, email,
                 work_email, work_mobile_number, linkedin_url, skype_id,
                 permanent_address, correspondence_address,
@@ -45,11 +45,11 @@ const Employee = {
                 aadhar_front, aadhar_back, pan_card,
                 ifsc_code, account_number, account_holder_name, branch_name,
                 cancelled_cheque, username, password, status, user_id, permissions
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 newId, employee_name, profile_picture, date_of_birth, age, gender,
                 father_name, mother_name, marital_status, joining_date,
-                department_id, designation_id, employee_type, work_type,
+                department_id, designation_id, shift_id, employee_type, work_type,
                 mobile_number, alternate_mobile_number, email,
                 work_email, work_mobile_number, linkedin_url, skype_id,
                 permanent_address, correspondence_address,
@@ -72,6 +72,7 @@ const Employee = {
             SELECT e.*, 
             d.department_name, d.department_id as department_uid,
             deg.designation_name, deg.designation_id as designation_uid,
+            s.shift_name,
             t.team_name as assigned_team_name,
             (
                 SELECT IFNULL(ROUND((SUM(CASE WHEN tag = 'Closed' THEN 1 ELSE 0 END) / COUNT(*)) * 100, 1), 0)
@@ -81,6 +82,7 @@ const Employee = {
             FROM employees e 
             LEFT JOIN departments d ON e.department_id = d.id 
             LEFT JOIN designations deg ON e.designation_id = deg.id
+            LEFT JOIN shifts s ON e.shift_id = s.id
             LEFT JOIN team_members tm ON e.id = tm.employee_id
             LEFT JOIN teams t ON tm.team_id = t.id
             WHERE e.user_id = ?
@@ -126,10 +128,12 @@ const Employee = {
         const [rows] = await pool.query(`
             SELECT e.*, 
             d.department_name, d.department_id as department_uid,
-            deg.designation_name, deg.designation_id as designation_uid
+            deg.designation_name, deg.designation_id as designation_uid,
+            s.shift_name
             FROM employees e 
             LEFT JOIN departments d ON e.department_id = d.id 
             LEFT JOIN designations deg ON e.designation_id = deg.id
+            LEFT JOIN shifts s ON e.shift_id = s.id
             WHERE e.id = ? AND e.user_id = ?
         `, [id, userId]);
         return rows[0];

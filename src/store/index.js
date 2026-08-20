@@ -44,6 +44,7 @@ import { visitorApi } from './api/visitorApi';
 import { meetingApi } from './api/meetingApi';
 import { walletApi } from './api/walletApi';
 import { superAdminApi } from './api/superAdminApi';
+import { shiftApi } from './api/shiftApi';
 
 
 
@@ -93,6 +94,7 @@ export const store = configureStore({
         [meetingApi.reducerPath]: meetingApi.reducer,
         [walletApi.reducerPath]: walletApi.reducer,
         [superAdminApi.reducerPath]: superAdminApi.reducer,
+        [shiftApi.reducerPath]: shiftApi.reducer,
 
 
 
@@ -141,6 +143,7 @@ export const store = configureStore({
             meetingApi.middleware,
             walletApi.middleware,
             superAdminApi.middleware,
+            shiftApi.middleware,
             limitErrorMiddleware
 
         ),

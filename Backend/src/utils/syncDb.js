@@ -98,7 +98,54 @@ const syncDatabase = async () => {
         `;
         await pool.query(visitorSql);
 
-        console.log('Database synced: channel_configs, goals, and visitors tables are ready.');
+        const shiftSql = `
+        CREATE TABLE IF NOT EXISTS shifts (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            shift_name VARCHAR(100) NOT NULL,
+            description TEXT,
+            check_in_time TIME NOT NULL,
+            check_out_time TIME NOT NULL,
+            working_hours DECIMAL(5,2),
+            attendance_method VARCHAR(100) DEFAULT 'WiFi Check-in',
+            grace_period INT DEFAULT 0,
+            late_marking BOOLEAN DEFAULT false,
+            half_day_enable BOOLEAN DEFAULT false,
+            min_work_hours_half_day DECIMAL(5,2),
+            half_day_cutoff_time TIME,
+            overtime_enable BOOLEAN DEFAULT false,
+            min_overtime_after INT,
+            overtime_rate DECIMAL(10,2),
+            overtime_calculation ENUM('Per Hour', 'Per Minute'),
+            max_overtime_per_day INT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        `;
+        await pool.query(shiftSql);
+
+        try {
+            await pool.query("ALTER TABLE employees ADD COLUMN shift_id INT DEFAULT NULL AFTER designation_id");
+            await pool.query("ALTER TABLE employees ADD CONSTRAINT fk_employee_shift FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE SET NULL");
+        } catch (e) {
+            // Already exists or constraint error
+        }
+
+        try {
+            await pool.query("ALTER TABLE shifts MODIFY COLUMN attendance_method VARCHAR(100) DEFAULT 'WiFi Check-in'");
+        } catch (e) {
+            console.error('Error modifying attendance_method column:', e);
+        }
+
+        try {
+            await pool.query("ALTER TABLE attendance ADD COLUMN overtime_hours DECIMAL(5,2) DEFAULT 0");
+            await pool.query("ALTER TABLE attendance ADD COLUMN overtime_amount DECIMAL(10,2) DEFAULT 0");
+        } catch (e) {
+            // Already exists
+        }
+
+        console.log('Database synced: channel_configs, goals, visitors, and shifts tables are ready.');
     } catch (error) {
         console.error('Error syncing database:', error);
     }

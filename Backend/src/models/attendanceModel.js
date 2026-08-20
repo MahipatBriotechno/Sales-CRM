@@ -21,11 +21,11 @@ const Attendance = {
     },
 
     updateCheckOut: async (id, data, userId) => {
-        const { check_out, work_hours, status } = data;
+        const { check_out, work_hours, status, overtime_hours, overtime_amount } = data;
         await pool.query(
-            `UPDATE attendance SET check_out = ?, work_hours = ?, status = ? 
+            `UPDATE attendance SET check_out = ?, work_hours = ?, status = ?, overtime_hours = ?, overtime_amount = ? 
              WHERE id = ? AND user_id = ?`,
-            [check_out, work_hours, status, id, userId]
+            [check_out, work_hours, status, overtime_hours || 0, overtime_amount || 0, id, userId]
         );
     },
 
@@ -112,6 +112,16 @@ const Attendance = {
              FROM attendance 
              WHERE employee_id = ? AND user_id = ?`,
             [employeeId, userId]
+        );
+        return rows[0];
+    },
+
+    getOvertimeByEmployeeAndDate: async (employeeId, startDate, endDate, userId) => {
+        const [rows] = await pool.query(
+            `SELECT COALESCE(SUM(overtime_amount), 0) as total_overtime_amount, COALESCE(SUM(overtime_hours), 0) as total_overtime_hours
+             FROM attendance 
+             WHERE employee_id = ? AND date >= ? AND date <= ? AND user_id = ?`,
+            [employeeId, startDate, endDate, userId]
         );
         return rows[0];
     },

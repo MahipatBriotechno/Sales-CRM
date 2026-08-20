@@ -303,14 +303,13 @@ export default function SalaryManagement() {
           <div className="max-w-8xl mx-auto px-4 py-4 border-b">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800 transition-all duration-300">Salary Management</h1>
-                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <FiHome className="text-gray-700" size={14} />
-                  <span className="text-gray-400"></span> HRM /{" "}
-                  <span className="text-[#FF7B1D] font-medium">
-                    All Salary
-                  </span>
-                </p>
+                <h1 className="text-2xl font-bold text-gray-800">Payroll Management</h1>
+                <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+                  <FiHome className="text-gray-400" />
+                  <span>HRM</span>
+                  <span>/</span>
+                  <span className="text-[#FF7B1D] font-medium">All Payrolls</span>
+                </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
@@ -321,7 +320,7 @@ export default function SalaryManagement() {
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search employee..."
+                    placeholder="Search payrolls..."
                     className="pl-10 pr-4 py-3 border border-gray-300 rounded-sm w-64 focus:border-orange-500 outline-none text-sm font-medium transition-all"
                   />
                 </div> */}
@@ -415,6 +414,9 @@ export default function SalaryManagement() {
                                     className="w-full px-2 py-1.5 border border-gray-200 rounded-sm text-[10px] outline-none focus:border-orange-500"
                                   />
                                 </div>
+                                <div className="flex items-center gap-2 mb-4 sm:mb-0">
+                                  <span className="text-sm font-medium text-gray-700">Filter By:</span>
+                                </div>
                                 <div className="space-y-1">
                                   <label className="text-[9px] font-bold text-gray-400 uppercase">To</label>
                                   <input
@@ -502,7 +504,7 @@ export default function SalaryManagement() {
                     }`}
                 >
                   <Plus size={20} />
-                  Add Salary
+                  Add Payroll
                 </button>
               </div>
             </div>
@@ -511,28 +513,11 @@ export default function SalaryManagement() {
 
         <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <NumberCard
-              title="Total Payroll"
-              number={`₹${Math.round(totalPayroll).toLocaleString()}`}
-              icon={<DollarSign className="text-blue-600" size={24} />}
-              iconBgColor="bg-blue-100"
-              lineBorderClass="border-blue-500"
-            />
-            <NumberCard
-              title="Paid This Month"
-              number={`₹${Math.round(totalPaid).toLocaleString()}`}
-              icon={<TrendingUp className="text-green-600" size={24} />}
-              iconBgColor="bg-green-100"
-              lineBorderClass="border-green-500"
-            />
-            <NumberCard
-              title="Pending Payment"
-              number={`₹${Math.round(totalPending).toLocaleString()}`}
-              icon={<Calendar className="text-orange-600" size={24} />}
-              iconBgColor="bg-orange-100"
-              lineBorderClass="border-orange-500"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <NumberCard title="Total Payrolls" number={salaries.length} icon={<DollarSign />} iconBgColor="bg-blue-100" lineBorderClass="border-blue-500" />
+            <NumberCard title="Total Generated" number={salaries.filter(s => s.status === 'generated').length} icon={<TrendingUp />} iconBgColor="bg-green-100" lineBorderClass="border-green-500" />
+            <NumberCard title="Total Pending" number={salaries.filter(s => s.status === 'pending').length} icon={<Calendar />} iconBgColor="bg-orange-100" lineBorderClass="border-orange-500" />
+            <NumberCard title="Total Employees" number={new Set(salaries.map(s => s.employee_id)).size} icon={<Users />} iconBgColor="bg-purple-100" lineBorderClass="border-purple-500" />
           </div>
 
           {/* Status Tabs */}
@@ -563,7 +548,7 @@ export default function SalaryManagement() {
           {salariesLoading ? (
             <div className="flex justify-center flex-col items-center py-20 gap-4">
               <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
-              <p className="text-gray-500 font-semibold">Loading salary records...</p>
+              <p className="text-gray-500 font-semibold">Loading payroll records...</p>
             </div>
           ) : salaries.length ? (
             <>
@@ -670,9 +655,9 @@ export default function SalaryManagement() {
                                     setSelectedSalary({ ...salary, Employee: salary.employee_id });
                                     setShowAddModal(true);
                                   }}
-                                  className="flex items-center gap-1 px-3 py-1 bg-orange-500 text-white text-[10px] font-bold rounded-sm hover:bg-orange-600 transition-all"
+                                  className="flex items-center gap-2 px-4 py-2 bg-[#FF7B1D] text-white rounded-sm hover:bg-[#e66a15] transition-all shadow-sm font-bold tracking-wide"
                                 >
-                                  <Plus size={12} /> ADD SALARY
+                                  <Plus size={18} /> Add Payroll
                                 </button>
                               )
                             )}

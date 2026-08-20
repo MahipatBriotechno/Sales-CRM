@@ -42,6 +42,7 @@ import {
   Zap,
   Target,
   Calendar,
+  Clock,
 } from "lucide-react";
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -481,13 +482,14 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           permission: "Designation Management"
         },
         {
-          name: "Terms & Conditions",
-          icon: <FileSignature size={22} />,
-          path: "/hrm/terms",
-          permission: "Policy & Compliance"
+          name: "Shift",
+          icon: <Clock size={22} />,
+          path: "/hrm/shift",
+          permission: "HRM"
         },
+
         {
-          name: "Salary", icon: <Wallet size={22} />, path: "/hrm/salary", permission: "Financial Management"
+          name: "Payroll", icon: <Wallet size={22} />, path: "/hrm/salary", permission: "Financial Management"
         },
         {
           name: "Company Policy",
@@ -666,7 +668,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     <>
       {/* Mobile Backdrop Overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[35] xl:hidden transition-all duration-300 animate-fadeIn"
           onClick={() => setIsOpen(false)}
         />

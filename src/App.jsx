@@ -116,6 +116,7 @@ import ChannelSettings from "./pages/ChannelIntegration/ChannelSettings";
 import ClientManagement from "./pages/ClientManagement/ClientManagement";
 import ClientProfile from "./pages/ClientManagement/ClientProfile";
 import TeamManagement from "./pages/TeamManagement/Team";
+import ShiftManagement from "./pages/ShiftManagement/Shift";
 // Auth Pages
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -208,6 +209,7 @@ function App() {
             <Route path="/hrm/dashboard" element={<HrmDashboard />} />
             <Route path="/hrm/department" element={<AllDepartment />} />
             <Route path="/hrm/designation" element={<AllDesignation />} />
+            <Route path="/hrm/shift" element={<ShiftManagement />} />
             <Route path="/hrm/terms" element={<AllTermCondition />} />
             <Route path="/hrm/employee/all" element={<AllEmployee />} />
             <Route path="/profile" element={<MyProfile />} />

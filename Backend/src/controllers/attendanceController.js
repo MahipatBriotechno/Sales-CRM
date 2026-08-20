@@ -1,6 +1,7 @@
 const Attendance = require('../models/attendanceModel');
 const Employee = require('../models/employeeModel');
 const AttendanceSettings = require('../models/attendanceSettingsModel');
+const Shift = require('../models/shiftModel');
 
 // Helper to calculate distance in meters between two GPS coordinates
 const getDistance = (lat1, lon1, lat2, lon2) => {
@@ -25,8 +26,18 @@ const attendanceController = {
             const userId = req.user.id;
             const today = new Date().toISOString().split('T')[0];
 
-            // 1. Fetch Company Settings
+            // 1. Fetch Company Settings & Employee Shift
             const settings = await AttendanceSettings.findByUserId(userId);
+            const employee = await Employee.findById(employee_id, userId);
+            
+            if (!employee) {
+                return res.status(404).json({ success: false, message: 'Employee not found' });
+            }
+
+            let shift = null;
+            if (employee.shift_id) {
+                shift = await Shift.findById(employee.shift_id, userId);
+            }
 
             // 2. Already marked check
             const existingRecord = await Attendance.findByEmployeeAndDate(employee_id, today, userId);
@@ -87,15 +98,30 @@ const attendanceController = {
             const currentTime = new Date();
             const checkInTime = currentTime.toTimeString().split(' ')[0];
 
-            // 4. Status Determination based on settings
+            // 4. Status Determination based on shift settings (or fallback to company settings)
             let status = 'present';
-            if (settings) {
+            
+            if (shift && shift.late_marking) {
+                const startTimeStr = shift.check_in_time || '09:00:00';
+                const graceMinutes = shift.grace_period || 0;
+
+                const [sHour, sMin, sSec] = startTimeStr.split(':').map(Number);
+                const startDateTime = new Date();
+                startDateTime.setHours(sHour, sMin, sSec || 0);
+
+                const lateLimit = new Date(startDateTime.getTime() + graceMinutes * 60000);
+
+                if (currentTime > lateLimit) {
+                    status = 'late';
+                }
+            } else if (!shift && settings) {
+                // Fallback to global settings if no shift assigned
                 const startTimeStr = settings.attendanceStartTime || '09:00:00';
                 const graceMinutes = settings.graceTime || 15;
 
                 const [sHour, sMin, sSec] = startTimeStr.split(':').map(Number);
                 const startDateTime = new Date();
-                startDateTime.setHours(sHour, sMin, sSec);
+                startDateTime.setHours(sHour, sMin, sSec || 0);
 
                 const lateLimit = new Date(startDateTime.getTime() + graceMinutes * 60000);
 
@@ -129,22 +155,80 @@ const attendanceController = {
             const userId = req.user.id;
             const currentTime = new Date().toTimeString().split(' ')[0];
 
-            // Calculate work hours if possible (simplified)
+            // Calculate work hours if possible
             const record = await Attendance.findById(id, userId);
+            
+            let employee = null;
+            let shift = null;
+            
+            if (record) {
+                employee = await Employee.findById(record.employee_id, userId);
+                if (employee && employee.shift_id) {
+                    shift = await Shift.findById(employee.shift_id, userId);
+                }
+            }
+
             let work_hours = '00:00';
+            let work_minutes = 0;
+            
             if (record && record.check_in) {
                 const start = new Date(`${record.date} ${record.check_in}`);
                 const end = new Date(`${record.date} ${currentTime}`);
-                const diff = (end - start) / 1000 / 3600; // hours
-                const h = Math.floor(diff);
-                const m = Math.round((diff - h) * 60);
+                const diff = (end - start) / 1000 / 60; // total minutes
+                work_minutes = diff > 0 ? diff : 0;
+                const h = Math.floor(work_minutes / 60);
+                const m = Math.round(work_minutes % 60);
                 work_hours = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            }
+
+            let newStatus = record ? record.status : 'present';
+            let overtime_hours = 0;
+            let overtime_amount = 0;
+
+            if (shift && record) {
+                // Half-day logic
+                if (shift.half_day_enable && shift.min_work_hours_half_day && shift.working_hours) {
+                    const minWorkMins = parseFloat(shift.min_work_hours_half_day) * 60;
+                    const fullWorkMins = parseFloat(shift.working_hours) * 60;
+                    
+                    if (work_minutes < minWorkMins) {
+                        newStatus = 'absent';
+                    } else if (work_minutes < fullWorkMins && work_minutes >= minWorkMins) {
+                        newStatus = 'half-day';
+                    }
+                }
+
+                // Overtime logic
+                if (shift.overtime_enable && shift.min_overtime_after && shift.working_hours) {
+                    const standardWorkMins = parseFloat(shift.working_hours) * 60;
+                    const minOvertimeMins = parseInt(shift.min_overtime_after);
+                    
+                    if (work_minutes >= (standardWorkMins + minOvertimeMins)) {
+                        let otMins = work_minutes - standardWorkMins;
+                        
+                        if (shift.max_overtime_per_day && otMins > shift.max_overtime_per_day) {
+                            otMins = shift.max_overtime_per_day;
+                        }
+                        
+                        overtime_hours = parseFloat((otMins / 60).toFixed(2));
+                        
+                        if (shift.overtime_rate && shift.overtime_calculation) {
+                            if (shift.overtime_calculation === 'Per Minute') {
+                                overtime_amount = otMins * parseFloat(shift.overtime_rate);
+                            } else {
+                                overtime_amount = overtime_hours * parseFloat(shift.overtime_rate);
+                            }
+                        }
+                    }
+                }
             }
 
             await Attendance.updateCheckOut(id, {
                 check_out: currentTime,
                 work_hours,
-                status: record.status // Keep original status (present/late)
+                status: newStatus,
+                overtime_hours,
+                overtime_amount
             }, userId);
 
             res.json({ success: true, message: 'Checked out successfully' });

@@ -98,6 +98,7 @@ app.use('/api/lead-assignment', require('./routes/leadAssignmentRoutes'));
 app.use('/api/campaigns', require('./routes/campaignRoutes'));
 app.use('/api/goals', require('./routes/goalRoutes'));
 app.use('/api/visitors', require('./routes/visitorRoutes'));
+app.use('/api/shifts', require('./routes/shiftRoutes'));
 app.use('/api/meetings', require('./routes/meetingRoutes'));
 app.use('/api/wallet', require('./routes/walletRoutes'));
 app.use('/api/super-admin', require('./routes/superAdminDashboardRoutes'));

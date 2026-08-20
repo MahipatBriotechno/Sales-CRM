@@ -217,18 +217,11 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                     </div>
 
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between border-b pb-4">
+                        <div className="flex items-center border-b pb-4">
                             <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 capitalize tracking-wide">
                                 <Settings size={18} className="text-[#FF7B1D]" />
                                 Team Structure (Levels) <span className="text-red-500">*</span>
                             </label>
-                            <button
-                                type="button" onClick={addLevel}
-                                className="flex items-center gap-2 px-4 py-2 bg-[#FF7B1D] text-white  font-bold text-[11px] capitalize tracking-wider hover:bg-[#e66a15] transition-all shadow-sm"
-                            >
-                                <Plus size={16} />
-                                Add New Level
-                            </button>
                         </div>
 
                         <div className="space-y-8 mt-6">
@@ -253,10 +246,11 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                                             <div className="flex items-center gap-2">
                                                 <button
                                                     type="button" onClick={() => addRowToLevel(level.id)}
-                                                    className="p-1.5 bg-[#FF7B1D] text-white rounded hover:bg-[#e66a15] transition-all shadow-sm"
-                                                    title="Add row to this level"
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FF7B1D] text-white rounded-none hover:bg-[#e66a15] transition-all shadow-sm text-[11px] font-bold capitalize tracking-wider"
+                                                    title="Add Employee to this level"
                                                 >
-                                                    <Plus size={20} />
+                                                    <Plus size={14} />
+                                                    Add Employee
                                                 </button>
                                                 {formData.levels.length > 1 && (
                                                     <button
@@ -343,77 +337,50 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                                                 );
                                             })}
                                         </div>
+                                        {/* Inline Selected Employees Preview for this level */}
+                                        {level.rows.some(r => r.employeeId) && (
+                                            <div className="mt-4 pt-4 border-t border-orange-50">
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                                                    <Users size={11} className="text-orange-400" /> Selected Members
+                                                </p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {level.rows.filter(r => r.employeeId).map((r, i) => {
+                                                        const emp = employees.find(e => e.id == r.employeeId);
+                                                        const conflict = emp?.assigned_team_name;
+                                                        const internalLevels = internalSelectionMap[r.employeeId] || [];
+                                                        const isDuplicate = internalLevels.length > 1;
+                                                        return (
+                                                            <div key={i} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-sm border text-xs font-semibold ${conflict ? 'bg-red-50 border-red-200 text-red-700' : isDuplicate ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-orange-50 border-orange-100 text-gray-800'}`}>
+                                                                <div className="w-5 h-5 rounded-full bg-white border border-current flex items-center justify-center text-[9px] font-black flex-shrink-0">
+                                                                    {emp?.employee_name?.charAt(0)}
+                                                                </div>
+                                                                <div className="min-w-0">
+                                                                    <p className="truncate max-w-[100px] font-bold text-[11px]">{emp?.employee_name}</p>
+                                                                    <p className="text-[9px] opacity-70 truncate">{emp?.designation_name}</p>
+                                                                </div>
+                                                                {conflict && <AlertCircle size={11} className="text-red-500 flex-shrink-0" title={`Already in ${conflict}`} />}
+                                                                {isDuplicate && !conflict && <AlertCircle size={11} className="text-orange-500 flex-shrink-0" title="Duplicate in levels" />}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}
                         </div>
-                    </div>
 
-                    {/* Hierarchy Preview */}
-                    {formData.levels.some(l => l.rows.some(r => r.employeeId)) && (
-                        <div className="bg-white rounded-sm p-6 border border-gray-200 mt-10 shadow-sm">
-                            <h3 className="text-sm font-black text-gray-800 capitalize tracking-widest mb-8 flex items-center gap-2 border-b pb-4">
-                                <Users size={18} className="text-[#FF7B1D]" /> Team Hierarchy Preview
-                            </h3>
-                            <div className="flex flex-col items-center">
-                                {formData.levels.filter(l => l.rows.some(r => r.employeeId)).map((level, idx, filtered) => (
-                                    <React.Fragment key={level.id}>
-                                        <div className="w-full max-w-3xl bg-white border border-gray-100 p-4 rounded-sm shadow-sm relative hover:border-orange-200 transition-all">
-                                            <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#FF7B1D] text-white text-[11px] font-black flex items-center justify-center border-2 border-white shadow-lg z-10">
-                                                {idx + 1}
-                                            </div>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 ml-4">
-                                                {level.rows.map(r => r.employeeId).filter(id => id).map((empId, rowIdx) => {
-                                                    const emp = employees.find(e => e.id == empId);
-                                                    const otherTeam = emp?.assigned_team_name;
-                                                    const internalLevels = internalSelectionMap[empId] || [];
-                                                    const isDuplicateInternally = internalLevels.length > 1;
-
-                                                    return (
-                                                        <div key={`${empId}-${rowIdx}`} className="flex flex-col gap-2 p-2 bg-gray-50 rounded-sm border border-gray-100">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-[#FF7B1D] font-black text-xs">
-                                                                    {emp?.employee_name?.charAt(0)}
-                                                                </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <p className="text-xs font-bold text-gray-800 leading-tight truncate">{emp?.employee_name}</p>
-                                                                    <p className="text-[9px] text-gray-500 font-bold capitalize tracking-wider truncate">{emp?.designation_name}</p>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Conflict Badges */}
-                                                            {(otherTeam || isDuplicateInternally) && (
-                                                                <div className="space-y-1">
-                                                                    {otherTeam && (
-                                                                        <div className="flex items-center gap-1.5 px-2 py-1 bg-red-50 text-red-600 rounded-sm text-[9px] font-bold border border-red-100 capitalize tracking-normal shadow-sm">
-                                                                            <AlertCircle size={10} strokeWidth={3} />
-                                                                            Already in Team: {otherTeam}
-                                                                        </div>
-                                                                    )}
-                                                                    {isDuplicateInternally && (
-                                                                        <div className="flex items-center gap-1.5 px-2 py-1 bg-orange-50 text-orange-600 rounded-sm text-[9px] font-bold border border-orange-100 capitalize tracking-normal shadow-sm">
-                                                                            <Users size={10} strokeWidth={3} />
-                                                                            Levels: {internalLevels.join(', ')}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                        {idx < filtered.length - 1 && (
-                                            <div className="flex flex-col items-center py-1">
-                                                <div className="w-0.5 h-8 bg-orange-100"></div>
-                                                <ArrowDown size={14} className="text-orange-300 -mt-1" />
-                                            </div>
-                                        )}
-                                    </React.Fragment>
-                                ))}
-                            </div>
+                        <div className="flex justify-end mt-2">
+                            <button
+                                type="button" onClick={addLevel}
+                                className="flex items-center gap-2 px-4 py-2 bg-[#FF7B1D] text-white font-bold text-[11px] capitalize tracking-wider hover:bg-[#e66a15] transition-all shadow-sm"
+                            >
+                                <Plus size={16} />
+                                Add New Level
+                            </button>
                         </div>
-                    )}
+                    </div>
 
                     <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-3 -mx-6 -mb-6 mt-10 rounded-b-sm">
                         <button

@@ -26,10 +26,12 @@ import {
   Languages,
   DollarSign,
   Upload,
-  Lock
+  Lock,
+  Clock
 } from "lucide-react";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { useGetDesignationsQuery } from "../../store/api/designationApi";
+import { useGetShiftsQuery } from "../../store/api/shiftApi";
 import { Country, State, City } from "country-state-city";
 import PermissionSelector from "../common/PermissionSelector";
 import { permissionCategories } from "../../pages/EmployeePart/permissionsData";
@@ -137,9 +139,11 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
 
   const { data: deptData, isLoading: departmentsLoading } = useGetDepartmentsQuery({ limit: 100 });
   const { data: dsgData, isLoading: designationsLoading } = useGetDesignationsQuery({ limit: 100 });
+  const { data: shiftData, isLoading: shiftsLoading } = useGetShiftsQuery();
 
   const departments = deptData?.departments || [];
   const designations = dsgData?.designations || [];
+  const shifts = shiftData?.shifts || [];
 
   const inputStyles =
     "w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium";
@@ -303,6 +307,16 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
               <select name="designation" value={formData.designation} onChange={handleDesignationChange} className={selectStyles}>
                 <option value="">Select Designation</option>
                 {designationsLoading ? <option disabled>Loading...</option> : designations.map((dsg) => <option key={dsg.id} value={dsg.id}>{dsg.designation_name}</option>)}
+              </select>
+              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+          <div className="group">
+            <label className={labelStyles}><Clock size={16} className="text-[#FF7B1D]" /> Shift <span className="text-red-500">*</span></label>
+            <div className="relative">
+              <select name="shift" value={formData.shift} onChange={handleChange} className={selectStyles}>
+                <option value="">Select Shift</option>
+                {shiftsLoading ? <option disabled>Loading...</option> : shifts.map((shift) => <option key={shift.id} value={shift.id}>{shift.shift_name} ({shift.check_in_time}-{shift.check_out_time})</option>)}
               </select>
               <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>

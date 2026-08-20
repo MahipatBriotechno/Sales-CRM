@@ -1,4 +1,5 @@
 const Salary = require('../models/salaryModel');
+const Attendance = require('../models/attendanceModel');
 
 const createSalary = async (req, res) => {
     try {
@@ -25,7 +26,17 @@ const createSalary = async (req, res) => {
         const basic = parseFloat(basic_salary) || 0;
         const adjustedBasic = (basic / working) * present;
 
-        const calculatedNetSalary = adjustedBasic + (parseFloat(allowances) || 0) - (parseFloat(deductions) || 0);
+        // Fetch total overtime from attendance
+        let totalOvertimeAmount = 0;
+        if (start_date && end_date) {
+            const otData = await Attendance.getOvertimeByEmployeeAndDate(employee_id, start_date, end_date, req.user.id);
+            if (otData && otData.total_overtime_amount) {
+                totalOvertimeAmount = parseFloat(otData.total_overtime_amount);
+            }
+        }
+
+        const calculatedAllowances = (parseFloat(allowances) || 0) + totalOvertimeAmount;
+        const calculatedNetSalary = adjustedBasic + calculatedAllowances - (parseFloat(deductions) || 0);
 
         const salaryId = await Salary.create({
             user_id: req.user.id,
@@ -34,7 +45,7 @@ const createSalary = async (req, res) => {
             designation,
             department,
             basic_salary,
-            allowances,
+            allowances: calculatedAllowances,
             deductions,
             net_salary: calculatedNetSalary,
             status: status || 'pending',
@@ -107,13 +118,28 @@ const updateSalary = async (req, res) => {
         const presentDays = req.body.present_days !== undefined ? parseInt(req.body.present_days) :
             (currentSalary.present_days !== undefined && currentSalary.present_days !== null ? parseInt(currentSalary.present_days) : workingDays);
 
+        // Fetch total overtime from attendance if dates exist
+        const startDate = req.body.start_date || currentSalary.start_date;
+        const endDate = req.body.end_date || currentSalary.end_date;
+        let totalOvertimeAmount = 0;
+        
+        if (startDate && endDate) {
+            const otData = await Attendance.getOvertimeByEmployeeAndDate(currentSalary.employee_id, startDate, endDate, userId);
+            if (otData && otData.total_overtime_amount) {
+                totalOvertimeAmount = parseFloat(otData.total_overtime_amount);
+            }
+        }
+
+        const finalAllowances = allowances + totalOvertimeAmount;
+
         // Calculate new net salary
         const adjustedBasic = (basicSalary / workingDays) * presentDays;
-        const netSalary = adjustedBasic + allowances - deductions;
+        const netSalary = adjustedBasic + finalAllowances - deductions;
 
         // Prepare update data
         const updateData = {
             ...req.body,
+            allowances: finalAllowances,
             net_salary: netSalary
         };
 
