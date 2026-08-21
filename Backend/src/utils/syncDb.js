@@ -126,6 +126,12 @@ const syncDatabase = async () => {
         await pool.query(shiftSql);
 
         try {
+            await pool.query("ALTER TABLE shifts ADD COLUMN working_days VARCHAR(255) DEFAULT 'Mon,Tue,Wed,Thu,Fri,Sat,Sun'");
+        } catch (e) {
+            // Already exists
+        }
+
+        try {
             await pool.query("ALTER TABLE employees ADD COLUMN shift_id INT DEFAULT NULL AFTER designation_id");
             await pool.query("ALTER TABLE employees ADD CONSTRAINT fk_employee_shift FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE SET NULL");
         } catch (e) {
@@ -143,6 +149,12 @@ const syncDatabase = async () => {
             await pool.query("ALTER TABLE attendance ADD COLUMN overtime_amount DECIMAL(10,2) DEFAULT 0");
         } catch (e) {
             // Already exists
+        }
+
+        try {
+            await pool.query("ALTER TABLE offer_letters DROP COLUMN roles_responsibilities, DROP COLUMN clauses");
+        } catch (e) {
+            // Safe to ignore if columns already dropped or table doesn't exist
         }
 
         console.log('Database synced: channel_configs, goals, visitors, and shifts tables are ready.');

@@ -8,6 +8,7 @@ import Modal from "../common/Modal";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from "react-hot-toast";
+import html2pdf from "html2pdf.js";
 
 const ViewOfferLetterModal = ({ isOpen, onClose, offer }) => {
     const printRef = useRef();
@@ -15,253 +16,41 @@ const ViewOfferLetterModal = ({ isOpen, onClose, offer }) => {
     if (!offer) return null;
 
     const handleDownload = async () => {
+        const toastId = toast.loading("Generating PDF, please wait...");
         try {
-            const doc = new jsPDF('p', 'mm', 'a4');
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const pageHeight = doc.internal.pageSize.getHeight();
+            const element = printRef.current;
+            if (!element) {
+                toast.error("Failed to find document content.", { id: toastId });
+                return;
+            }
 
-            // Fetch Logo
-            let logoData = null;
-            const logoSrc = getLogoSrc();
-            if (logoSrc) {
-                try {
-                    const response = await fetch(logoSrc);
-                    const blob = await response.blob();
-                    const reader = new FileReader();
-                    logoData = await new Promise((resolve) => {
-                        reader.onload = () => resolve(reader.result);
-                        reader.readAsDataURL(blob);
-                    });
-                } catch (e) {
-                    console.error("Logo fetch failed", e);
+            const fileName = `Offer_Letter_${offer.candidate_details?.name?.replace(/\s+/g, '_') || 'Candidate'}.pdf`;
+
+            const opt = {
+                margin: [15, 15, 15, 15], // Top, Right, Bottom, Left margins
+                filename: fileName,
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { scale: 2, useCORS: true, scrollY: 0, windowWidth: element.scrollWidth },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            await html2pdf().from(element).set(opt).toPdf().get('pdf').then((pdf) => {
+                const totalPages = pdf.internal.getNumberOfPages();
+                for (let i = 1; i <= totalPages; i++) {
+                    pdf.setPage(i);
+                    pdf.setDrawColor(15, 23, 42); // slate-900
+                    pdf.setLineWidth(0.5);
+                    // A4 size is 210 x 297 mm
+                    // We draw the rect at 10mm from edge, width=190, height=277
+                    pdf.rect(10, 10, 190, 277);
                 }
-            }
+            }).save();
 
-            // Colors
-            const brandColor = [255, 123, 29]; // Orange
-            const darkColor = [15, 23, 42];  // Slate 900
-            const lightColor = [71, 85, 105]; // Gray 600
-
-            // Background Header
-            doc.setFillColor(248, 250, 252);
-            doc.rect(0, 0, pageWidth, 50, 'F');
-
-            // Header Elements
-            if (logoData) {
-                try {
-                    const format = logoData.includes('png') ? 'PNG' : 'JPEG';
-                    doc.addImage(logoData, format, 15, 10, 25, 15);
-                } catch (e) {
-                    doc.setFillColor(...brandColor);
-                    doc.rect(15, 10, 10, 10, 'F');
-                }
-            }
-
-            doc.setTextColor(...darkColor);
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
-            doc.text(offer.company_info?.name || 'Company Name', 15, 38);
-
-            doc.setTextColor(...brandColor);
-            doc.setFontSize(22);
-            doc.text('OFFER LETTER', pageWidth - 15, 25, { align: 'right' });
-
-            doc.setTextColor(...darkColor);
-            doc.setFontSize(8);
-            doc.text(`REF: ${offer.reference_no}`, pageWidth - 15, 32, { align: 'right' });
-            doc.text(`Date: ${new Date(offer.offer_date).toLocaleDateString()}`, pageWidth - 15, 37, { align: 'right' });
-
-            // Body
-            let y = 65;
-
-            // Employment Recipient
-            doc.setFillColor(...brandColor);
-            doc.rect(15, y, 2, 8, 'F');
-            doc.setTextColor(...darkColor);
-            doc.setFontSize(11);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Employment Recipient', 20, y + 6);
-
-            y += 15;
-            doc.setFillColor(248, 250, 252);
-            doc.roundedRect(15, y, pageWidth - 30, 35, 1, 1, 'F');
-
-            doc.setFontSize(8);
-            doc.setTextColor(150, 150, 150);
-            doc.text('Candidate Name', 20, y + 8);
-            doc.setTextColor(...darkColor);
-            doc.setFontSize(12);
-            doc.text(offer.candidate_details?.name || '-', 20, y + 15);
-
-            doc.setFontSize(8);
-            doc.setTextColor(150, 150, 150);
-            doc.text('Email Address', 20, y + 25);
-            doc.setTextColor(...darkColor);
-            doc.setFontSize(10);
-            doc.text(offer.candidate_details?.email || '-', 20, y + 31);
-
-            doc.setFontSize(8);
-            doc.setTextColor(150, 150, 150);
-            doc.text('Residential Address', pageWidth / 2 + 5, y + 8);
-            doc.setTextColor(...darkColor);
-            doc.setFontSize(9);
-            const addr = doc.splitTextToSize(offer.candidate_details?.address || '-', 80);
-            doc.text(addr, pageWidth / 2 + 5, y + 14);
-
-            // Position Framework
-            y += 50;
-            doc.setFillColor(...brandColor);
-            doc.rect(15, y, 2, 8, 'F');
-            doc.setTextColor(...darkColor);
-            doc.setFontSize(11);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Position Framework', 20, y + 6);
-
-            y += 12;
-            const posData = [
-                ['Designation', offer.designation || '-'],
-                ['Department', offer.department || '-'],
-                ['Employment Type', offer.candidate_details?.employment_type || '-'],
-                ['Work Location', offer.candidate_details?.location || '-'],
-                ['Date of Joining', new Date(offer.joining_date).toLocaleDateString()]
-            ];
-
-            autoTable(doc, {
-                startY: y,
-                body: posData,
-                theme: 'plain',
-                styles: { fontSize: 9, cellPadding: 2 },
-                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 40, textColor: [100, 100, 100] } },
-                margin: { left: 15 }
-            });
-
-            y = doc.lastAutoTable.finalY + 15;
-
-            // Remuneration Strategy
-            doc.setFillColor(...brandColor);
-            doc.rect(15, y, 2, 8, 'F');
-            doc.setTextColor(...darkColor);
-            doc.setFontSize(11);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Remuneration Strategy', 20, y + 6);
-
-            y += 12;
-            doc.setFillColor(15, 23, 42);
-            doc.roundedRect(15, y, pageWidth - 30, 25, 1, 1, 'F');
-            doc.setTextColor(200, 200, 200);
-            doc.setFontSize(8);
-            doc.text('Annual Compensation (CTC)', 25, y + 8);
-            doc.setFontSize(14);
-            doc.setTextColor(255, 255, 255);
-            doc.text(`INR ${Number(offer.annual_ctc || 0).toLocaleString('en-IN')}`, 25, y + 18);
-
-            doc.setFontSize(8);
-            doc.setTextColor(200, 200, 200);
-            doc.text('Monthly Net', pageWidth - 60, y + 8);
-            doc.setFontSize(12);
-            doc.setTextColor(...brandColor);
-            doc.text(`INR ${Number(offer.net_salary || 0).toLocaleString('en-IN')}`, pageWidth - 60, y + 18);
-
-            // Salary Structure Table
-            if (offer.salary_model === 'Structured') {
-                y += 35;
-                const salHead = [['Component', 'Monthly Amount']];
-                const salBody = [
-                    ['Basic Salary', `INR ${Number(offer.salary_structure?.basic || 0).toLocaleString()}`],
-                    ['HRA', `INR ${Number(offer.salary_structure?.hra || 0).toLocaleString()}`]
-                ];
-                (offer.salary_structure?.allowances || []).forEach(al => {
-                    salBody.push([al.name, `INR ${Number(al.amount || 0).toLocaleString()}`]);
-                });
-
-                autoTable(doc, {
-                    startY: y,
-                    head: salHead,
-                    body: salBody,
-                    theme: 'striped',
-                    headStyles: { fillColor: [15, 23, 42], fontSize: 9 },
-                    styles: { fontSize: 8 },
-                    margin: { left: 15, right: 15 }
-                });
-                y = doc.lastAutoTable.finalY + 15;
-            } else {
-                y += 40;
-            }
-
-            // Roles
-            if (offer.roles_responsibilities?.summary) {
-                doc.setFillColor(...brandColor);
-                doc.rect(15, y, 2, 8, 'F');
-                doc.setTextColor(...darkColor);
-                doc.setFontSize(11);
-                doc.setFont('helvetica', 'bold');
-                doc.text('Operational Context', 20, y + 6);
-
-                y += 12;
-                doc.setFontSize(8);
-                doc.setFont('helvetica', 'italic');
-                doc.setTextColor(...lightColor);
-                const summaryLines = doc.splitTextToSize(offer.roles_responsibilities.summary, pageWidth - 40);
-                doc.text(summaryLines, 20, y);
-                y += summaryLines.length * 4 + 15;
-            }
-
-            // Compliance
-            doc.setFillColor(...brandColor);
-            doc.rect(15, y, 2, 8, 'F');
-            doc.setTextColor(...darkColor);
-            doc.setFontSize(11);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Compliance & Legal Guard', 20, y + 6);
-
-            y += 12;
-            doc.setFillColor(248, 250, 252);
-            doc.rect(15, y, pageWidth - 30, 15, 'F');
-            doc.setFontSize(7);
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(150, 150, 150);
-            const disclaimerLines = doc.splitTextToSize(offer.legal_disclaimer?.statement || "This offer is contingent upon successful background verification.", pageWidth - 40);
-            doc.text(disclaimerLines, 20, y + 6);
-
-            y += 40;
-            doc.setDrawColor(220, 220, 220);
-            doc.line(15, y, 80, y);
-            doc.line(pageWidth - 80, y, pageWidth - 15, y);
-
-            doc.setFontSize(8);
-            doc.setTextColor(150, 150, 150);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Authorized Representative', 15, y + 5);
-            doc.text('Candidate Acceptance', pageWidth - 15, y + 5, { align: 'right' });
-
-            doc.setTextColor(...darkColor);
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Business HR / MD', 15, y + 12);
-
-            doc.setTextColor(200, 200, 200);
-            doc.setFont('helvetica', 'italic');
-            doc.text('(Digital Signature Placeholder)', pageWidth - 15, y + 12, { align: 'right' });
-
-            // Footer
-            doc.setFillColor(248, 250, 252);
-            doc.rect(0, pageHeight - 20, pageWidth, 20, 'F');
-
-            doc.setTextColor(150, 150, 150);
-            doc.setFontSize(8);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`Branded By ${offer.company_info?.name}`, pageWidth / 2, pageHeight - 12, { align: 'center' });
-
-            doc.setFontSize(7);
-            doc.setFont('helvetica', 'normal');
-            const footerInfo = `${offer.company_info?.website || ""}   •   ${offer.company_info?.contact || ""}`;
-            doc.text(footerInfo, pageWidth / 2, pageHeight - 6, { align: 'center' });
-
-            doc.save(`Offer_Letter_${offer.candidate_details?.name.replace(/\s+/g, '_')}.pdf`);
-            toast.success("Offer Letter downloaded!");
+            toast.success("Offer Letter downloaded!", { id: toastId });
         } catch (error) {
             console.error(error);
-            toast.error("Failed to generate PDF");
+            toast.error("Failed to generate PDF", { id: toastId });
         }
     };
 
@@ -322,199 +111,194 @@ const ViewOfferLetterModal = ({ isOpen, onClose, offer }) => {
             }
         >
             <div className="flex flex-col h-[75vh]">
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-0 bg-gray-50/50">
-                    <div className="max-w-4xl mx-auto my-8 bg-white shadow-xl border border-gray-100 rounded-sm overflow-hidden" ref={printRef}>
-                        {/* Header Branding */}
-                        <div className="p-10 border-b border-gray-100 bg-white relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50/50 rounded-full -mr-16 -mt-16" />
-                            <div className="flex justify-between items-start relative z-10">
-                                <div>
-                                    {getLogoSrc() ? (
-                                        <img src={getLogoSrc()} alt="Logo" className="h-16 w-auto object-contain mb-6" />
-                                    ) : (
-                                        <div className="w-16 h-16 bg-orange-50 rounded-xl flex items-center justify-center mb-6 border border-orange-100">
-                                            <Building2 size={32} className="text-orange-500" />
-                                        </div>
-                                    )}
-                                    <h1 className="text-2xl font-black text-gray-900 tracking-tight capitalize font-primary">
-                                        {offer.company_info?.name || "Company Name"}
-                                    </h1>
-                                    <div className="flex flex-col gap-1 mt-3">
-                                        <p className="text-xs font-bold text-gray-400 capitalize flex items-center gap-2 font-primary">
-                                            <Globe size={12} className="text-orange-500" /> {offer.company_info?.website || "www.company.com"}
-                                        </p>
-                                        <p className="text-xs font-bold text-gray-400 capitalize flex items-center gap-2 font-primary">
-                                            <Mail size={12} className="text-orange-500" /> {offer.company_info?.email || "hr@company.com"}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="inline-block px-4 py-2 bg-slate-900 rounded-sm mb-4">
-                                        <span className="text-white text-xs font-bold capitalize font-primary">Private & Confidential</span>
-                                    </div>
-                                    <p className={labelClass}>Reference Number</p>
-                                    <p className="text-lg font-black text-orange-600 tracking-tighter mb-4">{offer.reference_no}</p>
-                                    <p className={labelClass}>Dated</p>
-                                    <p className={valueClass}>{new Date(offer.offer_date).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-                                </div>
-                            </div>
-                        </div>
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 bg-gray-200">
+                    <div className="max-w-4xl mx-auto bg-white shadow-2xl border border-gray-300 rounded-sm overflow-hidden relative" ref={printRef}>
+                        {/* Formal Inner Page Border */}
+                        <div data-html2canvas-ignore="true" className="absolute inset-6 md:inset-8 border border-gray-900 pointer-events-none z-0"></div>
 
-                        {/* Body Content */}
-                        <div className="p-10 space-y-12 bg-white">
-                            {/* Personal & Professional Summary */}
-                            <section>
-                                <h3 className={sectionTitle}><User size={14} className="text-orange-500" /> Employment Recipient</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50/50 p-6 rounded-sm border border-gray-100">
-                                    <div className="space-y-4">
-                                        <div>
-                                            <p className={labelClass}>Candidate Name</p>
-                                            <p className="text-xl font-black text-gray-900 font-primary">{offer.candidate_details?.name}</p>
-                                        </div>
-                                        <div>
-                                            <p className={labelClass}>Primary Email</p>
-                                            <p className={valueClass}>{offer.candidate_details?.email}</p>
-                                        </div>
-                                        <div>
-                                            <p className={labelClass}>Contact Number</p>
-                                            <p className={valueClass}>{offer.candidate_details?.phone}</p>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <p className={labelClass}>Residential Address</p>
-                                            <p className="text-sm font-semibold text-gray-700 leading-relaxed max-w-xs">{offer.candidate_details?.address}</p>
-                                        </div>
-                                        {offer.candidate_details?.employee_id && (
-                                            <div>
-                                                <p className={labelClass}>Assigned Employee ID</p>
-                                                <p className="text-sm font-black text-orange-500">{offer.candidate_details?.employee_id}</p>
-                                            </div>
-                                        )}
-                                    </div>
+                        {/* A4 Paper Container */}
+                        <div className="p-12 md:p-16 relative z-10">
+                            {/* Watermark (optional) */}
+                            {offer.output_control?.watermark && (
+                                <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none z-0">
+                                    <Building2 size={400} />
                                 </div>
-                            </section>
-
-                            {/* Position Details */}
-                            <section>
-                                <h3 className={sectionTitle}><Briefcase size={14} className="text-orange-500" /> Position Framework</h3>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                    <div>
-                                        <p className={labelClass}>Designation</p>
-                                        <p className={valueClass}>{offer.designation}</p>
-                                    </div>
-                                    <div>
-                                        <p className={labelClass}>Department</p>
-                                        <p className={valueClass}>{offer.department}</p>
-                                    </div>
-                                    <div>
-                                        <p className={labelClass}>Employment Type</p>
-                                        <p className={valueClass}>{offer.candidate_details?.employment_type}</p>
-                                    </div>
-                                    <div>
-                                        <p className={labelClass}>Work Location</p>
-                                        <p className={valueClass}>{offer.candidate_details?.location}</p>
-                                    </div>
-                                    <div>
-                                        <p className={labelClass}>Reporting Manager</p>
-                                        <p className={valueClass}>{offer.candidate_details?.manager || "N/A"}</p>
-                                    </div>
-                                    <div>
-                                        <p className={labelClass}>Date of Joining</p>
-                                        <p className="text-sm font-bold text-orange-600">{new Date(offer.joining_date).toLocaleDateString()}</p>
-                                    </div>
-                                    <div>
-                                        <p className={labelClass}>Working Hours</p>
-                                        <p className={valueClass}>{offer.offer_details?.working_hours}</p>
-                                    </div>
-                                    <div>
-                                        <p className={labelClass}>Working Days</p>
-                                        <p className={valueClass}>{offer.offer_details?.working_days}</p>
-                                    </div>
-                                </div>
-                            </section>
-
-                            {/* Compensation & Benefits */}
-                            <section>
-                                <h3 className={sectionTitle}><DollarSign size={14} className="text-orange-500" /> Remuneration Strategy</h3>
-                                <div className="bg-slate-900 rounded-sm p-8 text-white">
-                                    <div className="flex justify-between items-center mb-8 pb-6 border-b border-slate-700">
-                                        <div>
-                                            <p className="text-xs font-bold text-slate-400 capitalize font-primary">Annual Compensation (CTC)</p>
-                                            <p className="text-4xl font-black tracking-tighter mt-1">₹{Number(offer.annual_ctc || 0).toLocaleString('en-IN')}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-xs font-bold text-slate-400 capitalize font-primary">Monthly Net</p>
-                                            <p className="text-2xl font-bold tracking-tight mt-1 text-orange-500">₹{Number(offer.net_salary || 0).toLocaleString('en-IN')}</p>
-                                        </div>
-                                    </div>
-
-                                    {offer.salary_model === 'Structured' && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-                                            <div>
-                                                <div className="flex justify-between items-center mb-2">
-                                                    <span className="text-xs font-bold text-slate-400 capitalize font-primary">Basic Component</span>
-                                                    <span className="font-bold">₹{Number(offer.salary_structure?.basic || 0).toLocaleString()}</span>
-                                                </div>
-                                                {offer.salary_structure?.allowances?.map((allow, idx) => (
-                                                    <div key={idx} className="flex justify-between items-center text-xs text-slate-300 py-1 font-primary">
-                                                        <span>{allow.name}</span>
-                                                        <span className="font-semibold text-white">₹{Number(allow.amount || 0).toLocaleString()}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <div className="border-l border-slate-700 pl-12">
-                                                <div className="flex justify-between items-center mb-2">
-                                                    <span className="text-xs font-bold text-slate-400 capitalize font-primary">Probation</span>
-                                                    <span className="font-bold text-orange-400">{offer.offer_details?.probation_duration} {offer.offer_details?.probation_unit}</span>
-                                                </div>
-                                                <p className="text-xs text-slate-400 leading-relaxed capitalize font-bold font-primary">Standard deductions and taxes as per government norms will apply to the above mentioned gross salary.</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </section>
-
-                            {/* Roles & Roles */}
-                            {offer.roles_responsibilities?.summary && (
-                                <section>
-                                    <h3 className={sectionTitle}><Layout size={14} className="text-orange-500" /> Operational Context</h3>
-                                    <p className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-6 rounded-sm border border-gray-100 italic">
-                                        "{offer.roles_responsibilities.summary}"
-                                    </p>
-                                </section>
                             )}
 
-                            {/* Terms & Legals */}
-                            <section>
-                                <h3 className={sectionTitle}><ShieldCheck size={14} className="text-orange-500" /> Compliance & Legal Guard</h3>
-                                <div className="space-y-4">
-                                    <div className="p-4 bg-gray-50 rounded-sm border-l-4 border-gray-300">
-                                        <p className="text-[11px] text-gray-500 leading-relaxed">
-                                            {offer.legal_disclaimer?.statement || "This offer is contingent upon your successful completion of our standard background check and verification of the documents provided by you."}
-                                        </p>
+                            {/* Header: Letterhead */}
+                            {/* Header: Letterhead */}
+                            <div className="flex justify-between items-start pb-6 mb-8 border-b-2 border-gray-800 relative z-10">
+                                <div className="flex flex-col max-w-[60%]">
+                                    {getLogoSrc() ? (
+                                        <img src={getLogoSrc()} alt="Company Logo" className="h-16 w-auto object-contain mb-4" />
+                                    ) : (
+                                        <h1 className="text-2xl font-bold text-black tracking-tight mb-2">
+                                            {offer.company_info?.name || "Company Name"}
+                                        </h1>
+                                    )}
+                                    <p className="text-xs text-gray-800 leading-tight">{offer.company_info?.address}</p>
+                                    {offer.company_info?.gst_cin && <p className="text-[10px] text-gray-600 mt-1">CIN/GST: {offer.company_info.gst_cin}</p>}
+                                </div>
+                                <div className="text-right flex flex-col items-end">
+                                    <p className="text-[11px] font-bold tracking-widest text-black uppercase mb-4 border border-black px-2 py-1">Private & Confidential</p>
+                                    <table className="text-sm text-left">
+                                        <tbody>
+                                            <tr>
+                                                <td className="pr-3 text-gray-600 font-semibold">Ref:</td>
+                                                <td className="font-bold text-black">{offer.reference_no}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="pr-3 text-gray-600 font-semibold">Date:</td>
+                                                <td className="font-bold text-black">{new Date(offer.offer_date).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {/* Letter Body */}
+                            <div className="space-y-5 text-black text-[14px] leading-relaxed font-sans relative z-10">
+                                <div className="mb-6">
+                                    <p className="mb-1">To,</p>
+                                    <p className="font-bold text-[15px]">{offer.candidate_details?.name}</p>
+                                    <p>{offer.candidate_details?.address}</p>
+                                    <p>{offer.candidate_details?.email}</p>
+                                    <p>{offer.candidate_details?.phone}</p>
+                                </div>
+
+                                <p className="font-bold text-[15px] underline underline-offset-2 mb-6">Subject: Offer of Employment</p>
+
+                                <p>Dear <span className="font-bold">{offer.candidate_details?.name?.split(' ')[0] || 'Candidate'}</span>,</p>
+
+                                <p className="text-justify">
+                                    Following our recent discussions, we are pleased to offer you the position of <span className="font-bold">{offer.designation}</span> at <span className="font-bold">{offer.company_info?.name}</span>.
+                                    We are confident that your skills and experience will be an ideal match for our team.
+                                </p>
+
+                                {/* Position Details Table */}
+                                <div className="my-6">
+                                    <p className="font-bold mb-2">1. Position & Assignment Details</p>
+                                    <table className="w-full text-[13px] border-collapse border border-gray-400">
+                                        <tbody>
+                                            <tr>
+                                                <th className="py-2 px-3 border border-gray-400 bg-gray-50 font-semibold w-[35%] text-left">Designation</th>
+                                                <td className="py-2 px-3 border border-gray-400 font-bold">{offer.designation}</td>
+                                            </tr>
+                                            <tr>
+                                                <th className="py-2 px-3 border border-gray-400 bg-gray-50 font-semibold text-left">Department</th>
+                                                <td className="py-2 px-3 border border-gray-400">{offer.department}</td>
+                                            </tr>
+                                            <tr>
+                                                <th className="py-2 px-3 border border-gray-400 bg-gray-50 font-semibold text-left">Date of Joining</th>
+                                                <td className="py-2 px-3 border border-gray-400 font-bold">{new Date(offer.joining_date).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                                            </tr>
+                                            <tr>
+                                                <th className="py-2 px-3 border border-gray-400 bg-gray-50 font-semibold text-left">Work Location</th>
+                                                <td className="py-2 px-3 border border-gray-400">{offer.candidate_details?.location}</td>
+                                            </tr>
+                                            <tr>
+                                                <th className="py-2 px-3 border border-gray-400 bg-gray-50 font-semibold text-left">Reporting To</th>
+                                                <td className="py-2 px-3 border border-gray-400">{offer.candidate_details?.manager || "Department Head"}</td>
+                                            </tr>
+                                            <tr>
+                                                <th className="py-2 px-3 border border-gray-400 bg-gray-50 font-semibold text-left">Working Hours</th>
+                                                <td className="py-2 px-3 border border-gray-400">{offer.offer_details?.working_hours} ({offer.offer_details?.working_days})</td>
+                                            </tr>
+                                            <tr>
+                                                <th className="py-2 px-3 border border-gray-400 bg-gray-50 font-semibold text-left">Probation Period</th>
+                                                <td className="py-2 px-3 border border-gray-400">{offer.offer_details?.probation_duration} {offer.offer_details?.probation_unit}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {/* Compensation Details */}
+                                <div className="my-6">
+                                    <p className="font-bold mb-2">2. Compensation & Benefits</p>
+                                    <p className="mb-3 text-justify">
+                                        Your Annual Cost to Company (CTC) will be <span className="font-bold">₹{Number(offer.annual_ctc || 0).toLocaleString('en-IN')}</span>.
+                                        Your estimated monthly take-home salary will be approximately <span className="font-bold">₹{Number(offer.net_salary || 0).toLocaleString('en-IN')}</span>.
+                                    </p>
+
+                                    {offer.salary_model === 'Structured' && (
+                                        <div className="mt-4 max-w-xl">
+                                            <table className="w-full text-[13px] border-collapse border border-gray-400">
+                                                <thead>
+                                                    <tr>
+                                                        <th className="py-2 px-3 border border-gray-400 bg-gray-200 font-bold text-left">Salary Component</th>
+                                                        <th className="py-2 px-3 border border-gray-400 bg-gray-200 font-bold text-right">Monthly Amount</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td className="py-2 px-3 border border-gray-400">Basic Salary</td>
+                                                        <td className="py-2 px-3 border border-gray-400 text-right font-bold">₹{Number(offer.salary_structure?.basic || 0).toLocaleString()}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="py-2 px-3 border border-gray-400">House Rent Allowance (HRA)</td>
+                                                        <td className="py-2 px-3 border border-gray-400 text-right font-bold">₹{Number(offer.salary_structure?.hra || 0).toLocaleString()}</td>
+                                                    </tr>
+                                                    {offer.salary_structure?.allowances?.map((allow, idx) => (
+                                                        <tr key={idx}>
+                                                            <td className="py-2 px-3 border border-gray-400">{allow.name}</td>
+                                                            <td className="py-2 px-3 border border-gray-400 text-right font-bold">₹{Number(allow.amount || 0).toLocaleString()}</td>
+                                                        </tr>
+                                                    ))}
+                                                    <tr>
+                                                        <th className="py-3 px-3 border border-gray-400 bg-gray-100 font-bold text-left uppercase text-xs">Gross Monthly Salary</th>
+                                                        <th className="py-3 px-3 border border-gray-400 bg-gray-100 font-bold text-right text-[14px]">₹{Number(offer.salary_structure?.gross || 0).toLocaleString()}</th>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <p className="text-[11px] text-gray-600 italic mt-2 text-justify">
+                                                Note: Standard statutory deductions (PF, ESI, TDS) will be applicable on the gross salary as per government regulations.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Terms and Conditions */}
+                                <div className="my-6">
+                                    <p className="font-bold mb-2">3. Terms & Conditions</p>
+                                    <ul className="list-disc pl-5 space-y-2 text-[13px] text-justify">
+                                        <li>{offer.legal_disclaimer?.statement || "This offer is contingent upon your successful completion of our standard background check and verification of the documents provided by you."}</li>
+                                        {offer.documents_required?.length > 0 && (
+                                            <li>Please bring the following documents on your date of joining: <span className="font-bold">{offer.documents_required.join(", ")}</span>.</li>
+                                        )}
+                                    </ul>
+                                </div>
+
+                                <p className="mt-8 mb-16 text-justify">
+                                    Please sign and return the duplicate copy of this letter as a token of your acceptance.
+                                    We look forward to welcoming you to the team and wish you a long and successful career with us.
+                                </p>
+
+                                {/* Signature Block */}
+                                <div className="flex justify-between items-end mt-12">
+                                    <div className="w-1/2">
+                                        <p className="font-bold mb-12">For {offer.company_info?.name}</p>
+                                        <div className="h-px w-48 bg-black mb-2"></div>
+                                        <p className="font-bold">Authorized Signatory</p>
+                                        <p className="text-xs text-gray-600">Human Resources</p>
                                     </div>
-                                    <div className="flex gap-12 pt-8">
-                                        <div className="flex-1 border-t border-gray-200 pt-4">
-                                            <p className={labelClass}>Authorized Representative</p>
-                                            <p className="text-sm font-black text-gray-900 font-primary capitalize tracking-tighter">Business HR / MD</p>
-                                        </div>
-                                        <div className="flex-1 border-t border-gray-200 pt-4 text-right">
-                                            <p className={labelClass}>Candidate Acceptance</p>
-                                            <p className="text-sm font-bold text-gray-300 italic">(Digital Signature Placeholder)</p>
-                                        </div>
+
+                                    <div className="w-1/2 flex flex-col items-end text-right">
+                                        <p className="font-bold mb-12">Accepted & Agreed</p>
+                                        <div className="h-px w-48 bg-black mb-2"></div>
+                                        <p className="font-bold">{offer.candidate_details?.name}</p>
+                                        <p className="text-xs text-gray-600">Date: _______________</p>
                                     </div>
                                 </div>
-                            </section>
-                        </div>
-
-                        {/* Footer / Branding */}
-                        <div className="p-10 bg-slate-50 border-t border-gray-100 flex flex-col items-center">
-                            <p className="text-xs font-bold text-gray-400 capitalize mb-4 font-primary">Branded By {offer.company_info?.name}</p>
-                            <div className="flex gap-8">
-                                <span className="text-xs font-bold text-gray-400 flex items-center gap-1 capitalize font-primary"><Globe size={10} /> {offer.company_info?.website}</span>
-                                <span className="text-xs font-bold text-gray-400 flex items-center gap-1 capitalize font-primary"><Phone size={10} /> {offer.company_info?.contact}</span>
                             </div>
+
+                            {/* Footer */}
+                            <div className="mt-12 pt-6 border-t border-gray-300 text-center relative z-10 text-[10px] text-gray-600">
+                                <p className="mb-1">
+                                    {offer.company_info?.name} | {offer.company_info?.website} | {offer.company_info?.contact} | {offer.company_info?.email}
+                                </p>
+                                <p>{offer.output_control?.footer_note || "Strictly Confidential"}</p>
+                            </div>
+
                         </div>
                     </div>
                 </div>

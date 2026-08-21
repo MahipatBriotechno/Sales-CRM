@@ -34,7 +34,7 @@ class Applicant {
         return result.insertId;
     }
 
-    static async findAll(userId, { page = 1, limit = 10, search = '', status = 'All', job_title = '' }) {
+    static async findAll(userId, { page = 1, limit = 10, search = '', status = 'All', job_id = '' }) {
         const offset = (page - 1) * limit;
         let query = `
             SELECT a.*, 
@@ -59,9 +59,9 @@ class Applicant {
             params.push(status);
         }
 
-        if (job_title && job_title !== 'All') {
-            query += ` AND j.title = ?`;
-            params.push(job_title);
+        if (job_id && job_id !== 'All') {
+            query += ` AND j.id = ?`;
+            params.push(job_id);
         }
 
         // Count query for pagination
@@ -72,7 +72,7 @@ class Applicant {
             WHERE j.user_id = ?
             ${search ? ` AND (a.name LIKE ? OR a.email LIKE ? OR j.title LIKE ?)` : ''}
             ${status !== 'All' ? ` AND a.status = ?` : ''}
-            ${(job_title && job_title !== 'All') ? ` AND j.title = ?` : ''}
+            ${(job_id && job_id !== 'All') ? ` AND j.id = ?` : ''}
         `;
         const [countResult] = await pool.execute(countQuery, params);
         const total = countResult[0].total;

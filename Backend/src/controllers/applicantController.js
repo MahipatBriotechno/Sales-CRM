@@ -42,13 +42,13 @@ const applyForJob = async (req, res) => {
 
 const getApplicants = async (req, res) => {
     try {
-        const { page, limit, search, status, job_title } = req.query;
+        const { page, limit, search, status, job_id } = req.query;
         const data = await Applicant.findAll(req.user.id, {
             page,
             limit,
             search,
             status,
-            job_title
+            job_id
         });
         res.json(data);
     } catch (error) {

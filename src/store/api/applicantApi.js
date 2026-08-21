@@ -15,11 +15,11 @@ export const applicantApi = createApi({
     tagTypes: ['Applicant'],
     endpoints: (builder) => ({
         getApplicants: builder.query({
-            query: ({ page = 1, limit = 10, search = '', status = 'All', job_title = '' }) => {
+            query: ({ page = 1, limit = 10, search = '', status = 'All', job_id = '' }) => {
                 let url = `applicants?page=${page}&limit=${limit}`;
                 if (search) url += `&search=${search}`;
                 if (status !== 'All') url += `&status=${status}`;
-                if (job_title && job_title !== 'All') url += `&job_title=${job_title}`;
+                if (job_id && job_id !== 'All') url += `&job_id=${job_id}`;
                 return url;
             },
             providesTags: ['Applicant'],

@@ -12,16 +12,25 @@ import { toast } from "react-hot-toast";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { useGetDesignationsQuery } from "../../store/api/designationApi";
 import { useGetBusinessInfoQuery } from "../../store/api/businessApi";
-import { useGetAllTermsQuery } from "../../store/api/termApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
+import { useGetShiftsQuery } from "../../store/api/shiftApi";
 
 const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }) => {
     const [activeTab, setActiveTab] = useState(1);
     const { data: businessInfo } = useGetBusinessInfoQuery();
     const { data: departments } = useGetDepartmentsQuery({ limit: 100 });
     const { data: designations } = useGetDesignationsQuery({ limit: 100 });
-    const { data: termsTemplates } = useGetAllTermsQuery({ limit: 100 });
     const { data: employeesData } = useGetEmployeesQuery({ limit: 1000, status: 'Active' });
+    const { data: shiftsData } = useGetShiftsQuery({ limit: 100 });
+
+    const formatTime = (timeStr) => {
+        if (!timeStr) return "";
+        const [hours, minutes] = timeStr.split(':');
+        const h = parseInt(hours, 10);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const formattedH = h % 12 || 12;
+        return `${formattedH}:${minutes} ${ampm}`;
+    };
 
     const [formData, setFormData] = useState({
         reference_no: "",
@@ -56,7 +65,6 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
             joining_date: "",
             probation_duration: "3",
             probation_unit: "Months",
-            terms_template: "",
             working_hours: "9:30 AM – 6:30 PM",
             working_days: "Mon–Fri",
             shift_type: "General"
@@ -80,21 +88,9 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
             monthly: 0,
             annual_ctc: 0
         },
-        roles_responsibilities: {
-            mode: "Template",
-            template_id: "",
-            custom_text: "",
-            display_type: "Bullet"
-        },
-        clauses: {
-            confidentiality: { enabled: true, text: "The Employee shall maintain strict confidentiality regarding all company trade secrets, client data, and internal processes." },
-            nda: { enabled: true, text: "The Employee agrees to sign a separate Non-Disclosure Agreement upon joining." },
-            non_compete: { enabled: false, text: "The Employee shall not engage in any business that directly competes with the Company for a period of 12 months after termination." },
-            notice_period: { enabled: true, text: "A notice period of 30 days is required for resignation or termination without cause." },
-            termination_policy: { enabled: true, text: "The Company reserves the right to terminate employment immediately for gross misconduct." },
-            leave_policy: { enabled: true, text: "Leaves will be granted as per the Company's standard leave policy (1.5 days per month)." },
-            code_of_conduct: { enabled: true, text: "The Employee must adhere to the professional code of conduct mentioned in the Employee Handbook." },
-            custom_clauses: [] // { name, enabled, text }
+        simple_salary: {
+            monthly: 0,
+            annual_ctc: 0
         },
         documents_required: ["ID Proof", "Address Proof", "Educational Certificates"], // strings
         acceptance_details: {
@@ -142,8 +138,7 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
                 company_info: { ...prev.company_info, ...(initialData.company_info || {}) },
                 candidate_details: { ...prev.candidate_details, ...(initialData.candidate_details || {}) },
                 offer_details: { ...prev.offer_details, ...(initialData.offer_details || {}) },
-                salary_structure: { ...prev.salary_structure, ...(initialData.salary_structure || {}) },
-                clauses: { ...prev.clauses, ...(initialData.clauses || {}) }
+                salary_structure: { ...prev.salary_structure, ...(initialData.salary_structure || {}) }
             }));
         }
     }, [initialData, isOpen]);
@@ -287,8 +282,7 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
         { id: 1, label: "Identity", icon: <UserIcon size={16} /> },
         { id: 2, label: "Core Offer", icon: <FileText size={16} /> },
         { id: 3, label: "Compensation", icon: <DollarSign size={16} /> },
-        { id: 4, label: "Roles & Clauses", icon: <ShieldCheck size={16} /> },
-        { id: 5, label: "Compliance & Control", icon: <Settings size={16} /> }
+        { id: 4, label: "Compliance & Control", icon: <Settings size={16} /> }
     ];
 
     const inputClass = "w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 outline-none transition-all text-sm font-medium bg-white hover:border-gray-300 shadow-sm";
@@ -311,7 +305,7 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
                                 <ChevronLeft size={18} /> Prev
                             </button>
                         )}
-                        {activeTab < 5 && (
+                        {activeTab < 4 && (
                             <button onClick={() => setActiveTab(activeTab + 1)} className="flex items-center gap-2 px-6 py-2 text-sm font-bold bg-gray-800 text-white hover:bg-black rounded-sm shadow-md transition-all focus:outline-none">
                                 Next <ChevronRight size={18} />
                             </button>
@@ -594,24 +588,32 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
                                     </div>
                                     <div>
                                         <label className={labelClass}>
-                                            <FileText size={16} className="text-[#FF7B1D]" />
-                                            Terms Template
-                                        </label>
-                                        <select value={formData.offer_details.terms_template} onChange={(e) => handleUpdateNested('offer_details', 'terms_template', e.target.value)} className={inputClass}>
-                                            <option value="">Default Policy</option>
-                                            {termsTemplates?.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>
                                             <RefreshCw size={16} className="text-[#FF7B1D]" />
                                             Shift Type
                                         </label>
-                                        <select value={formData.offer_details.shift_type} onChange={(e) => handleUpdateNested('offer_details', 'shift_type', e.target.value)} className={inputClass}>
-                                            <option value="General">General (9:30-6:30)</option>
-                                            <option value="Night">Night Shift</option>
-                                            <option value="Rotational">Rotational</option>
-                                            <option value="Custom">Custom</option>
+                                        <select 
+                                            value={formData.offer_details.shift_type} 
+                                            onChange={(e) => {
+                                                const selectedName = e.target.value;
+                                                const shiftList = shiftsData?.shifts || shiftsData || [];
+                                                const shiftInfo = shiftList.find(s => s.shift_name === selectedName);
+                                                
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    offer_details: {
+                                                        ...prev.offer_details,
+                                                        shift_type: selectedName,
+                                                        working_hours: shiftInfo ? `${formatTime(shiftInfo.check_in_time)} - ${formatTime(shiftInfo.check_out_time)}` : "",
+                                                        working_days: shiftInfo ? shiftInfo.working_days : ""
+                                                    }
+                                                }));
+                                            }} 
+                                            className={inputClass}
+                                        >
+                                            <option value="">Select Shift</option>
+                                            {(shiftsData?.shifts || shiftsData || []).map(s => (
+                                                <option key={s.id || s.shift_name} value={s.shift_name}>{s.shift_name}</option>
+                                            ))}
                                         </select>
                                     </div>
                                     <div className="md:col-span-1">
@@ -619,35 +621,28 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
                                             <Clock size={16} className="text-[#FF7B1D]" />
                                             Working Hours
                                         </label>
-                                        <select
+                                        <input
+                                            type="text"
                                             value={formData.offer_details.working_hours}
                                             onChange={(e) => handleUpdateNested('offer_details', 'working_hours', e.target.value)}
-                                            className={inputClass}
-                                        >
-                                            <option value="">Choose Hours</option>
-                                            <option value="9:00 AM – 6:00 PM">9:00 AM – 6:00 PM</option>
-                                            <option value="9:30 AM – 6:30 PM">9:30 AM – 6:30 PM</option>
-                                            <option value="10:00 AM – 7:00 PM">10:00 AM – 7:00 PM</option>
-                                            <option value="Flexible">Flexible</option>
-                                            <option value="Night Shift (9PM - 6AM)">Night Shift (9PM - 6AM)</option>
-                                        </select>
+                                            className={`${inputClass} cursor-not-allowed focus:ring-0`}
+                                            placeholder="e.g. 9:30 AM – 6:30 PM"
+                                            readOnly
+                                        />
                                     </div>
                                     <div className="md:col-span-1">
                                         <label className={labelClass}>
                                             <Calendar size={16} className="text-[#FF7B1D]" />
                                             Working Days
                                         </label>
-                                        <select
+                                        <input
+                                            type="text"
                                             value={formData.offer_details.working_days}
                                             onChange={(e) => handleUpdateNested('offer_details', 'working_days', e.target.value)}
-                                            className={inputClass}
-                                        >
-                                            <option value="">Choose Days</option>
-                                            <option value="Mon–Fri">Mon–Fri (5 Days)</option>
-                                            <option value="Mon–Sat">Mon–Sat (6 Days)</option>
-                                            <option value="Mon–Sat (Alt Sat Off)">Mon–Sat (Alt Sat Off)</option>
-                                            <option value="Rotational Weekly Off">Rotational Weekly Off</option>
-                                        </select>
+                                            className={`${inputClass} cursor-not-allowed focus:ring-0`}
+                                            placeholder="e.g. Mon–Fri"
+                                            readOnly
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -827,83 +822,8 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
                         </div>
                     )}
 
-                    {/* Tab 4: Roles & Clauses */}
+                    {/* Tab 4: Compliance & Control */}
                     {activeTab === 4 && (
-                        <div className="animate-fadeIn space-y-8">
-                            <div>
-                                <h3 className={sectionTitle}>
-                                    <Briefcase size={18} className="text-[#FF7B1D]" />
-                                    5. Roles & Responsibilities
-                                </h3>
-                                <div className="bg-gray-50 p-5 rounded-sm border border-gray-100 space-y-4">
-                                    <div className="flex gap-4">
-                                        <button onClick={() => handleUpdateNested('roles_responsibilities', 'mode', 'Template')} className={`px-4 py-2 text-xs font-bold rounded-sm border transition-all ${formData.roles_responsibilities.mode === 'Template' ? 'bg-orange-500 text-white' : 'bg-white text-gray-400'}`}>Use Template</button>
-                                        <button onClick={() => handleUpdateNested('roles_responsibilities', 'mode', 'Custom')} className={`px-4 py-2 text-xs font-bold rounded-sm border transition-all ${formData.roles_responsibilities.mode === 'Custom' ? 'bg-orange-500 text-white' : 'bg-white text-gray-400'}`}>Write Custom</button>
-                                    </div>
-                                    {formData.roles_responsibilities.mode === 'Template' ? (
-                                        <select className={inputClass} value={formData.roles_responsibilities.template_id} onChange={(e) => handleUpdateNested('roles_responsibilities', 'template_id', e.target.value)}>
-                                            <option value="">Select JD Template</option>
-                                            <option value="1">Software Engineer JD</option>
-                                            <option value="2">Sales Executive JD</option>
-                                            <option value="3">Operations Specialist JD</option>
-                                        </select>
-                                    ) : (
-                                        <textarea value={formData.roles_responsibilities.custom_text} onChange={(e) => handleUpdateNested('roles_responsibilities', 'custom_text', e.target.value)} className={`${inputClass} h-32 resize-none`} placeholder="Describe core duties, reporting lines etc..." />
-                                    )}
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                            <ListChecks size={18} className="text-[#FF7B1D]" />
-                                            Display Format:
-                                        </span>
-                                        <button onClick={() => handleUpdateNested('roles_responsibilities', 'display_type', 'Bullet')} className={`p-1.5 rounded-sm border ${formData.roles_responsibilities.display_type === 'Bullet' ? 'bg-orange-100 text-orange-600 border-orange-200' : 'bg-white text-gray-400 border-gray-100'}`}><ListChecks size={18} /></button>
-                                        <button onClick={() => handleUpdateNested('roles_responsibilities', 'display_type', 'Paragraph')} className={`p-1.5 rounded-sm border ${formData.roles_responsibilities.display_type === 'Paragraph' ? 'bg-orange-100 text-orange-600 border-orange-200' : 'bg-white text-gray-400 border-gray-100'}`}><Layout size={18} /></button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="pt-6 border-t border-gray-100">
-                                <h3 className={sectionTitle}>
-                                    <ShieldCheck size={18} className="text-[#FF7B1D]" />
-                                    6. Legal Clause Engine
-                                </h3>
-                                <div className="space-y-4 max-w-4xl">
-                                    {Object.entries(formData.clauses).map(([key, value]) => {
-                                        if (key === 'custom_clauses') return null;
-                                        return (
-                                            <div key={key} className={`group border rounded-sm transition-all ${value.enabled ? 'border-orange-100 bg-orange-50/20' : 'border-gray-100 opacity-60'}`}>
-                                                <div className="flex items-center justify-between p-4 cursor-pointer" onClick={() => handleUpdateNested('clauses', key, { ...value, enabled: !value.enabled })}>
-                                                    <div className="flex items-center gap-3">
-                                                        <div className={`p-2 rounded-lg ${value.enabled ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
-                                                            {value.enabled ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
-                                                        </div>
-                                                        <span className={`text-sm font-semibold ${value.enabled ? 'text-gray-900' : 'text-gray-400'}`}>
-                                                            {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 text-xs font-bold text-orange-500">
-                                                        {value.enabled ? 'Included' : 'Excluded'}
-                                                        <ChevronRight size={14} className={`transition-transform duration-300 ${value.enabled ? 'rotate-90' : ''}`} />
-                                                    </div>
-                                                </div>
-                                                {value.enabled && (
-                                                    <div className="px-4 pb-4 animate-slideDown">
-                                                        <textarea
-                                                            value={value.text}
-                                                            onChange={(e) => handleUpdateNested('clauses', key, { ...value, text: e.target.value })}
-                                                            className="w-full bg-white border border-orange-100 rounded-sm p-3 text-sm text-gray-600 focus:outline-none focus:border-orange-300 min-h-[80px]"
-                                                        />
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Tab 5: Extras & Finalize */}
-                    {activeTab === 5 && (
                         <div className="animate-fadeIn space-y-8">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>

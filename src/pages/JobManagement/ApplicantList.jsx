@@ -81,12 +81,12 @@ const DeleteApplicantModal = ({ isOpen, onClose, onConfirm, isLoading, title }) 
 const ApplicantList = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const initialJobTitle = location.state?.jobTitle || "All";
+    const initialJobId = location.state?.jobId || "All";
 
     const [currentPage, setCurrentPage] = useState(1);
     const [search, setSearch] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("All");
-    const [selectedJobTitle, setSelectedJobTitle] = useState(initialJobTitle);
+    const [selectedJobId, setSelectedJobId] = useState(initialJobId);
     const [selectedApplicant, setSelectedApplicant] = useState(null);
     const [applicantToDelete, setApplicantToDelete] = useState(null);
 
@@ -94,25 +94,25 @@ const ApplicantList = () => {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [tempFilters, setTempFilters] = useState({
         status: "All",
-        jobTitle: initialJobTitle
+        jobId: initialJobId
     });
     const dropdownRef = React.useRef(null);
-    const hasActiveFilters = selectedStatus !== "All" || selectedJobTitle !== "All";
+    const hasActiveFilters = selectedStatus !== "All" || selectedJobId !== "All";
 
     const clearAllFilters = () => {
         setSelectedStatus("All");
-        setSelectedJobTitle("All");
+        setSelectedJobId("All");
         setSearch("");
         setTempFilters({
             status: "All",
-            jobTitle: "All"
+            jobId: "All"
         });
         setCurrentPage(1);
     };
 
     const handleApplyFilters = () => {
         setSelectedStatus(tempFilters.status);
-        setSelectedJobTitle(tempFilters.jobTitle);
+        setSelectedJobId(tempFilters.jobId);
         setCurrentPage(1);
         setIsFilterOpen(false);
     };
@@ -149,13 +149,11 @@ const ApplicantList = () => {
         limit: itemsPerPage,
         search,
         status: selectedStatus,
-        job_title: selectedJobTitle
+        job_id: selectedJobId
     });
 
     // Fetch jobs for filter dropdown
     const { data: jobsData } = useGetJobsQuery({ page: 1, limit: 100 });
-    const jobTitles = jobsData?.jobs?.map(job => job.title) || [];
-    const uniqueJobTitles = [...new Set(jobTitles)];
 
     const { data: statsData } = useGetApplicantStatsQuery();
     const [updateStatus] = useUpdateApplicantStatusMutation();
@@ -364,13 +362,13 @@ const ApplicantList = () => {
                                                     <div className="space-y-2">
                                                         <span className="text-[11px] font-bold text-gray-700 capitalize tracking-wider block font-primary">Filter By Job</span>
                                                         <select
-                                                            value={tempFilters.jobTitle}
-                                                            onChange={(e) => setTempFilters({ ...tempFilters, jobTitle: e.target.value })}
+                                                            value={tempFilters.jobId}
+                                                            onChange={(e) => setTempFilters({ ...tempFilters, jobId: e.target.value })}
                                                             className="w-full bg-gray-50 border border-gray-100 rounded-sm px-4 py-2.5 text-xs font-semibold focus:border-orange-500 focus:bg-white outline-none transition-all font-primary"
                                                         >
                                                             <option value="All">All Job Posts</option>
-                                                            {uniqueJobTitles.map((title, index) => (
-                                                                <option key={index} value={title}>{title}</option>
+                                                            {jobsData?.jobs?.map((job) => (
+                                                                <option key={job.id} value={job.id}>{job.title} - {job.location}</option>
                                                             ))}
                                                         </select>
                                                     </div>

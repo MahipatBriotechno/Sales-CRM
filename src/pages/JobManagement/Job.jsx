@@ -707,7 +707,7 @@ export default function JobManagement() {
 
                           <td className="px-6 py-4 whitespace-nowrap">
                             <button
-                              onClick={() => navigate('/hrm/applicants', { state: { jobTitle: job.title } })}
+                              onClick={() => navigate('/hrm/applicants', { state: { jobTitle: job.title, jobId: job.id } })}
                               className="flex items-center gap-2 hover:bg-orange-50 px-3 py-1.5 rounded-sm transition-all group/count border border-transparent hover:border-orange-100"
                               title="View Job Applicants"
                             >
@@ -859,7 +859,7 @@ export default function JobManagement() {
                       <div className="text-center p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
                         <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter">Applicants</p>
                         <button
-                          onClick={() => navigate('/hrm/applicants', { state: { jobTitle: job.title } })}
+                          onClick={() => navigate('/hrm/applicants', { state: { jobTitle: job.title, jobId: job.id } })}
                           className="text-base font-black text-orange-600 hover:text-orange-700 flex items-center justify-center gap-1 mx-auto"
                         >
                           <Users size={12} />

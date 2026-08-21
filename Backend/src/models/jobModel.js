@@ -1,5 +1,5 @@
 const { pool } = require('../config/db');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 
 class Job {
     static async create(jobData) {
@@ -19,7 +19,15 @@ class Job {
             application_fields
         } = jobData;
 
-        const application_link = uuidv4();
+        // Generate SEO-friendly slug with unique hash
+        const slug = (title || 'job')
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9 -]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-');
+        const uniqueHash = crypto.randomBytes(3).toString('hex');
+        const application_link = `${slug}-${uniqueHash}`;
 
         const query = `
       INSERT INTO jobs (

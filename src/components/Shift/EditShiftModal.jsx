@@ -8,6 +8,47 @@ export default function EditShiftModal({ shift, onClose }) {
   const [formData, setFormData] = useState({ ...shift });
   const [errors, setErrors] = useState({});
 
+  const WORKING_DAYS_OPTIONS = [
+    "Choose Days",
+    "Mon-Fri (5 Days)",
+    "Mon-Sat (6 Days)",
+    "Mon-Sat (Alt Sat Off)",
+    "Rotational Weekly Off"
+  ];
+
+  const [workingDaysType, setWorkingDaysType] = useState(() => {
+    if (shift?.working_days && WORKING_DAYS_OPTIONS.includes(shift.working_days)) {
+        return shift.working_days;
+    }
+    return "Choose Days";
+  });
+
+  const handleWorkingDaysTypeChange = (e) => {
+    const val = e.target.value;
+    setWorkingDaysType(val);
+    if (val !== "Choose Days") {
+      setFormData(prev => ({ ...prev, working_days: val }));
+    } else {
+      setFormData(prev => ({ ...prev, working_days: "" }));
+    }
+  };
+
+  const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+  const handleDayToggle = (day) => {
+    setFormData((prev) => {
+      const currentDays = prev.working_days ? prev.working_days.split(",") : [];
+      let newDays;
+      if (currentDays.includes(day)) {
+        newDays = currentDays.filter((d) => d !== day);
+      } else {
+        const allSelected = [...currentDays, day];
+        newDays = DAYS.filter(d => allSelected.includes(d));
+      }
+      return { ...prev, working_days: newDays.join(",") };
+    });
+  };
+
   useEffect(() => {
     if (formData.check_in_time && formData.check_out_time) {
       const start = new Date(`1970-01-01T${formData.check_in_time}`);
@@ -34,6 +75,7 @@ export default function EditShiftModal({ shift, onClose }) {
     if (!formData.shift_name) newErrors.shift_name = "Shift name is required";
     if (!formData.check_in_time) newErrors.check_in_time = "Check-in time is required";
     if (!formData.check_out_time) newErrors.check_out_time = "Check-out time is required";
+    if (!formData.working_days) newErrors.working_days = "At least one working day must be selected";
     if (formData.half_day_enable && !formData.min_work_hours_half_day) {
         newErrors.min_work_hours_half_day = "Required for half day rule";
     }
@@ -115,6 +157,41 @@ export default function EditShiftModal({ shift, onClose }) {
                             className="w-full p-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#FF7B1D]"
                         />
                     </div>
+                </div>
+                <div className="mt-5 border-t border-gray-100 pt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Working Days <span className="text-red-500">*</span></label>
+                    <select
+                        value={workingDaysType}
+                        onChange={handleWorkingDaysTypeChange}
+                        className="w-full p-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] mb-4"
+                    >
+                        {WORKING_DAYS_OPTIONS.map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                    </select>
+
+                    {workingDaysType === "Choose Days" && (
+                        <div className="flex flex-wrap gap-3">
+                            {DAYS.map((day) => {
+                                const isSelected = formData.working_days?.includes(day);
+                                return (
+                                    <button
+                                        key={day}
+                                        type="button"
+                                        onClick={() => handleDayToggle(day)}
+                                        className={`w-16 py-2 text-xs font-bold rounded-sm border transition-all duration-200 ${
+                                            isSelected 
+                                                ? 'bg-orange-50/50 text-[#FF7B1D] border-[#FF7B1D] shadow-sm' 
+                                                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        {day}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+                    {errors.working_days && <p className="text-red-500 text-xs mt-2">{errors.working_days}</p>}
                 </div>
             </div>
 
