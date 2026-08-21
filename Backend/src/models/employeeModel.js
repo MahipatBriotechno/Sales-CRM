@@ -167,6 +167,17 @@ const Employee = {
     findByUsername: async (username) => {
         const [rows] = await pool.query('SELECT * FROM employees WHERE username = ?', [username]);
         return rows[0];
+    },
+
+    findByMobileNumber: async (mobileNumber) => {
+        const cleanMobile = mobileNumber.replace(/\D/g, '').slice(-10);
+        const [rows] = await pool.query(
+            'SELECT * FROM employees WHERE RIGHT(mobile_number, 10) = ? OR mobile_number = ? OR RIGHT(work_mobile_number, 10) = ?',
+            [cleanMobile, mobileNumber, cleanMobile]
+        );
+
+        console.log("otp_table", rows);
+        return rows[0];
     }
 };
 

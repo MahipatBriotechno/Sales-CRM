@@ -49,6 +49,15 @@ const User = {
         return rows[0];
     },
 
+    findByMobileNumber: async (mobileNumber) => {
+        const cleanMobile = mobileNumber.replace(/\D/g, '').slice(-10);
+        const [rows] = await pool.query(
+            'SELECT * FROM users WHERE RIGHT(mobileNumber, 10) = ? OR mobileNumber = ?',
+            [cleanMobile, mobileNumber]
+        );
+        return rows[0];
+    },
+
     findById: async (id) => {
         const [rows] = await pool.query(
             'SELECT id, firstName, lastName, profile_picture, email, mobileNumber, businessName, businessType, gst, address, role, created_at FROM users WHERE id = ?',

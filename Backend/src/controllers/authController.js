@@ -7,6 +7,8 @@ const ProductKey = require('../models/productKeyModel');
 const Plan = require('../models/planModel');
 const Subscription = require('../models/subscriptionModel');
 const BusinessInfo = require('../models/businessInfoModel');
+const Otp = require('../models/otpModel');
+const { sendSmsOtp } = require('../utils/smsService');
 const { pool } = require('../config/db');
 
 // @desc    Register a new user
@@ -264,7 +266,158 @@ const authUser = async (req, res) => {
     }
 };
 
+// @desc    Send OTP to user mobile number
+// @route   POST /api/auth/send-otp
+// @access  Public
+const sendOtp = async (req, res) => {
+    const { mobileNumber, countryCode = '+91' } = req.body;
+
+    if (!mobileNumber) {
+        return res.status(400).json({
+            status: false,
+            message: 'Mobile number is required'
+        });
+    }
+
+    const cleanMobile = mobileNumber.replace(/\D/g, '').slice(-10);
+    if (cleanMobile.length !== 10) {
+        return res.status(400).json({
+            status: false,
+            message: 'Please enter a valid 10-digit mobile number'
+        });
+    }
+
+    try {
+        // 1. Check if mobile number exists in Admin (users) or Employee (employees) table
+        const user = await User.findByMobileNumber(cleanMobile);
+        const employee = !user ? await Employee.findByMobileNumber(cleanMobile) : null;
+
+        if (!user && !employee) {
+            return res.status(404).json({
+                status: false,
+                message: 'Mobile number not registered. Please register first.'
+            });
+        }
+
+        // 2. Generate random 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // 3. Save OTP in DB with 10 min expiration
+        await Otp.saveOtp(cleanMobile, otp, 10);
+
+        // 4. Send SMS via TrueBulkSMS HTTP API
+        const fullMobile = `${countryCode}${cleanMobile}`;
+        await sendSmsOtp(fullMobile, otp);
+
+        return res.json({
+            status: true,
+            message: `OTP sent successfully to ${countryCode} ${cleanMobile}`
+        });
+
+    } catch (error) {
+        console.error('Send OTP error:', error);
+        return res.status(500).json({
+            status: false,
+            message: error.message || 'Failed to send OTP. Please try again.'
+        });
+    }
+};
+
+// @desc    Verify OTP & login user
+// @route   POST /api/auth/verify-otp
+// @access  Public
+const verifyOtp = async (req, res) => {
+    const { mobileNumber, otp } = req.body;
+
+    if (!mobileNumber || !otp) {
+        return res.status(400).json({
+            status: false,
+            message: 'Mobile number and OTP are required'
+        });
+    }
+
+    const cleanMobile = mobileNumber.replace(/\D/g, '').slice(-10);
+
+    try {
+        // 1. Verify OTP from DB
+        const validOtpRecord = await Otp.verifyOtp(cleanMobile, otp);
+
+        if (!validOtpRecord) {
+            return res.status(400).json({
+                status: false,
+                message: 'Invalid or expired OTP code'
+            });
+        }
+
+        // Delete used OTP
+        await Otp.deleteOtp(cleanMobile);
+
+        // 2. Find user in Admin (users) or Employee (employees) table
+        const user = await User.findByMobileNumber(cleanMobile);
+        if (user) {
+            await pool.query('UPDATE users SET last_login = NOW() WHERE id = ?', [user.id]);
+
+            return res.json({
+                status: true,
+                message: 'Login successful',
+                token: generateToken(user.id, user.role || 'Admin'),
+                user: {
+                    _id: user.id,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    profile_picture: user.profile_picture,
+                    email: user.email,
+                    mobileNumber: user.mobileNumber,
+                    businessName: user.businessName,
+                    businessType: user.businessType,
+                    gst: user.gst,
+                    address: user.address,
+                    role: user.role || 'Admin'
+                }
+            });
+        }
+
+        const employee = await Employee.findByMobileNumber(cleanMobile);
+        if (employee) {
+            await pool.query('UPDATE employees SET last_login = NOW() WHERE id = ?', [employee.id]).catch(() => { });
+
+            return res.json({
+                status: true,
+                message: 'Employee Login successful',
+                token: generateToken(employee.id, 'Employee'),
+                user: {
+                    _id: employee.id,
+                    employee_id: employee.employee_id,
+                    name: employee.employee_name,
+                    firstName: employee.employee_name ? employee.employee_name.split(' ')[0] : '',
+                    lastName: employee.employee_name ? employee.employee_name.split(' ').slice(1).join(' ') : '',
+                    profile_picture: employee.profile_picture,
+                    username: employee.username,
+                    email: employee.email,
+                    role: 'Employee',
+                    permissions: employee.permissions ? (typeof employee.permissions === 'string' ? JSON.parse(employee.permissions) : employee.permissions) : [],
+                    user_id: employee.user_id
+                }
+            });
+        }
+
+        return res.status(404).json({
+            status: false,
+            message: 'Mobile number not registered. Please register first.'
+        });
+
+    } catch (error) {
+        console.error('Verify OTP error:', error);
+        return res.status(500).json({
+            status: false,
+            message: error.message || 'OTP verification failed. Please try again.'
+        });
+    }
+};
+
 module.exports = {
     registerUser,
     authUser,
+    sendOtp,
+    verifyOtp,
 };
