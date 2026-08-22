@@ -307,13 +307,6 @@ export default function EmployeeProfile() {
                     </span>
                     <span className="font-bold text-slate-800">{employee.marital_status}</span>
                   </div>
-                  <div className="flex items-center justify-between py-2">
-                    <span className="text-slate-500 flex items-center gap-2">
-                      <Briefcase className="w-4 h-4 text-slate-400" /> Blood Group
-                    </span>
-                    <span className="font-bold text-slate-800">{employee.blood_group}</span>
-                  </div>
-
                 </div>
               </div>
 
@@ -404,34 +397,6 @@ export default function EmployeeProfile() {
                 </div>
               )}
 
-              {/* About Employee */}
-              <div className="bg-white rounded-sm shadow overflow-hidden">
-                <div
-                  className="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50 transition-colors border-b"
-                  onClick={() => toggleSection("about")}
-                >
-                  <h3 className="font-bold text-slate-800 text-lg">
-                    About Employee
-                  </h3>
-                  <div className="flex items-center gap-3">
-                    <Edit className="w-4 h-4 text-slate-400 hover:text-orange-500" />
-                    <ChevronDown
-                      className={`w-5 h-5 text-slate-400 transition-transform ${expandedSections.about ? "rotate-180" : ""
-                        }`}
-                    />
-                  </div>
-                </div>
-                {expandedSections.about && (
-                  <div className="px-6 py-5 text-slate-600 leading-relaxed bg-slate-0">
-                    As an award winning designer, I deliver exceptional quality
-                    work and bring value to your brand! With 10 years of
-                    experience and 350+ projects completed worldwide with
-                    satisfied customers, I developed the 360° brand approach,
-                    which helped me to create numerous brands that are relevant,
-                    meaningful and loved.
-                  </div>
-                )}
-              </div>
 
               {/* Bank Information */}
               <div className="bg-white rounded-sm shadow border border-gray-100 overflow-hidden">

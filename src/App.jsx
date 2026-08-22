@@ -42,6 +42,8 @@ import AllDesignation from "./pages/DesignationPart/Designation";
 import AllTermCondition from "./pages/Term & Condition/AllTerm";
 // Employee part
 import AllEmployee from "./pages/EmployeePart/AllEmployee";
+import AddEmployee from "./pages/EmployeePart/AddEmployee";
+import EditEmployee from "./pages/EmployeePart/EditEmployee";
 import EmployeeProfile from "./pages/EmployeePart/AllEmployee/Profile.jsx";
 
 // unused generally
@@ -212,6 +214,8 @@ function App() {
             <Route path="/hrm/shift" element={<ShiftManagement />} />
             <Route path="/hrm/terms" element={<AllTermCondition />} />
             <Route path="/hrm/employee/all" element={<AllEmployee />} />
+            <Route path="/hrm/employee/add" element={<AddEmployee />} />
+            <Route path="/hrm/employee/edit/:id" element={<EditEmployee />} />
             <Route path="/profile" element={<MyProfile />} />
             <Route path="/employee-profile/:id" element={<EmployeeProfile />} />
             <Route path="/hrm/attendance" element={<AllAttendance />} />

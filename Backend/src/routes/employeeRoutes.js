@@ -5,7 +5,10 @@ const {
     getEmployees,
     getEmployeeById,
     updateEmployee,
-    deleteEmployee
+    deleteEmployee,
+    checkEmployeeId,
+    checkContactAvailability,
+    checkUsername
 } = require('../controllers/employeeController');
 
 const { protect } = require('../middleware/authMiddleware');
@@ -21,6 +24,9 @@ const employeeUploadFields = [
 ];
 
 router.post('/', protect, checkLimit('users'), upload.fields(employeeUploadFields), createEmployee);
+router.post('/check-id', protect, checkEmployeeId);
+router.post('/check-contact', protect, checkContactAvailability);
+router.post('/check-username', protect, checkUsername);
 router.get('/', protect, getEmployees);
 router.get('/:id', protect, getEmployeeById);
 router.put('/:id', protect, upload.fields(employeeUploadFields), updateEmployee);

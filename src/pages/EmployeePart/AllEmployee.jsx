@@ -18,8 +18,6 @@ import {
   ChevronDown,
   LayoutGrid,
 } from "lucide-react";
-import AddEmployeeModal from "../../components/Employee/AddEmployeeModal";
-import EditEmployeeModal from "../../components/Employee/EditEmployeeModal";
 import DeleteEmployeeModal from "../../components/Employee/DeleteEmployeeModal";
 import EmployeeGridView from "../../pages/EmployeePart/EmployeeGridView";
 import NumberCard from "../../components/NumberCard";
@@ -40,8 +38,6 @@ const AllEmployee = () => {
   const [viewMode, setViewMode] = useState("list");
   const itemsPerPage = viewMode === "list" ? 7 : 12;
 
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
@@ -69,8 +65,7 @@ const AllEmployee = () => {
   const handleNext = () => setCurrentPage((prev) => (prev < pagination.totalPages ? prev + 1 : prev));
 
   const handleEdit = (emp) => {
-    setSelectedEmployee(emp);
-    setIsEditModalOpen(true);
+    navigate(`/hrm/employee/edit/${emp.id}`);
   };
 
   const handleView = (emp, options = {}) => {
@@ -255,7 +250,7 @@ const AllEmployee = () => {
 
                 <ActionGuard permission="employee_create" module="Employee Management" type="create">
                   <button
-                    onClick={() => setIsAddModalOpen(true)}
+                    onClick={() => navigate('/hrm/employee/add')}
                     className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                   >
                     <Plus size={20} />
@@ -469,8 +464,6 @@ const AllEmployee = () => {
         </div>
 
         {/* Modals */}
-        <AddEmployeeModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
-        <EditEmployeeModal isOpen={isEditModalOpen} onClose={() => { setIsEditModalOpen(false); setSelectedEmployee(null); }} employee={selectedEmployee} />
         <DeleteEmployeeModal
           isOpen={isDeleteModalOpen}
           onClose={() => {

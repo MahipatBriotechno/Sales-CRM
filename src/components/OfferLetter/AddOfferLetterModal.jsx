@@ -5,14 +5,14 @@ import {
     ListChecks, Plus, Trash2, Layout, Settings, ChevronRight,
     ChevronLeft, Copy, Info, CheckCircle2, X, Upload, Download,
     Eye, AlertCircle, FileText, ToggleLeft, ToggleRight, Fingerprint,
-    Hash, Clock, RefreshCw
+    Hash, Clock, RefreshCw, Loader2, CheckCircle, XCircle
 } from "lucide-react";
 import Modal from "../common/Modal";
 import { toast } from "react-hot-toast";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { useGetDesignationsQuery } from "../../store/api/designationApi";
 import { useGetBusinessInfoQuery } from "../../store/api/businessApi";
-import { useGetEmployeesQuery } from "../../store/api/employeeApi";
+import { useGetEmployeesQuery, useCheckEmployeeIdMutation } from "../../store/api/employeeApi";
 import { useGetShiftsQuery } from "../../store/api/shiftApi";
 
 const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }) => {
@@ -22,6 +22,9 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
     const { data: designations } = useGetDesignationsQuery({ limit: 100 });
     const { data: employeesData } = useGetEmployeesQuery({ limit: 1000, status: 'Active' });
     const { data: shiftsData } = useGetShiftsQuery({ limit: 100 });
+    const [checkEmployeeId, { isLoading: isCheckingId }] = useCheckEmployeeIdMutation();
+    const [idStatus, setIdStatus] = useState(null); // null, 'available', 'taken'
+    const [typingTimeout, setTypingTimeout] = useState(null);
 
     const formatTime = (timeStr) => {
         if (!timeStr) return "";
@@ -65,6 +68,7 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
             joining_date: "",
             probation_duration: "3",
             probation_unit: "Months",
+            notice_period: "30 Days",
             working_hours: "9:30 AM – 6:30 PM",
             working_days: "Mon–Fri",
             shift_type: "General"
@@ -88,10 +92,7 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
             monthly: 0,
             annual_ctc: 0
         },
-        simple_salary: {
-            monthly: 0,
-            annual_ctc: 0
-        },
+
         documents_required: ["ID Proof", "Address Proof", "Educational Certificates"], // strings
         acceptance_details: {
             checkbox_enabled: true,
@@ -152,6 +153,60 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
             }
         }));
     };
+
+    const handleEmployeeIdChange = (e) => {
+        const value = e.target.value;
+        handleUpdateNested('candidate_details', 'employee_id', value);
+        
+        if (typingTimeout) {
+            clearTimeout(typingTimeout);
+        }
+
+        if (!value) {
+            setIdStatus(null);
+            return;
+        }
+
+        setTypingTimeout(
+            setTimeout(async () => {
+                try {
+                    const res = await checkEmployeeId({ employeeId: value }).unwrap();
+                    if (res.available) {
+                        setIdStatus('available');
+                    } else {
+                        // In edit mode we can ignore if it matches the initial data's employee id?
+                        // But initialData might not have candidate_details easily accessible without checking.
+                        // So just set taken, and backend handles validation during save.
+                        setIdStatus('taken');
+                    }
+                } catch (error) {
+                    setIdStatus(null);
+                }
+            }, 500)
+        );
+    };
+
+    // Use effect to handle initial id checks
+    useEffect(() => {
+        const value = formData.candidate_details?.employee_id;
+        if (!value) {
+            setIdStatus(null);
+            return;
+        }
+        const timer = setTimeout(async () => {
+            try {
+                const res = await checkEmployeeId({ employeeId: value }).unwrap();
+                if (res.available) {
+                    setIdStatus('available');
+                } else {
+                    setIdStatus('taken');
+                }
+            } catch (error) {
+                setIdStatus(null);
+            }
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [formData.candidate_details?.employee_id, checkEmployeeId]);
 
     const handleLogoChange = (e) => {
         const file = e.target.files[0];
@@ -534,11 +589,51 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
                                         <input value={formData.candidate_details.location} onChange={(e) => handleUpdateNested('candidate_details', 'location', e.target.value)} className={inputClass} placeholder="e.g. Ahmedabad, Noida" />
                                     </div>
                                     <div>
-                                        <label className={labelClass}>
-                                            <Fingerprint size={16} className="text-[#FF7B1D]" />
-                                            Employee ID (Optional)
-                                        </label>
-                                        <input value={formData.candidate_details.employee_id} onChange={(e) => handleUpdateNested('candidate_details', 'employee_id', e.target.value)} className={inputClass} placeholder="T-001X" />
+                                        <div className="flex items-center justify-between mb-2">
+                                            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 capitalize">
+                                                <Fingerprint size={16} className="text-[#FF7B1D]" />
+                                                Employee ID
+                                            </label>
+                                            <div className="flex items-center gap-3">
+                                                {!formData.candidate_details.employee_id ? (
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const uniqueNum = Math.floor(10000 + Math.random() * 90000);
+                                                            const newId = `EMP${uniqueNum}`;
+                                                            handleEmployeeIdChange({ target: { value: newId } });
+                                                        }}
+                                                        className="text-[10px] text-orange-600 hover:text-orange-700 font-bold uppercase tracking-wider focus:outline-none"
+                                                    >
+                                                        Auto Generate
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleUpdateNested('candidate_details', 'employee_id', '')}
+                                                        className="text-[10px] text-red-500 hover:text-red-600 font-bold uppercase tracking-wider focus:outline-none"
+                                                    >
+                                                        Clear
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="relative">
+                                            <input 
+                                                type="text" 
+                                                value={formData.candidate_details.employee_id || ""} 
+                                                onChange={handleEmployeeIdChange}
+                                                className={`${inputClass} pr-10 ${idStatus === 'taken' ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : idStatus === 'available' ? 'border-green-500 focus:border-green-500 focus:ring-green-500' : ''}`} 
+                                                placeholder="Enter or generate ID" 
+                                            />
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                {isCheckingId && <Loader2 className="animate-spin text-gray-400" size={18} />}
+                                                {!isCheckingId && idStatus === 'available' && <CheckCircle className="text-green-500" size={18} />}
+                                                {!isCheckingId && idStatus === 'taken' && <XCircle className="text-red-500" size={18} />}
+                                            </div>
+                                        </div>
+                                        {idStatus === 'taken' && <p className="text-xs text-red-500 mt-1 font-bold">This ID is already taken.</p>}
+                                        {idStatus === 'available' && <p className="text-xs text-green-500 mt-1 font-bold">ID is available.</p>}
                                     </div>
                                 </div>
                             </div>
@@ -586,18 +681,31 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
                                             </select>
                                         </div>
                                     </div>
+                                    <div className="md:col-span-1">
+                                        <label className={labelClass}>
+                                            <Clock size={16} className="text-[#FF7B1D]" />
+                                            Notice Period
+                                        </label>
+                                        <div className="flex gap-2">
+                                            <input type="text" value={formData.notice_period?.split(' ')[0] || ''} onChange={(e) => setFormData(prev => ({ ...prev, notice_period: `${e.target.value} ${prev.notice_period?.split(' ')[1] || 'Days'}` }))} className={`${inputClass} w-20`} placeholder="30" />
+                                            <select value={formData.notice_period?.split(' ')[1] || 'Days'} onChange={(e) => setFormData(prev => ({ ...prev, notice_period: `${prev.notice_period?.split(' ')[0] || '30'} ${e.target.value}` }))} className={inputClass}>
+                                                <option value="Days">Days</option>
+                                                <option value="Months">Months</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                     <div>
                                         <label className={labelClass}>
                                             <RefreshCw size={16} className="text-[#FF7B1D]" />
                                             Shift Type
                                         </label>
-                                        <select 
-                                            value={formData.offer_details.shift_type} 
+                                        <select
+                                            value={formData.offer_details.shift_type}
                                             onChange={(e) => {
                                                 const selectedName = e.target.value;
                                                 const shiftList = shiftsData?.shifts || shiftsData || [];
                                                 const shiftInfo = shiftList.find(s => s.shift_name === selectedName);
-                                                
+
                                                 setFormData(prev => ({
                                                     ...prev,
                                                     offer_details: {
@@ -607,7 +715,7 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
                                                         working_days: shiftInfo ? shiftInfo.working_days : ""
                                                     }
                                                 }));
-                                            }} 
+                                            }}
                                             className={inputClass}
                                         >
                                             <option value="">Select Shift</option>

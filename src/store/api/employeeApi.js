@@ -83,6 +83,27 @@ export const employeeApi = createApi({
             }),
             invalidatesTags: ['Employee'],
         }),
+        checkEmployeeId: builder.mutation({
+            query: ({ employeeId, excludeEmployeeId }) => ({
+                url: 'employees/check-id',
+                method: 'POST',
+                body: { employeeId, excludeEmployeeId },
+            }),
+        }),
+        checkContactAvailability: builder.mutation({
+            query: ({ type, value, excludeEmployeeId }) => ({
+                url: 'employees/check-contact',
+                method: 'POST',
+                body: { type, value, excludeEmployeeId },
+            }),
+        }),
+        checkUsername: builder.mutation({
+            query: ({ username, excludeEmployeeId }) => ({
+                url: 'employees/check-username',
+                method: 'POST',
+                body: { username, excludeEmployeeId },
+            }),
+        }),
     }),
 });
 
@@ -92,4 +113,7 @@ export const {
     useCreateEmployeeMutation,
     useUpdateEmployeeMutation,
     useDeleteEmployeeMutation,
+    useCheckEmployeeIdMutation,
+    useCheckContactAvailabilityMutation,
+    useCheckUsernameMutation,
 } = employeeApi;

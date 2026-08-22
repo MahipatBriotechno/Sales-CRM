@@ -228,6 +228,8 @@ const authUser = async (req, res) => {
             // Fallback for plain text if match fails (optional, for backward compatibility during dev)
             const isPlainMatch = employee.password === password;
 
+
+
             if (isMatch || isPlainMatch) {
                 // Update last_login timestamp for employees
                 await pool.query('UPDATE employees SET last_login = NOW() WHERE id = ?', [employee.id]).catch(() => { });
@@ -253,12 +255,14 @@ const authUser = async (req, res) => {
             }
         }
 
+        console.log("Login Failed for identifier:", identifier);
         res.status(401).json({
             status: false,
             message: 'Invalid email/username or password' // Generic message
         });
 
     } catch (error) {
+        console.error("Login Error:", error);
         res.status(500).json({
             status: false,
             message: error.message

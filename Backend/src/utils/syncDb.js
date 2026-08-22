@@ -157,6 +157,51 @@ const syncDatabase = async () => {
             // Safe to ignore if columns already dropped or table doesn't exist
         }
 
+        try {
+            // Change employee_id from INT to VARCHAR to support 'EMP...' format
+            await pool.query("ALTER TABLE offer_letters MODIFY COLUMN employee_id VARCHAR(100)");
+            console.log('Database Synced: employee_id column changed to VARCHAR(100) in offer_letters table.');
+        } catch (e) {
+            console.error('Error modifying employee_id column in offer_letters:', e);
+        }
+
+        try {
+            const [columns] = await pool.query("SHOW COLUMNS FROM offer_letters LIKE 'notice_period'");
+            if (columns.length === 0) {
+                await pool.query("ALTER TABLE offer_letters ADD COLUMN notice_period VARCHAR(100) DEFAULT NULL AFTER joining_date");
+                console.log('Database Synced: notice_period column successfully added to offer_letters table.');
+            }
+            else {
+                console.log("Database Synced: notice_period column already exists in offer_letters table.");
+            }
+        } catch (e) {
+            console.error('Error adding notice_period column to offer_letters:', e);
+        }
+
+        try {
+            const [columns] = await pool.query("SHOW COLUMNS FROM employees LIKE 'notice_period'");
+            if (columns.length === 0) {
+                await pool.query("ALTER TABLE employees ADD COLUMN notice_period VARCHAR(100) DEFAULT NULL AFTER joining_date");
+                await pool.query("ALTER TABLE employees ADD COLUMN probation_period VARCHAR(100) DEFAULT NULL AFTER notice_period");
+                await pool.query("ALTER TABLE employees ADD COLUMN working_hours VARCHAR(100) DEFAULT NULL AFTER probation_period");
+                await pool.query("ALTER TABLE employees ADD COLUMN working_days VARCHAR(100) DEFAULT NULL AFTER working_hours");
+                console.log('Database Synced: notice_period, probation_period, working_hours, and working_days columns successfully added to employees table.');
+            }
+            else {
+                // If notice_period exists, let's also specifically check for working_hours just in case
+                const [whColumns] = await pool.query("SHOW COLUMNS FROM employees LIKE 'working_hours'");
+                if (whColumns.length === 0) {
+                    await pool.query("ALTER TABLE employees ADD COLUMN working_hours VARCHAR(100) DEFAULT NULL AFTER probation_period");
+                    await pool.query("ALTER TABLE employees ADD COLUMN working_days VARCHAR(100) DEFAULT NULL AFTER working_hours");
+                    console.log('Database Synced: working_hours and working_days columns successfully added to employees table.');
+                } else {
+                    console.log("Database Synced: notice_period, probation_period, working_hours, and working_days columns already exist in employees table.");
+                }
+            }
+        } catch (e) {
+            console.error('Error adding notice_period and probation_period to employees:', e);
+        }
+
         console.log('Database synced: channel_configs, goals, visitors, and shifts tables are ready.');
     } catch (error) {
         console.error('Error syncing database:', error);

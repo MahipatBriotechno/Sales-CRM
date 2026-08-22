@@ -4,7 +4,8 @@ const Employee = {
     create: async (data, userId) => {
         const {
             employee_name, profile_picture, date_of_birth, age, gender,
-            father_name, mother_name, marital_status, joining_date,
+            father_name, mother_name, marital_status, joining_date, notice_period, probation_period,
+            working_hours, working_days,
             department_id, designation_id, shift_id, employee_type, work_type,
             mobile_number, alternate_mobile_number, email,
             work_email, work_mobile_number, linkedin_url, skype_id,
@@ -19,20 +20,25 @@ const Employee = {
             cancelled_cheque, username, password, status, permissions
         } = data;
 
-        // Generate unique employee_id for all users
-        const [rows] = await pool.query('SELECT employee_id FROM employees ORDER BY id DESC LIMIT 1');
-        let newId = 'EMP10001';
-        if (rows.length > 0 && rows[0].employee_id) {
-            const lastId = rows[0].employee_id;
-            const numericPart = parseInt(lastId.substring(3));
-            const nextNum = numericPart + 1;
-            newId = `EMP${nextNum}`;
+        // Use provided employee_id or generate unique employee_id for all users
+        let newId = data.employee_id;
+        
+        if (!newId) {
+            const [rows] = await pool.query('SELECT employee_id FROM employees ORDER BY id DESC LIMIT 1');
+            newId = 'EMP10001';
+            if (rows.length > 0 && rows[0].employee_id) {
+                const lastId = rows[0].employee_id;
+                const numericPart = parseInt(lastId.substring(3));
+                const nextNum = numericPart ? numericPart + 1 : Math.floor(10000 + Math.random() * 90000);
+                newId = `EMP${nextNum}`;
+            }
         }
 
         const [result] = await pool.query(
             `INSERT INTO employees (
                 employee_id, employee_name, profile_picture, date_of_birth, age, gender,
-                father_name, mother_name, marital_status, joining_date,
+                father_name, mother_name, marital_status, joining_date, notice_period, probation_period,
+                working_hours, working_days,
                 department_id, designation_id, shift_id, employee_type, work_type,
                 mobile_number, alternate_mobile_number, email,
                 work_email, work_mobile_number, linkedin_url, skype_id,
@@ -45,10 +51,11 @@ const Employee = {
                 aadhar_front, aadhar_back, pan_card,
                 ifsc_code, account_number, account_holder_name, branch_name,
                 cancelled_cheque, username, password, status, user_id, permissions
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 newId, employee_name, profile_picture, date_of_birth, age, gender,
-                father_name, mother_name, marital_status, joining_date,
+                father_name, mother_name, marital_status, joining_date, notice_period, probation_period,
+                working_hours, working_days,
                 department_id, designation_id, shift_id, employee_type, work_type,
                 mobile_number, alternate_mobile_number, email,
                 work_email, work_mobile_number, linkedin_url, skype_id,
@@ -142,10 +149,13 @@ const Employee = {
     update: async (id, data, userId) => {
         const payload = data || {};
         const forbiddenFields = [
-            'id', 'employee_id', 'user_id', 'department_name', 'department_uid', 'designation_name', 'designation_uid',
+            'id', 'user_id', 'password',
             'employeeId', 'joiningDate', 'firstName', 'lastName', 'createdAt', 'updatedAt'
         ];
-        const fields = Object.keys(payload).filter(key => !forbiddenFields.includes(key));
+        let fields = Object.keys(payload).filter(key => !forbiddenFields.includes(key));
+        if (payload.password) {
+            fields.push('password');
+        }
         const setClause = fields.map(field => `${field} = ?`).join(', ');
         const values = fields.map(field => {
             const val = payload[field];
@@ -164,20 +174,72 @@ const Employee = {
         await pool.query('DELETE FROM employees WHERE id = ? AND user_id = ?', [id, userId]);
     },
 
-    findByUsername: async (username) => {
-        const [rows] = await pool.query('SELECT * FROM employees WHERE username = ?', [username]);
+    findByUsername: async (identifier) => {
+        const [rows] = await pool.query(
+            'SELECT * FROM employees WHERE username = ? OR email = ?', 
+            [identifier, identifier]
+        );
         return rows[0];
     },
 
     findByMobileNumber: async (mobileNumber) => {
         const cleanMobile = mobileNumber.replace(/\D/g, '').slice(-10);
         const [rows] = await pool.query(
-            'SELECT * FROM employees WHERE RIGHT(mobile_number, 10) = ? OR mobile_number = ? OR RIGHT(work_mobile_number, 10) = ?',
-            [cleanMobile, mobileNumber, cleanMobile]
+            'SELECT * FROM employees WHERE RIGHT(mobile_number, 10) = ? OR mobile_number = ?',
+            [cleanMobile, mobileNumber]
         );
 
         console.log("otp_table", rows);
         return rows[0];
+    },
+
+    checkEmployeeId: async (employeeId, excludeId = null) => {
+        let query = 'SELECT id FROM employees WHERE employee_id = ?';
+        let params = [employeeId];
+        if (excludeId) {
+            query += ' AND id != ?';
+            params.push(excludeId);
+        }
+        const [rows] = await pool.query(query, params);
+        return rows.length > 0;
+    },
+
+    checkContactAvailability: async (type, value, excludeEmployeeId = null) => {
+        let query = '';
+        let params = [];
+        
+        if (type === 'email') {
+            query = `
+                SELECT 'employee' as source, id FROM employees WHERE email = ? ${excludeEmployeeId ? 'AND id != ?' : ''}
+                UNION
+                SELECT 'user' as source, id FROM users WHERE email = ?
+            `;
+            params = excludeEmployeeId ? [value, excludeEmployeeId, value] : [value, value];
+        } else if (type === 'mobile') {
+            const cleanMobile = value.replace(/\D/g, '').slice(-10);
+            query = `
+                SELECT 'employee' as source, id FROM employees WHERE RIGHT(mobile_number, 10) = ? ${excludeEmployeeId ? 'AND id != ?' : ''}
+                UNION
+                SELECT 'user' as source, id FROM users WHERE RIGHT(mobileNumber, 10) = ?
+            `;
+            params = excludeEmployeeId ? [cleanMobile, excludeEmployeeId, cleanMobile] : [cleanMobile, cleanMobile];
+        } else {
+            return true; // unknown type, allow
+        }
+        
+        const [rows] = await pool.query(query, params);
+        return rows.length === 0;
+    },
+
+    checkUsername: async (username, excludeId = null) => {
+        let query = 'SELECT id FROM employees WHERE username = ?';
+        let params = [username];
+        if (excludeId) {
+            query += ' AND id != ?';
+            params.push(excludeId);
+        }
+        const [rows] = await pool.query(query, params);
+        return rows.length === 0; // true if available, false if taken
     }
 };
 

@@ -5,7 +5,7 @@ class OfferLetter {
         const {
             user_id, employee_id, candidate_name, email, phone,
             designation, department, basic_salary, allowances,
-            deductions, net_salary, joining_date, offer_date,
+            deductions, net_salary, joining_date, notice_period, offer_date,
             status, address, reference_no, salary_model, annual_ctc,
             company_info, candidate_details, offer_details, salary_structure,
             documents_required,
@@ -17,13 +17,13 @@ class OfferLetter {
             INSERT INTO offer_letters (
                 user_id, employee_id, candidate_name, email, phone,
                 designation, department, basic_salary, allowances,
-                deductions, net_salary, joining_date, offer_date,
-                status, address, reference_no, salary_model, annual_ctc,https://127.0.0.1:58110/static/artifacts/291c9028-9ffc-4e62-81db-145c4a14851c/.user_uploaded/media_1787292950798.png?csrf=55396a46-75d2-4a28-92c5-3e3756f01475
+                deductions, net_salary, joining_date, notice_period, offer_date,
+                status, address, reference_no, salary_model, annual_ctc,
                 company_info, candidate_details, offer_details, salary_structure,
                 documents_required,
                 acceptance_details, legal_disclaimer, custom_fields,
                 output_control, version_number, revision_history
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
         const [result] = await pool.execute(query, [
@@ -39,6 +39,7 @@ class OfferLetter {
             JSON.stringify(deductions || []),
             net_salary || 0,
             joining_date || null,
+            data.notice_period || null,
             offer_date || null,
             status || 'Draft',
             address || null,
@@ -137,8 +138,8 @@ class OfferLetter {
         ];
 
         const directFields = [
-            'candidate_name', 'email', 'phone', 'designation', 'department',
-            'basic_salary', 'net_salary', 'joining_date', 'offer_date',
+            'employee_id', 'candidate_name', 'email', 'phone', 'designation', 'department',
+            'basic_salary', 'net_salary', 'joining_date', 'notice_period', 'offer_date',
             'status', 'address', 'reference_no', 'salary_model', 'annual_ctc',
             'version_number'
         ];

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   User,
   Briefcase,
@@ -27,11 +27,17 @@ import {
   DollarSign,
   Upload,
   Lock,
-  Clock
+  Clock,
+  Loader2,
+  CheckCircle,
+  XCircle,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { useGetDesignationsQuery } from "../../store/api/designationApi";
 import { useGetShiftsQuery } from "../../store/api/shiftApi";
+import { useCheckEmployeeIdMutation, useCheckContactAvailabilityMutation, useCheckUsernameMutation } from "../../store/api/employeeApi";
 import { Country, State, City } from "country-state-city";
 import PermissionSelector from "../common/PermissionSelector";
 import { permissionCategories } from "../../pages/EmployeePart/permissionsData";
@@ -60,33 +66,36 @@ const formatTime12Hr = (timeStr) => {
 
 const CollapsibleSection = ({ id, title, icon: Icon, children, isCollapsed, onToggle }) => {
   return (
-    <div className="border border-gray-200 rounded-lg bg-white shadow-sm overflow-hidden mb-6">
+    <div className={`border rounded-none bg-white overflow-hidden mb-5 transition-all duration-300 ${isCollapsed ? 'border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300' : 'border-gray-200 shadow-lg ring-1 ring-black/5'}`}>
       <div
-        className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+        className={`flex items-center justify-between p-5 cursor-pointer transition-colors relative ${isCollapsed ? 'hover:bg-gray-50/80' : 'bg-gray-50/50'}`}
         onClick={onToggle}
       >
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-orange-50 rounded-lg">
-            <Icon size={20} className="text-[#FF7B1D]" />
+        {!isCollapsed && <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-orange-500 to-orange-600"></div>}
+        <div className="flex items-center gap-4">
+          <div className={`p-2.5 flex items-center justify-center transition-colors duration-300 ${isCollapsed ? 'bg-gray-100 text-gray-500' : 'bg-orange-100 text-[#FF7B1D]'}`}>
+            <Icon size={18} strokeWidth={isCollapsed ? 2 : 2.5} />
           </div>
-          <h3 className="text-lg font-bold text-gray-800">{title}</h3>
+          <div>
+              <h3 className={`font-bold tracking-wide transition-colors ${isCollapsed ? 'text-gray-700 text-base' : 'text-gray-900 text-lg uppercase'}`}>{title}</h3>
+          </div>
         </div>
-        {isCollapsed ? (
-          <ChevronDown size={20} className="text-gray-400" />
-        ) : (
-          <ChevronUp size={20} className="text-gray-400" />
-        )}
+        <div className={`p-1.5 rounded-none transition-transform duration-300 ${isCollapsed ? 'bg-white border border-gray-200 text-gray-400' : 'bg-orange-50 text-orange-600 border border-orange-100 rotate-180'}`}>
+           <ChevronDown size={16} strokeWidth={3} />
+        </div>
       </div>
-      {!isCollapsed && (
-        <div className="p-6 pt-0 border-t border-gray-100 animate-fadeIn overflow-x-auto">
-          {children}
+      <div className={`grid transition-all duration-300 ease-in-out ${isCollapsed ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr] opacity-100'}`}>
+        <div className="overflow-hidden">
+          <div className="p-6 pt-5 border-t border-gray-100">
+            {children}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
 
-const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode = "full" }) => {
+const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode = "full", excludeEmployeeId = null, hideSensitiveInfo = false }) => {
   const [collapsedSections, setCollapsedSections] = useState({
     personal: false,
     job: true,
@@ -98,7 +107,88 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
     education: true,
   });
 
+  const [showPassword, setShowPassword] = useState(false);
   const [isSameAddress, setIsSameAddress] = useState(false);
+  const [idStatus, setIdStatus] = useState(null); // null, 'available', 'taken'
+  const [checkEmployeeId, { isLoading: isCheckingId }] = useCheckEmployeeIdMutation();
+  const handleEmployeeIdChange = (e) => {
+    const value = e.target.value;
+    handleChange(e);
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      try {
+        const res = await checkEmployeeId({ employeeId: formData.employeeId, excludeEmployeeId }).unwrap();
+        if (res.available) {
+          setIdStatus('available');
+        } else {
+          setIdStatus('taken');
+        }
+      } catch (error) {
+        setIdStatus(null);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [formData.employeeId, checkEmployeeId]);
+
+  const [emailStatus, setEmailStatus] = useState(null);
+  const [mobileStatus, setMobileStatus] = useState(null);
+  const [checkContact, { isLoading: isCheckingContact }] = useCheckContactAvailabilityMutation();
+
+  useEffect(() => {
+    const value = formData.email;
+    if (!value) {
+      setEmailStatus(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await checkContact({ type: 'email', value, excludeEmployeeId }).unwrap();
+        setEmailStatus(res.available ? 'available' : 'taken');
+      } catch (error) {
+        setEmailStatus(null);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [formData.email, checkContact, excludeEmployeeId]);
+
+  useEffect(() => {
+    const value = formData.mobile;
+    if (!value) {
+      setMobileStatus(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await checkContact({ type: 'mobile', value, excludeEmployeeId }).unwrap();
+        setMobileStatus(res.available ? 'available' : 'taken');
+      } catch (error) {
+        setMobileStatus(null);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [formData.mobile, checkContact, excludeEmployeeId]);
+
+  const [usernameStatus, setUsernameStatus] = useState(null);
+  const [checkUsername, { isLoading: isCheckingUsername }] = useCheckUsernameMutation();
+
+  useEffect(() => {
+    const value = formData.username;
+    if (!value) {
+      setUsernameStatus(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await checkUsername({ username: value, excludeEmployeeId }).unwrap();
+        setUsernameStatus(res.available ? 'available' : 'taken');
+      } catch (error) {
+        setUsernameStatus(null);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [formData.username, checkUsername, excludeEmployeeId]);
 
   const handlePermanentAddressChange = (e) => {
     const { name, value } = e.target;
@@ -159,16 +249,16 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
   const shifts = shiftData?.shifts || [];
 
   const inputStyles =
-    "w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium";
+    "w-full px-4 py-3 border border-gray-200 rounded-none focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium";
 
   const selectStyles =
-    "w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm appearance-none cursor-pointer font-medium";
+    "w-full px-4 py-3 border border-gray-200 rounded-none focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm appearance-none cursor-pointer font-medium";
 
   const readOnlyStyles =
-    "w-full px-3 py-2.5 border border-gray-200 rounded bg-gray-50 text-sm text-gray-900 font-semibold shadow-sm cursor-not-allowed";
+    "w-full px-3 py-2.5 border border-gray-200 rounded-none bg-gray-50 text-sm text-gray-900 font-semibold shadow-sm cursor-not-allowed";
 
   const fileStyles =
-    "w-full px-4 py-2 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-700 bg-white shadow-sm file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer";
+    "w-full px-4 py-2 border border-gray-200 rounded-none focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-700 bg-white shadow-sm file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer";
 
   const labelStyles =
     "flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize";
@@ -232,8 +322,51 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
       <CollapsibleSection id="personal" title="Personal Details" icon={User} isCollapsed={collapsedSections.personal} onToggle={() => toggleSection("personal")}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <div className="group">
-            <label className={labelStyles}><User size={16} className="text-[#FF7B1D]" /> Employee ID</label>
-            <input type="text" name="employeeId" value={formData.employeeId} readOnly className={readOnlyStyles + " text-[#FF7B1D]"} />
+            <div className="flex items-center justify-between mb-2">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 capitalize">
+                <User size={16} className="text-[#FF7B1D]" /> Employee ID
+              </label>
+              <div className="flex items-center gap-3">
+                {!formData.employeeId ? (
+                  <button 
+                    type="button"
+                    onClick={() => {
+                       const uniqueNum = Math.floor(10000 + Math.random() * 90000);
+                       const newId = `EMP${uniqueNum}`;
+                       handleEmployeeIdChange({ target: { name: 'employeeId', value: newId } });
+                    }}
+                    className="text-[10px] text-orange-600 hover:text-orange-700 font-bold uppercase tracking-wider"
+                  >
+                    Auto Generate
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, employeeId: "" }))}
+                    className="text-[10px] text-red-500 hover:text-red-600 font-bold uppercase tracking-wider"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="relative">
+              <input 
+                type="text" 
+                name="employeeId" 
+                value={formData.employeeId || ""} 
+                onChange={handleEmployeeIdChange}
+                className={`${inputStyles} pr-10 ${idStatus === 'taken' ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : idStatus === 'available' ? 'border-green-500 focus:border-green-500 focus:ring-green-500' : ''}`} 
+                placeholder="Enter or generate ID" 
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {isCheckingId && <Loader2 className="animate-spin text-gray-400" size={18} />}
+                {!isCheckingId && idStatus === 'available' && <CheckCircle className="text-green-500" size={18} />}
+                {!isCheckingId && idStatus === 'taken' && <XCircle className="text-red-500" size={18} />}
+              </div>
+            </div>
+            {idStatus === 'taken' && <p className="text-xs text-red-500 mt-1 font-bold">This ID is already taken.</p>}
+            {idStatus === 'available' && <p className="text-xs text-green-500 mt-1 font-bold">ID is available.</p>}
           </div>
           <div className="group">
             <label className={labelStyles}><User size={16} className="text-[#FF7B1D]" /> First Name <span className="text-red-500">*</span></label>
@@ -298,7 +431,8 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection id="job" title="Job Details" icon={Briefcase} isCollapsed={collapsedSections.job} onToggle={() => toggleSection("job")}>
+      {!hideSensitiveInfo && (
+        <CollapsibleSection id="job" title="Job Details" icon={Briefcase} isCollapsed={collapsedSections.job} onToggle={() => toggleSection("job")}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <div className="group">
             <label className={labelStyles}><Calendar size={16} className="text-[#FF7B1D]" /> Joining Date</label>
@@ -335,6 +469,35 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
             </div>
           </div>
           <div className="group">
+            <label className={labelStyles}><Clock size={16} className="text-[#FF7B1D]" /> Working Hours</label>
+            <input type="text" name="workingHours" value={formData.workingHours || ""} onChange={handleChange} className={`${inputStyles} cursor-not-allowed focus:ring-0`} placeholder="Auto-filled from Shift" readOnly />
+          </div>
+          <div className="group">
+            <label className={labelStyles}><Calendar size={16} className="text-[#FF7B1D]" /> Working Days</label>
+            <input type="text" name="workingDays" value={formData.workingDays || ""} onChange={handleChange} className={`${inputStyles} cursor-not-allowed focus:ring-0`} placeholder="Auto-filled from Shift" readOnly />
+          </div>
+          <div className="group">
+            <label className={labelStyles}><Clock size={16} className="text-[#FF7B1D]" /> Notice Period</label>
+            <div className="flex gap-2">
+              <input type="text" name="noticePeriodValue" value={formData.noticePeriod?.split(' ')[0] || ''} onChange={(e) => handleChange({ target: { name: 'noticePeriod', value: `${e.target.value} ${formData.noticePeriod?.split(' ')[1] || 'Days'}` } })} className={`${inputStyles} w-20`} placeholder="30" />
+              <select name="noticePeriodUnit" value={formData.noticePeriod?.split(' ')[1] || 'Days'} onChange={(e) => handleChange({ target: { name: 'noticePeriod', value: `${formData.noticePeriod?.split(' ')[0] || ''} ${e.target.value}` } })} className={selectStyles}>
+                <option value="Days">Days</option>
+                <option value="Months">Months</option>
+              </select>
+            </div>
+          </div>
+          <div className="group">
+            <label className={labelStyles}><Clock size={16} className="text-[#FF7B1D]" /> Probation Period</label>
+            <div className="flex gap-2">
+              <input type="text" name="probationPeriodValue" value={formData.probationPeriod?.split(' ')[0] || ''} onChange={(e) => handleChange({ target: { name: 'probationPeriod', value: `${e.target.value} ${formData.probationPeriod?.split(' ')[1] || 'Months'}` } })} className={`${inputStyles} w-20`} placeholder="3" />
+              <select name="probationPeriodUnit" value={formData.probationPeriod?.split(' ')[1] || 'Months'} onChange={(e) => handleChange({ target: { name: 'probationPeriod', value: `${formData.probationPeriod?.split(' ')[0] || ''} ${e.target.value}` } })} className={selectStyles}>
+                <option value="Days">Days</option>
+                <option value="Months">Months</option>
+                <option value="Years">Years</option>
+              </select>
+            </div>
+          </div>
+          <div className="group">
             <label className={labelStyles}><User size={16} className="text-[#FF7B1D]" /> Employee Type</label>
             <div className="relative">
               <select name="employeeType" value={formData.employeeType} onChange={handleChange} className={selectStyles}>
@@ -357,6 +520,7 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
           </div>
         </div>
       </CollapsibleSection>
+      )}
 
       <CollapsibleSection id="education" title="Education Details" icon={GraduationCap} isCollapsed={collapsedSections.education} onToggle={() => toggleSection("education")}>
         <div className="space-y-4">
@@ -405,16 +569,46 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             <div className="group">
-              <label className={labelStyles}><Phone size={16} className="text-[#FF7B1D]" /> Personal Mobile <span className="text-red-500">*</span></label>
-              <input type="tel" name="mobile" placeholder="Enter personal mobile" value={formData.mobile} onChange={handleChange} className={inputStyles} />
+              <label className={labelStyles}><Phone size={16} className="text-[#FF7B1D]" /> Personal Mobile <span className="text-[10px] text-gray-500 font-normal ml-1">(Primary for login use)</span> <span className="text-red-500">*</span></label>
+              <div className="relative">
+                <input 
+                  type="tel" 
+                  name="mobile" 
+                  placeholder="Enter personal mobile" 
+                  value={formData.mobile || ""} 
+                  onChange={handleChange} 
+                  className={`${inputStyles} pr-10 ${mobileStatus === 'taken' ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : mobileStatus === 'available' ? 'border-green-500 focus:border-green-500 focus:ring-green-500' : ''}`} 
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {isCheckingContact && formData.mobile && <Loader2 className="animate-spin text-gray-400" size={18} />}
+                  {!isCheckingContact && mobileStatus === 'available' && <CheckCircle className="text-green-500" size={18} />}
+                  {!isCheckingContact && mobileStatus === 'taken' && <XCircle className="text-red-500" size={18} />}
+                </div>
+              </div>
+              {mobileStatus === 'taken' && <p className="text-xs text-red-500 mt-1 font-bold">This mobile number is already taken.</p>}
             </div>
             <div className="group">
               <label className={labelStyles}><Phone size={16} className="text-[#FF7B1D]" /> Work Mobile</label>
               <input type="tel" name="altMobile" placeholder="Enter work mobile" value={formData.altMobile} onChange={handleChange} className={inputStyles} />
             </div>
             <div className="group">
-              <label className={labelStyles}><Mail size={16} className="text-[#FF7B1D]" /> Personal Email <span className="text-red-500">*</span></label>
-              <input type="email" name="email" placeholder="Enter personal email" value={formData.email} onChange={handleChange} className={inputStyles} />
+              <label className={labelStyles}><Mail size={16} className="text-[#FF7B1D]" /> Personal Email <span className="text-[10px] text-gray-500 font-normal ml-1">(Primary for login use)</span> <span className="text-red-500">*</span></label>
+              <div className="relative">
+                <input 
+                  type="email" 
+                  name="email" 
+                  placeholder="Enter personal email" 
+                  value={formData.email || ""} 
+                  onChange={handleChange} 
+                  className={`${inputStyles} pr-10 ${emailStatus === 'taken' ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : emailStatus === 'available' ? 'border-green-500 focus:border-green-500 focus:ring-green-500' : ''}`} 
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {isCheckingContact && formData.email && <Loader2 className="animate-spin text-gray-400" size={18} />}
+                  {!isCheckingContact && emailStatus === 'available' && <CheckCircle className="text-green-500" size={18} />}
+                  {!isCheckingContact && emailStatus === 'taken' && <XCircle className="text-red-500" size={18} />}
+                </div>
+              </div>
+              {emailStatus === 'taken' && <p className="text-xs text-red-500 mt-1 font-bold">This email is already taken.</p>}
             </div>
             <div className="group">
               <label className={labelStyles}><Mail size={16} className="text-[#FF7B1D]" /> Work Email</label>
@@ -453,10 +647,7 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
                   <label className={labelStyles}><MapPin size={16} className="text-[#FF7B1D]" /> Address Line 2</label>
                   <input type="text" name="permanentAddressLine2" placeholder="Locality" value={formData.permanentAddressLine2 || ""} onChange={handlePermanentAddressChange} className={inputStyles} />
                 </div>
-                <div className="group">
-                  <label className={labelStyles}><MapPin size={16} className="text-[#FF7B1D]" /> Address Line 3</label>
-                  <input type="text" name="permanentAddressLine3" placeholder="Area" value={formData.permanentAddressLine3 || ""} onChange={handlePermanentAddressChange} className={inputStyles} />
-                </div>
+
                 <div className="group">
                   <label className={labelStyles}><Globe size={16} className="text-[#FF7B1D]" /> Country</label>
                   <div className="relative">
@@ -637,31 +828,66 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
         </>
       )}
 
-      <CollapsibleSection id="login" title="Login Credentials" icon={Key} isCollapsed={collapsedSections.login} onToggle={() => toggleSection("login")}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          <div className="group">
-            <label className={labelStyles}><User size={16} className="text-[#FF7B1D]" /> Username <span className="text-red-500">*</span></label>
-            <input type="text" name="username" placeholder="Enter username" value={formData.username} onChange={handleChange} className={inputStyles} />
-          </div>
-          <div className="group">
-            <label className={labelStyles}><Mail size={16} className="text-[#FF7B1D]" /> Email ID</label>
-            <input type="email" name="email" placeholder="Enter email" value={formData.email} onChange={handleChange} className={inputStyles} />
-          </div>
-          <div className="group">
-            <label className={labelStyles}><Lock size={16} className="text-[#FF7B1D]" /> Password <span className="text-red-500">*</span></label>
-            <input type="password" name="password" placeholder="Enter password" value={formData.password} onChange={handleChange} className={inputStyles} />
-          </div>
-        </div>
-      </CollapsibleSection>
+      {!hideSensitiveInfo && (
+        <>
+          <CollapsibleSection id="login" title="Login Credentials" icon={Key} isCollapsed={collapsedSections.login} onToggle={() => toggleSection("login")}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="group">
+                <label className={labelStyles}><User size={16} className="text-[#FF7B1D]" /> Username <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    name="username" 
+                    placeholder="Enter username" 
+                    value={formData.username || ""} 
+                    onChange={handleChange} 
+                    className={`${inputStyles} pr-10 ${usernameStatus === 'taken' ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : usernameStatus === 'available' ? 'border-green-500 focus:border-green-500 focus:ring-green-500' : ''}`} 
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {isCheckingUsername && formData.username && <Loader2 className="animate-spin text-gray-400" size={18} />}
+                    {!isCheckingUsername && usernameStatus === 'available' && <CheckCircle className="text-green-500" size={18} />}
+                    {!isCheckingUsername && usernameStatus === 'taken' && <XCircle className="text-red-500" size={18} />}
+                  </div>
+                </div>
+                {usernameStatus === 'taken' && <p className="text-xs text-red-500 mt-1 font-bold">This username is already taken.</p>}
+              </div>
+              <div className="group">
+                <label className={labelStyles}><Mail size={16} className="text-[#FF7B1D]" /> Email ID</label>
+                <input type="email" name="email" placeholder="Enter email" value={formData.email} onChange={handleChange} className={inputStyles} />
+              </div>
+              <div className="group">
+                <label className={labelStyles}><Lock size={16} className="text-[#FF7B1D]" /> Password <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    name="password" 
+                    placeholder="Enter password" 
+                    value={formData.password || ""} 
+                    onChange={handleChange} 
+                    className={`${inputStyles} pr-10`} 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </CollapsibleSection>
 
-      <CollapsibleSection id="permissions" title="Permissions Control" icon={ShieldCheck} isCollapsed={collapsedSections.permissions} onToggle={() => toggleSection("permissions")}>
-        <div className="bg-orange-50/50 p-4 rounded-lg mb-6 border border-orange-100 italic text-center">
-          <p className="text-xs text-orange-700 leading-relaxed font-bold">
-            Note: These permissions were automatically suggested based on the selected Department & Designation. You can further customize them here.
-          </p>
-        </div>
-        <PermissionSelector selectedPermissions={formData.permissions || {}} onTogglePermission={handleTogglePermission} onSelectCategory={handleSelectCategory} />
-      </CollapsibleSection>
+          <CollapsibleSection id="permissions" title="Permissions Control" icon={ShieldCheck} isCollapsed={collapsedSections.permissions} onToggle={() => toggleSection("permissions")}>
+            <div className="bg-orange-50/50 p-4 rounded-lg mb-6 border border-orange-100 italic text-center">
+              <p className="text-xs text-orange-700 leading-relaxed font-bold">
+                Note: These permissions were automatically suggested based on the selected Department & Designation. You can further customize them here.
+              </p>
+            </div>
+            <PermissionSelector selectedPermissions={formData.permissions || {}} onTogglePermission={handleTogglePermission} onSelectCategory={handleSelectCategory} />
+          </CollapsibleSection>
+        </>
+      )}
     </>
   );
 };

@@ -208,6 +208,10 @@ const ViewOfferLetterModal = ({ isOpen, onClose, offer }) => {
                                                 <th className="py-2 px-3 border border-gray-400 bg-gray-50 font-semibold text-left">Probation Period</th>
                                                 <td className="py-2 px-3 border border-gray-400">{offer.offer_details?.probation_duration} {offer.offer_details?.probation_unit}</td>
                                             </tr>
+                                            <tr>
+                                                <th className="py-2 px-3 border border-gray-400 bg-gray-50 font-semibold text-left">Notice Period</th>
+                                                <td className="py-2 px-3 border border-gray-400">{offer.notice_period || "30 Days"}</td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>
