@@ -93,10 +93,7 @@ export function ContactsList({ contacts, selectedChat, onChatSelect }) {
             <div className="flex items-center gap-3">
               <div className="relative flex-shrink-0">
                 <div
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold text-white shadow-sm transition-all duration-300 group-hover:shadow-md ${contact.status === "online"
-                    ? "bg-gradient-to-tr from-[#FF7B1D] to-[#E66A0D]"
-                    : "bg-gray-300"
-                    }`}
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold text-white shadow-sm transition-all duration-300 group-hover:shadow-md bg-gradient-to-tr from-[#FF7B1D] to-[#E66A0D]"
                 >
                   {contact.avatar}
                 </div>
@@ -163,12 +160,14 @@ export function ChatHeader({
             <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-[#FF7B1D] to-[#E66A0D] flex items-center justify-center text-base font-bold text-white shadow-sm transition-all duration-300 group-hover:shadow-md">
               {selectedChat.avatar}
             </div>
-            <div
-              className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white ${selectedChat.status === "online"
-                ? "bg-green-500"
-                : "bg-gray-400"
-                }`}
-            />
+            {selectedChat.type !== 'team' && (
+              <div
+                className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white ${selectedChat.status === "online"
+                  ? "bg-green-500"
+                  : "bg-gray-400"
+                  }`}
+              />
+            )}
           </div>
           <div>
             <h2 className="text-base font-bold text-gray-900 leading-tight">
@@ -177,7 +176,7 @@ export function ChatHeader({
             <div className="flex items-center gap-2 mt-0.5">
               <span className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${selectedChat.status === "online" ? "text-green-600" : "text-gray-400"
                 }`}>
-                {selectedChat.status === "online" ? "Online" : selectedChat.status}
+                {selectedChat.type === 'team' ? 'Team' : (selectedChat.status === "online" ? "Online" : "Offline")}
               </span>
               <span className="text-gray-200">|</span>
               <span className="text-[10px] font-bold text-[#FF7B1D] uppercase tracking-wider">{selectedChat.role}</span>
@@ -330,41 +329,42 @@ export function ChatMessages({
                   )}
 
                   <div
-                    className={`px-4 py-3 rounded-2xl relative transition-all duration-300 border ${isMe
-                      ? "bg-gradient-to-br from-[#FF7B1D] to-[#E66A0D] text-white border-[#FF7B1D] rounded-tr-none shadow-md shadow-[#FF7B1D]/20 ml-auto"
-                      : "bg-white border-orange-100 text-black rounded-tl-none shadow-sm shadow-orange-500/5 group-hover/msg:border-orange-200"
+                    className={`px-3 py-1.5 rounded-2xl w-fit max-w-full relative transition-all duration-300 shadow-sm flex flex-col ${isMe
+                      ? "bg-[#FF7B1D] text-white rounded-tr-sm ml-auto"
+                      : "bg-white border border-gray-100 text-black rounded-tl-sm group-hover/msg:border-gray-200"
                       }`}
+                    style={{ minWidth: "80px" }}
                   >
                     {/* Forwarded */}
                     {!!msg.is_forwarded && (
-                      <div className={`flex items-center gap-1 mb-1 opacity-70 ${isMe ? "text-orange-100" : "text-gray-400"}`}>
-                        <Forward size={10} />
-                        <span className="text-[9px] font-bold uppercase tracking-wider italic">Forwarded</span>
+                      <div className={`flex items-center gap-1 mb-1 opacity-80 ${isMe ? "text-white/90" : "text-gray-500"}`}>
+                        <Forward size={12} />
+                        <span className="text-[10px] font-medium italic">Forwarded</span>
                       </div>
                     )}
 
                     {/* Files Wrapper */}
                     {(msg.file_url || (msg.attachments && msg.attachments.length > 0)) && (
-                      <div className="mb-2 space-y-2">
+                      <div className="mb-1 space-y-2 mt-1">
                         {msg.attachments?.map((file, fIdx) => {
                           const isImg = file.message_type === 'image' || file.file_url?.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i);
                           const fUrl = file.file_url?.startsWith('http') ? file.file_url : `${API_BASE_URL.replace(/\/api\/?$/, '')}/${file.file_url}`;
 
                           if (isImg) {
                             return (
-                              <div key={fIdx} className="rounded-xl overflow-hidden cursor-pointer shadow-sm">
+                              <div key={fIdx} className="rounded-lg overflow-hidden cursor-pointer shadow-sm">
                                 <img src={fUrl} alt="" className="w-full max-h-60 object-cover" onClick={() => window.open(fUrl, '_blank')} />
                               </div>
                             );
                           }
                           return (
-                            <div key={fIdx} className={`flex items-center gap-3 p-2.5 rounded-xl border ${isMe ? 'bg-white/10 border-white/20' : 'bg-gray-50 border-gray-100'}`}>
-                              <FileText size={20} className={isMe ? 'text-white' : 'text-[#FF7B1D]'} />
+                            <div key={fIdx} className={`flex items-center gap-2 p-2 rounded-lg border ${isMe ? 'bg-white/10 border-white/20' : 'bg-gray-50 border-gray-100'}`}>
+                              <FileText size={18} className={isMe ? 'text-white' : 'text-[#FF7B1D]'} />
                               <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold truncate uppercase">{file.file_name || 'File'}</p>
-                                <p className="text-[9px] opacity-70">{file.file_size || '0 KB'}</p>
+                                <p className="text-xs font-semibold truncate">{file.file_name || 'File'}</p>
+                                <p className="text-[9px] opacity-80">{file.file_size || '0 KB'}</p>
                               </div>
-                              <button onClick={() => window.open(fUrl, '_blank')} className="p-1.5 hover:bg-black/5 rounded-lg">
+                              <button onClick={() => window.open(fUrl, '_blank')} className="p-1 hover:bg-black/10 rounded-md transition-colors">
                                 <Download size={14} />
                               </button>
                             </div>
@@ -373,20 +373,21 @@ export function ChatMessages({
                       </div>
                     )}
 
-                    <p className={`text-[14px] leading-relaxed font-medium break-words whitespace-pre-wrap ${/^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])+$/.test(msg.text?.trim()) && msg.text.trim().length <= 4 ? "text-3xl py-1" : ""}`}>
+                    <p className={`text-[15px] leading-snug font-normal break-words whitespace-pre-wrap ${/^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])+$/.test(msg.text?.trim()) && msg.text.trim().length <= 4 ? "text-3xl" : "pt-0.5"}`}>
                       {msg.text}
                     </p>
 
-                    <div className={`flex items-center justify-end gap-1.5 mt-1 opacity-60`}>
-                      {!!msg.is_edited && <span className="text-[8px] font-bold uppercase italic">Edited</span>}
+                    <div className={`flex items-center justify-end gap-1 opacity-80 mt-1 shrink-0`}>
+                      {!!msg.is_edited && <span className="text-[10px] italic mr-1">Edited</span>}
+                      <span className="text-[10px] leading-none">{msg.time || ''}</span>
                       {isMe && (
-                        <div className="flex items-center">
+                        <div className="flex items-center ml-0.5">
                           {msg.is_read ? (
-                            <CheckCheck size={12} className="text-white" />
+                            <CheckCheck size={14} className="text-white" />
                           ) : msg.is_delivered ? (
-                            <CheckCheck size={12} className="text-white/70" />
+                            <CheckCheck size={14} className="text-white/80" />
                           ) : (
-                            <Check size={12} className="text-white/50" />
+                            <Check size={14} className="text-white/60" />
                           )}
                         </div>
                       )}

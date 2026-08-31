@@ -49,6 +49,7 @@ import {
   Heart,
   Flower2,
   HeartPulse,
+  Camera,
 } from "lucide-react";
 import {
   useGetAllAttendanceQuery,
@@ -64,10 +65,12 @@ import ActionGuard from "../../../components/common/ActionGuard";
 import { useEffect } from "react";
 
 export default function AttendanceManagement() {
-  const [mainTab, setMainTab] = useState("monitor");
+  const [mainTab, setMainTab] = useState("settings");
   const [activeTab, setActiveTab] = useState("general");
   const [showPassword, setShowPassword] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedEmployeeForDetail, setSelectedEmployeeForDetail] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   // Real-time data
   const { data: attendanceResponse, isLoading: isAttendanceLoading } = useGetAllAttendanceQuery({
@@ -266,6 +269,38 @@ export default function AttendanceManagement() {
     }
   };
 
+  const calculateTotalTime = (checkIn, checkOut, workHours) => {
+    let totalMinutes = 0;
+    
+    if (checkIn && checkOut && checkIn !== "-" && checkOut !== "-") {
+      const parseTime = (t) => {
+        const parts = t.split(":");
+        return parseInt(parts[0] || 0) * 60 + parseInt(parts[1] || 0);
+      };
+      const inMins = parseTime(checkIn);
+      const outMins = parseTime(checkOut);
+      totalMinutes = outMins - inMins;
+      if (totalMinutes < 0) totalMinutes += 24 * 60; // handle overnight
+    } else if (workHours && !workHours.includes('NaN') && workHours !== "-") {
+      if (workHours.includes(':')) {
+         const parts = workHours.split(':');
+         totalMinutes = parseInt(parts[0] || 0) * 60 + parseInt(parts[1] || 0);
+      } else {
+         totalMinutes = parseFloat(workHours) * 60;
+      }
+    } else {
+      return "-";
+    }
+
+    const hrs = Math.floor(totalMinutes / 60);
+    const mins = Math.floor(totalMinutes % 60);
+    
+    if (hrs === 0 && mins === 0) return "-";
+    if (hrs === 0) return `${mins} mins`;
+    if (mins === 0) return `${hrs} hrs`;
+    return `${hrs} hrs ${mins} mins`;
+  };
+
   const handleSettingChange = (key, value) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
@@ -347,36 +382,13 @@ export default function AttendanceManagement() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border-b py-6 pr-6">
               <div>
                 <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">
-                  Attendance Management
+                  Attendance Settings
                 </h1>
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                   <FiHome className="text-gray-400 text-sm" />
                   <span className="text-gray-300">/</span> HRM /{" "}
-                  <span className="text-[#FF7B1D] font-semibold">Manage Attendance</span>
+                  <span className="text-[#FF7B1D] font-semibold">Settings</span>
                 </p>
-              </div>
-
-              <div className="flex bg-gray-100 p-1 rounded-sm shadow-inner">
-                {[
-                  { id: "monitor", label: "Live Monitor", icon: Activity },
-                  { id: "records", label: "Historical Records", icon: ClipboardList },
-                  { id: "settings", label: "System Settings", icon: Settings },
-                ].map((mt) => {
-                  const Icon = mt.icon;
-                  return (
-                    <button
-                      key={mt.id}
-                      onClick={() => setMainTab(mt.id)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-sm text-sm font-bold transition-all ${mainTab === mt.id
-                        ? "bg-white text-[#FF7B1D] shadow-sm scale-105"
-                        : "text-gray-500 hover:text-gray-700"
-                        }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                      {mt.label}
-                    </button>
-                  );
-                })}
               </div>
             </div>
           </div>
@@ -473,11 +485,20 @@ export default function AttendanceManagement() {
                             <tr key={record.id} className="border-t hover:bg-gray-50 transition-colors group">
                               <td className="px-6 py-4">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center font-bold text-orange-600 border border-orange-200">
-                                    {record.employee_name?.charAt(0)}
-                                  </div>
-                                  <div>
-                                    <p className="font-bold text-gray-900">{record.employee_name}</p>
+                                  {record.selfie ? (
+                                    <img 
+                                      src={record.selfie} 
+                                      alt="" 
+                                      onClick={() => setSelectedImage({ url: record.selfie, time: record.check_in, ip: record.ip_address })}
+                                      className="w-10 h-10 rounded-xl object-cover border-2 border-orange-200 cursor-pointer hover:opacity-80 transition-opacity"
+                                    />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center font-bold text-orange-600 border border-orange-200">
+                                      {record.employee_name?.charAt(0)}
+                                    </div>
+                                  )}
+                                  <div onClick={() => setSelectedEmployeeForDetail(record)} className="cursor-pointer hover:text-orange-600">
+                                    <p className="font-bold text-gray-900 hover:text-orange-600 transition-colors">{record.employee_name}</p>
                                     <p className="text-xs text-gray-500 font-medium">{record.emp_uid}</p>
                                   </div>
                                 </div>
@@ -548,7 +569,7 @@ export default function AttendanceManagement() {
                         <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
                           <th className="px-6 py-3 font-semibold border-b border-orange-400 capitalize whitespace-nowrap text-left">Employee</th>
                           <th className="px-6 py-3 font-semibold border-b border-orange-400 capitalize whitespace-nowrap text-center">Date</th>
-                          <th className="px-6 py-3 font-semibold border-b border-orange-400 capitalize whitespace-nowrap text-center">Hours</th>
+                          <th className="px-6 py-3 font-semibold border-b border-orange-400 capitalize whitespace-nowrap text-center">Total Time</th>
                           <th className="px-6 py-3 font-semibold border-b border-orange-400 capitalize whitespace-nowrap text-center">Status</th>
                           <th className="px-6 py-3 font-semibold border-b border-orange-400 capitalize whitespace-nowrap text-right">Actions</th>
                         </tr>
@@ -559,17 +580,28 @@ export default function AttendanceManagement() {
                             <tr key={record.id} className="border-t hover:bg-gray-50 transition-colors group">
                               <td className="px-6 py-4">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 border border-slate-200 uppercase">
-                                    {record.employee_name?.charAt(0)}
-                                  </div>
-                                  <div>
-                                    <p className="font-bold text-gray-900">{record.employee_name}</p>
+                                  {record.selfie ? (
+                                    <img 
+                                      src={record.selfie} 
+                                      alt="" 
+                                      onClick={() => setSelectedImage({ url: record.selfie, time: record.check_in, ip: record.ip_address })}
+                                      className="w-10 h-10 rounded-xl object-cover border-2 border-slate-200 cursor-pointer hover:opacity-80 transition-opacity"
+                                    />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-600 border border-slate-200 uppercase">
+                                      {record.employee_name?.charAt(0)}
+                                    </div>
+                                  )}
+                                  <div onClick={() => setSelectedEmployeeForDetail(record)} className="cursor-pointer hover:text-orange-600">
+                                    <p className="font-bold text-gray-900 hover:text-orange-600 transition-colors">{record.employee_name}</p>
                                     <p className="text-[11px] text-gray-500 font-medium uppercase tracking-tighter">{record.emp_uid}</p>
                                   </div>
                                 </div>
                               </td>
                               <td className="px-6 py-4 text-center text-sm">{record.date ? new Date(record.date).toLocaleDateString() : '-'}</td>
-                              <td className="px-6 py-4 text-center text-sm font-bold">{record.work_hours || '-'}</td>
+                              <td className="px-6 py-4 text-center text-sm font-bold whitespace-nowrap">
+                                {calculateTotalTime(record.check_in, record.check_out, record.work_hours)}
+                              </td>
                               <td className="px-6 py-4 text-center">
                                 <span className={`px-2 py-1 rounded-[2px] text-[10px] font-bold border uppercase tracking-wider ${record.status === 'present' ? 'bg-green-100 text-green-600 border-green-200' :
                                   record.status === 'absent' ? 'bg-red-100 text-red-600 border-red-200' : 'bg-orange-100 text-orange-600 border-orange-200'
@@ -1716,6 +1748,113 @@ export default function AttendanceManagement() {
           </div>
         </div>
       </div>
+
+      {/* Lightbox for Image Preview */}
+      {selectedImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setSelectedImage(null)}>
+          <div className="bg-white rounded-2xl overflow-hidden shadow-2xl max-w-lg w-full relative animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <div className="absolute top-4 right-4 z-10">
+              <button onClick={() => setSelectedImage(null)} className="p-2 bg-black/50 hover:bg-black/80 rounded-full text-white backdrop-blur-md transition-all">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <img src={selectedImage.url} alt="Reference" className="w-full aspect-square object-cover scale-x-[-1]" />
+            <div className="p-6 bg-gradient-to-b from-white to-gray-50">
+              <h3 className="font-black text-xl text-gray-900 mb-4 flex items-center gap-2">
+                <Camera className="w-5 h-5 text-orange-500" />
+                Check-in Snapshot
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                  <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Timestamp</p>
+                  <p className="text-sm font-semibold text-gray-800">{selectedImage.time || 'N/A'}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                  <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">IP Address</p>
+                  <p className="text-sm font-semibold text-gray-800">{selectedImage.ip || 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Employee Detail Modal */}
+      {selectedEmployeeForDetail && (
+        <div className="fixed inset-0 z-40 flex items-center justify-end bg-black/40 backdrop-blur-sm" onClick={() => setSelectedEmployeeForDetail(null)}>
+          <div className="bg-white h-full w-full max-w-md shadow-2xl animate-in slide-in-from-right duration-300 overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white/90 backdrop-blur-md border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                {selectedEmployeeForDetail.selfie ? (
+                  <img src={selectedEmployeeForDetail.selfie} alt="" className="w-10 h-10 rounded-xl object-cover border border-orange-200" />
+                ) : (
+                  <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600">
+                    {selectedEmployeeForDetail.employee_name?.charAt(0)}
+                  </div>
+                )}
+                <div>
+                  {selectedEmployeeForDetail.employee_name}
+                  <p className="text-xs text-gray-500 font-medium">{selectedEmployeeForDetail.emp_uid}</p>
+                </div>
+              </h2>
+              <button onClick={() => setSelectedEmployeeForDetail(null)} className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="bg-green-50 p-4 rounded-2xl border border-green-100">
+                   <p className="text-xs font-bold text-green-600 uppercase mb-1">Status Today</p>
+                   <p className="text-2xl font-black text-green-700 capitalize">{selectedEmployeeForDetail.status || 'Present'}</p>
+                 </div>
+                 <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100">
+                   <p className="text-xs font-bold text-orange-600 uppercase mb-1">Total Hours</p>
+                   <p className="text-2xl font-black text-orange-700">{selectedEmployeeForDetail.work_hours || '0h 0m'}</p>
+                 </div>
+              </div>
+              
+              {/* Timeline */}
+              <div>
+                <h3 className="font-bold text-gray-800 mb-4">Today's Timeline</h3>
+                <div className="relative border-l-2 border-gray-200 ml-3 space-y-6">
+                  <div className="relative pl-6">
+                    <div className="absolute w-3 h-3 bg-green-500 rounded-full -left-[7px] top-1.5 ring-4 ring-white"></div>
+                    <p className="text-sm font-bold text-gray-800">Checked In</p>
+                    <p className="text-xs text-gray-500">
+                      {selectedEmployeeForDetail.check_in || 'N/A'}
+                      {selectedEmployeeForDetail.check_in_method && ` • via ${selectedEmployeeForDetail.check_in_method.toUpperCase()}`}
+                    </p>
+                  </div>
+                  {selectedEmployeeForDetail.check_out && (
+                    <div className="relative pl-6">
+                      <div className="absolute w-3 h-3 bg-red-500 rounded-full -left-[7px] top-1.5 ring-4 ring-white"></div>
+                      <p className="text-sm font-bold text-gray-800">Checked Out</p>
+                      <p className="text-xs text-gray-500">{selectedEmployeeForDetail.check_out}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Contact Info (Placeholder) */}
+              <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                <h3 className="font-bold text-gray-800 mb-3 text-sm">Additional Information</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Department</span>
+                    <span className="font-medium text-gray-900">{selectedEmployeeForDetail.department_name || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Network IP</span>
+                    <span className="font-mono font-medium text-gray-900">{selectedEmployeeForDetail.ip_address || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

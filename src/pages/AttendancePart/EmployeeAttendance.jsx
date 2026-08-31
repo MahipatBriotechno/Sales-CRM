@@ -409,42 +409,6 @@ export default function EmployeeAttendance() {
                   </p>
                 </div>
               </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setCurrentPage("dashboard")}
-                  className={`px-6 py-3 rounded-sm font-semibold transition-all flex items-center gap-2 ${currentPage === "dashboard"
-                    ? "bg-[#FF7B1D] text-white shadow-lg"
-                    : "bg-orange-50 text-orange-700 hover:bg-orange-100"
-                    } `}
-
-                >
-                  <Home className="w-5 h-5" />
-                  Dashboard
-                </button>
-                <button
-                  onClick={() => setCurrentPage("checkin")}
-                  className={`px-6 py-3 rounded-sm font-semibold transition-all flex items-center gap-2 ${currentPage === "checkin"
-                    ? "bg-[#FF7B1D] text-white shadow-lg"
-                    : "bg-orange-50 text-orange-700 hover:bg-orange-100"
-                    } `}
-
-                >
-                  <Camera className="w-5 h-5" />
-                  Check-In
-                </button>
-                <button
-                  onClick={() => setCurrentPage("records")}
-                  className={`px-6 py-3 rounded-sm font-semibold transition-all flex items-center gap-2 ${currentPage === "records"
-                    ? "bg-[#FF7B1D] text-white shadow-lg"
-                    : "bg-orange-50 text-orange-700 hover:bg-orange-100"
-                    } `}
-
-                >
-                  <ClipboardList className="w-5 h-5" />
-                  Records
-                </button>
-              </div>
             </div>
           </div>
         </nav>

@@ -30,6 +30,7 @@ import {
   FileText,
   Filter,
   Mic,
+  Eye,
 } from "lucide-react";
 import {
   useGetAllAttendanceQuery,
@@ -53,6 +54,7 @@ export default function AttendanceApp() {
   const dropdownRef = useRef(null);
   const [showSelfieCapture, setShowSelfieCapture] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
   const [detailsModal, setDetailsModal] = useState(null);
 
   // Live Monitoring State for Check-in Grid
@@ -383,6 +385,17 @@ export default function AttendanceApp() {
     );
   };
 
+  const format12Hour = (timeStr) => {
+    if (!timeStr || timeStr === "-") return "-";
+    const parts = timeStr.split(":");
+    if (parts.length < 2) return timeStr;
+    let h = parseInt(parts[0], 10);
+    const m = parts[1];
+    const ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return `${h}:${m} ${ampm}`;
+  };
+
   return (
     <DashboardLayout>
       <div className="p-0 bg-white ml-4 mr-4 min-h-screen text-black">
@@ -392,199 +405,15 @@ export default function AttendanceApp() {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-gray-800 transition-all duration-300">
-                  Attendance System
+                  Attendance Overview
                 </h1>
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                   <FiHome className="text-gray-700" size={14} />
                   <span className="text-gray-400"></span> HRM /{" "}
                   <span className="text-[#FF7B1D] font-medium">
-                    {currentPage === 'dashboard' ? 'Dashboard' : currentPage === 'checkin' ? 'Check-In' : 'All Attendance'}
+                    Overview
                   </span>
                 </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center bg-gray-100 p-1 rounded-sm border border-gray-200 shadow-inner mr-4">
-                  <button
-                    onClick={() => setCurrentPage("dashboard")}
-                    className={`p-2 px-4 rounded-sm transition-all duration-200 flex items-center gap-2 text-sm font-bold ${currentPage === "dashboard"
-                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
-                      : "text-gray-400 hover:text-gray-600"
-                      }`}
-                  >
-                    <Home size={18} />
-                    Dashboard
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage("checkin")}
-                    className={`p-2 px-4 rounded-sm transition-all duration-200 flex items-center gap-2 text-sm font-bold ${currentPage === "checkin"
-                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
-                      : "text-gray-400 hover:text-gray-600"
-                      }`}
-                  >
-                    <Camera size={18} />
-                    Check-In
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage("records")}
-                    className={`p-2 px-4 rounded-sm transition-all duration-200 flex items-center gap-2 text-sm font-bold ${currentPage === "records"
-                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
-                      : "text-gray-400 hover:text-gray-600"
-                      }`}
-                  >
-                    <ClipboardList size={18} />
-                    Records
-                  </button>
-                </div>
-
-                {currentPage === 'records' && (
-                  <div className="flex items-center gap-2">
-                    {/* Unified Filter */}
-                    <div className="relative" ref={dropdownRef}>
-                      <button
-                        onClick={() => {
-                          if (filterStatus !== 'all' || filterDepartment !== 'all' || dateRange.state !== 'All') {
-                            setFilterStatus('all');
-                            setFilterDepartment('all');
-                            setDateRange({ state: "All", start: "", end: "" });
-                          } else {
-                            setIsFilterOpen(!isFilterOpen);
-                          }
-                        }}
-                        className={`px-3 py-3 rounded-sm border transition shadow-sm ${(isFilterOpen || (filterStatus !== 'all' || filterDepartment !== 'all' || dateRange.state !== 'All'))
-                          ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-                          }`}
-                      >
-                        {(filterStatus !== 'all' || filterDepartment !== 'all' || dateRange.state !== 'All') ? <X size={18} /> : <Filter size={18} />}
-                      </button>
-
-                      {isFilterOpen && (
-                        <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
-                          <div className="p-3 border-b border-gray-100 bg-gray-50">
-                            <span className="text-sm font-bold text-gray-700 tracking-wide">status</span>
-                          </div>
-                          <div className="py-1">
-                            {['all', 'present', 'absent', 'late', 'half-day'].map((status) => (
-                              <button
-                                key={status}
-                                onClick={() => {
-                                  setFilterStatus(status);
-                                  setIsFilterOpen(false);
-                                }}
-                                className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterStatus === status
-                                  ? "bg-orange-50 text-orange-600 font-bold"
-                                  : "text-gray-700 hover:bg-gray-50"
-                                  }`}
-                              >
-                                {status.charAt(0).toUpperCase() + status.slice(1)}
-                              </button>
-                            ))}
-                          </div>
-
-                          <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                            <span className="text-sm font-bold text-gray-700 tracking-wide">department</span>
-                          </div>
-                          <div className="py-1 max-h-48 overflow-y-auto custom-scrollbar">
-                            <button
-                              onClick={() => { setFilterDepartment('all'); setIsFilterOpen(false); }}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterDepartment === 'all'
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
-                            >
-                              All Departments
-                            </button>
-                            {departments.map((dept) => (
-                              <button
-                                key={dept.id}
-                                onClick={() => {
-                                  setFilterDepartment(dept.id);
-                                  setIsFilterOpen(false);
-                                }}
-                                className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterDepartment === dept.id
-                                  ? "bg-orange-50 text-orange-600 font-bold"
-                                  : "text-gray-700 hover:bg-gray-50"
-                                  }`}
-                              >
-                                {dept.department_name}
-                              </button>
-                            ))}
-                          </div>
-
-                          <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                            <span className="text-sm font-bold text-gray-700 tracking-wide">Date Range</span>
-                          </div>
-                          <div className="py-1">
-                            {["All", "Today", "Yesterday", "Last 7 Days", "Custom"].map((option) => (
-                              <div key={option}>
-                                <button
-                                  onClick={() => {
-                                    const today = new Date().toISOString().split('T')[0];
-                                    if (option === 'All') setDateRange({ state: 'All', start: '', end: '' });
-                                    else if (option === 'Today') setDateRange({ state: 'Today', start: today, end: today });
-                                    else if (option === 'Yesterday') {
-                                      const yesterday = new Date();
-                                      yesterday.setDate(yesterday.getDate() - 1);
-                                      const d = yesterday.toISOString().split('T')[0];
-                                      setDateRange({ state: 'Yesterday', start: d, end: d });
-                                    } else if (option === 'Last 7 Days') {
-                                      const last7 = new Date();
-                                      last7.setDate(last7.getDate() - 7);
-                                      setDateRange({ state: 'Last 7 Days', start: last7.toISOString().split('T')[0], end: today });
-                                    } else if (option === 'Custom') {
-                                      setDateRange({ ...dateRange, state: 'Custom' });
-                                      return;
-                                    }
-                                    setIsFilterOpen(false);
-                                  }}
-                                  className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateRange.state === option
-                                    ? "bg-orange-50 text-orange-600 font-bold"
-                                    : "text-gray-700 hover:bg-gray-50"
-                                    }`}
-                                >
-                                  {option}
-                                </button>
-                                {option === "Custom" && dateRange.state === "Custom" && (
-                                  <div className="px-4 py-3 space-y-2 bg-gray-50/50">
-                                    <input
-                                      type="date"
-                                      value={dateRange.start}
-                                      onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                                      className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:ring-1 focus:ring-orange-500 outline-none"
-                                    />
-                                    <input
-                                      type="date"
-                                      value={dateRange.end}
-                                      onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                                      className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:ring-1 focus:ring-orange-500 outline-none"
-                                    />
-                                    <button
-                                      onClick={() => setIsFilterOpen(false)}
-                                      className="w-full bg-orange-500 text-white text-[10px] font-bold py-2 rounded-sm"
-                                    >
-                                      Apply
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <ActionGuard permission="attendance_reports" module="Attendance Management" type="read">
-                      <button
-                        onClick={handleExport}
-                        className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 transition shadow-lg flex items-center gap-2 font-semibold"
-                      >
-                        <Download size={18} />
-                        Export
-                      </button>
-                    </ActionGuard>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -610,115 +439,64 @@ export default function AttendanceApp() {
               </div>
 
 
-              {/* Network Status
-              <div className="bg-white rounded-sm shadow-xl p-6 border border-orange-100">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`p-3 rounded-sm ${
-                        isOnCompanyNetwork ? "bg-green-100" : "bg-red-100"
-                      }`}
-                    >
-                      <Wifi
-                        className={`w-6 h-6 ${
-                          isOnCompanyNetwork ? "text-green-600" : "text-red-600"
-                        }`}
-                      />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 text-lg">
-                        Network Status
-                      </h3>
-                      <p
-                        className={`text-sm font-medium ${
-                          isOnCompanyNetwork ? "text-green-600" : "text-red-600"
-                        }`}
-                      >
-                        {isOnCompanyNetwork
-                          ? "✓ Connected to company WiFi"
-                          : "✗ Not on company network"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right bg-orange-50 px-4 py-2 rounded-sm">
-                    <p className="text-xs text-orange-600 font-semibold uppercase">
-                      Your IP
-                    </p>
-                    <p className="text-sm font-mono font-bold text-orange-900">
-                      {userIP || "Loading..."}
-                    </p>
-                  </div>
-                </div>
-              </div> */}
-
-              {/* Quick Actions */}
-              <div className="bg-white rounded-sm shadow-xl p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  Quick Actions
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <ActionGuard permission="attendance_mark" module="Attendance Management" type="create">
-                    <button
-                      onClick={() => setCurrentPage("checkin")}
-                      className="p-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-sm hover:shadow-sm transform flex items-center justify-center gap-3 font-semibold w-full"
-                    >
-                      <Camera className="w-6 h-6" />
-                      Check-In with Selfie
-                    </button>
-                  </ActionGuard>
-                  <button
-                    onClick={() => setCurrentPage("records")}
-                    className="p-6 bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-sm hover:from-orange-500 hover:to-orange-600 transition-all shadow-sm hover:shadow-sm transform  flex items-center justify-center gap-3 font-semibold"
-                  >
-                    <ClipboardList className="w-6 h-6" />
-                    View Attendance Records
-                  </button>
-                </div>
-              </div>
-
               {/* Recent Activity */}
-              <div className="bg-white rounded-sm shadow-xl p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  Recent Check-ins
-                </h2>
-                <div className="space-y-4">
+              <div className="bg-white rounded-sm shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <div className="w-2 h-6 bg-orange-500 rounded-sm"></div>
+                      Recent Check-ins
+                    </h2>
+                    <p className="text-xs text-gray-500 mt-1 ml-4">Latest employee arrivals today</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {attendanceData
                     .filter((a) => a.status !== "absent")
-                    .slice(0, 5)
+                    .slice(0, 6)
                     .map((record, index) => (
                       <div
                         key={index}
-                        className="flex items-center gap-4 p-4 bg-orange-50 rounded-sm"
+                        onClick={() => record.selfie && setSelectedImage({ url: record.selfie, time: record.check_in, date: record.date, method: record.check_in_method, ip: record.ip_address, name: record.employee_name })}
+                        className="flex items-center gap-4 p-4 bg-white border border-gray-200 shadow-sm hover:shadow-md rounded-sm hover:border-orange-300 transition-all group cursor-pointer"
                       >
-                        {record.selfie && (
-                          <img
-                            src={record.selfie}
-                            alt="Selfie"
-                            className="w-12 h-12 rounded-full object-cover border-2 border-orange-300"
-                          />
-                        )}
-                        {!record.selfie && (
-                          <div className="w-12 h-12 rounded-full bg-orange-200 flex items-center justify-center">
-                            <UserCheck className="w-6 h-6 text-orange-600" />
-                          </div>
-                        )}
-                        <div className="flex-1">
-                          <p className="font-bold text-gray-900">
+                        <div className="relative">
+                          {record.selfie ? (
+                            <img
+                              src={record.selfie}
+                              alt="Selfie"
+                              className="w-12 h-12 rounded-sm object-cover border-2 border-orange-100 group-hover:border-orange-300 transition-all"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-sm bg-orange-50 border-2 border-orange-100 flex items-center justify-center group-hover:border-orange-300 transition-colors">
+                              <UserCheck className="w-5 h-5 text-orange-500" />
+                            </div>
+                          )}
+                          <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-gray-900 truncate group-hover:text-orange-600 transition-colors">
                             {record.employee_name}
                           </p>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-xs font-medium text-gray-500 truncate">
                             {record.department_name}
                           </p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold text-orange-600">
-                            {record.check_in}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {record.check_in_method}
-                          </p>
+                        <div className="flex flex-col items-end shrink-0">
+                          <span className="text-sm font-bold text-gray-800">
+                            {format12Hour(record.check_in)}
+                          </span>
+                          <div className="flex items-center gap-2 mt-1">
+                            {record.selfie && (
+                              <span className="text-[10px] font-bold text-orange-500 flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                                <Eye size={12} /> View
+                              </span>
+                            )}
+                            <span className="text-[9px] font-bold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                              {record.check_in_method}
+                            </span>
+                          </div>
                         </div>
-
                       </div>
                     ))}
                 </div>
@@ -1237,6 +1015,69 @@ export default function AttendanceApp() {
                       {detailsModal.work_hours}
                     </p>
 
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Selfie Lightbox */}
+        {selectedImage && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 font-primary" onClick={() => setSelectedImage(null)}>
+            <div className="bg-white rounded-sm shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col relative" onClick={(e) => e.stopPropagation()}>
+              <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between z-50 rounded-t-sm shadow-md shrink-0">
+                  <div className="flex items-center gap-4">
+                      <div className="bg-white bg-opacity-20 p-2.5 rounded-sm">
+                          <Camera size={24} className="text-white" />
+                      </div>
+                      <div>
+                          <h2 className="text-xl font-bold text-white capitalize tracking-wide leading-tight">
+                              Check-in Snapshot
+                          </h2>
+                          <p className="text-xs text-orange-50 font-medium opacity-90">
+                              View employee check-in details
+                          </p>
+                      </div>
+                  </div>
+                  <button onClick={() => setSelectedImage(null)} className="text-white hover:bg-white hover:bg-opacity-20 p-2 transition-all rounded-full">
+                      <X size={24} />
+                  </button>
+              </div>
+
+              <div className="overflow-y-auto custom-scrollbar flex-1">
+                <img src={selectedImage.url} alt="Check-in" className="w-full h-auto object-cover" style={{ maxHeight: "60vh" }} />
+                <div className="p-6 bg-gradient-to-b from-white to-gray-50 border-t border-gray-100">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-50 p-3 rounded-sm border border-gray-200">
+                      <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Employee</p>
+                      <p className="text-sm font-bold text-gray-900">{selectedImage.name || "N/A"}</p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-sm border border-gray-200">
+                      <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Date</p>
+                      <p className="text-sm font-bold text-gray-900">
+                        {selectedImage.date && !isNaN(new Date(selectedImage.date).getTime()) 
+                          ? new Date(selectedImage.date).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }) 
+                          : selectedImage.date || "N/A"}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-sm border border-gray-200">
+                      <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Time</p>
+                      <p className="text-sm font-bold text-gray-900">{format12Hour(selectedImage.time) || "N/A"}</p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-sm border border-gray-200">
+                      <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Method</p>
+                      <p className="text-sm font-bold text-blue-600 uppercase tracking-wider">{selectedImage.method || "N/A"}</p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-sm border border-gray-200 col-span-2 flex justify-between items-center">
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">IP Address</p>
+                        <p className="text-sm font-bold text-gray-900 font-mono">{selectedImage.ip || "N/A"}</p>
+                      </div>
+                      <div className="w-8 h-8 rounded-sm bg-orange-100 flex items-center justify-center text-orange-600">
+                        <Wifi className="w-4 h-4" />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

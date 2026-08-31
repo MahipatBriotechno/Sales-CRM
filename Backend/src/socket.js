@@ -2,6 +2,11 @@ const { Server } = require('socket.io');
 const Messenger = require('./models/messengerModel');
 
 let ioInstance;
+const onlineUsers = new Map();
+
+const isUserOnline = (id, type) => {
+    return onlineUsers.has(`${id}_${type}`);
+};
 
 const initializeSocket = (server) => {
     const io = new Server(server, {
@@ -34,7 +39,7 @@ const initializeSocket = (server) => {
     ioInstance = io;
 
     // Map to track online users: { userId_type: socketId }
-    const onlineUsers = new Map();
+    // onlineUsers map is defined at module scope
 
     io.on('connection', (socket) => {
         console.log('New client connected:', socket.id);
@@ -191,4 +196,4 @@ const initializeSocket = (server) => {
 
 const getIO = () => ioInstance;
 
-module.exports = { initializeSocket, getIO };
+module.exports = { initializeSocket, getIO, isUserOnline, onlineUsers };

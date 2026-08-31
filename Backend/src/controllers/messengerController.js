@@ -3,6 +3,7 @@ const Employee = require('../models/employeeModel');
 const Client = require('../models/clientModel');
 const { pool } = require('../config/db');
 const notificationService = require('../services/notificationService');
+const { isUserOnline } = require('../socket');
 
 const messengerController = {
     // Get all potential contacts (Employees and Clients)
@@ -31,7 +32,7 @@ const messengerController = {
                     name: emp.employee_name,
                     role: emp.designation_name || 'Employee',
                     avatar: emp.employee_name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2),
-                    status: emp.status === 'Active' ? 'online' : 'offline',
+                    status: (emp.status === 'Active' && isUserOnline(emp.id, 'employee')) ? 'online' : 'offline',
                     email: emp.email,
                     phone: emp.mobile_number || 'N/A',
                     type: 'employee',
@@ -47,7 +48,7 @@ const messengerController = {
                         name: `${admin[0].firstName} ${admin[0].lastName} (Admin)`,
                         role: 'Administrator',
                         avatar: (admin[0].firstName[0] + (admin[0].lastName[0] || '')).toUpperCase(),
-                        status: 'online',
+                        status: isUserOnline(admin[0].id, 'user') ? 'online' : 'offline',
                         email: admin[0].email,
                         phone: admin[0].mobileNumber,
                         type: 'user',
@@ -132,7 +133,7 @@ const messengerController = {
                 name: c.company_name || `${c.first_name} ${c.last_name}`,
                 role: c.type === 'organization' ? 'Organization' : 'Individual Client',
                 avatar: (c.company_name || c.first_name || 'C').substring(0, 2).toUpperCase(),
-                status: c.status === 'active' ? 'online' : 'offline',
+                status: (c.status === 'active' && isUserOnline(c.id, 'client')) ? 'online' : 'offline',
                 email: c.email,
                 phone: c.phone,
                 type: 'client',

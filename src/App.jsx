@@ -52,8 +52,8 @@ import MyProfile from "./pages/Profile/MyProfile";
 
 // Attendance Part
 import AllAttendance from "./pages/AttendancePart/AllAttendance";
-import EmployeeAttendance from "./pages/AttendancePart/EmployeeAttendance"; // Import this
-
+import EmployeeAttendance from "./pages/AttendancePart/EmployeeAttendance";
+import AttendanceRecords from "./pages/AttendancePart/AttendanceRecords";
 import ManageAttendance from "./pages/AttendancePart/ManageAttendancePart/ManageAttendance";
 // Leave Management Part
 import AllLeave from "./pages/LeaveManagement/AllLeave";
@@ -220,7 +220,8 @@ function App() {
             <Route path="/employee-profile/:id" element={<EmployeeProfile />} />
             <Route path="/hrm/attendance" element={<AllAttendance />} />
             <Route path="/hrm/attendance/employee" element={<EmployeeAttendance />} />
-
+            <Route path="/hrm/attendance/records" element={<AttendanceRecords />} />
+            <Route path="/hrm/attendance/settings" element={<ManageAttendance />} />
             <Route path="/hrm/attendance/manage" element={<ManageAttendance />} />
             <Route path="/hrm/leave/all" element={<AllLeave />} />
             <Route path="/hrm/leave/holiday" element={<Holiday />} />

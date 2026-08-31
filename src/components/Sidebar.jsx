@@ -433,19 +433,24 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           permission: "Attendance Management",
           icon: <CalendarCheck size={22} />,
           children: [
-            {
+            ...(user?.role === 'Employee' ? [{
               name: "My Attendance",
               path: "/hrm/attendance/employee",
               permission: "attendance_view_own"
-            },
+            }] : []),
             {
-              name: "All Attendance",
+              name: "Overview",
               path: "/hrm/attendance",
               permission: "attendance_view_all"
             },
             {
-              name: "Manage Attendance",
-              path: "/hrm/attendance/manage",
+              name: "Records",
+              path: "/hrm/attendance/records",
+              permission: "attendance_view_all"
+            },
+            {
+              name: "Settings",
+              path: "/hrm/attendance/settings",
               permission: "attendance_edit"
             },
           ],
