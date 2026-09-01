@@ -202,7 +202,20 @@ const syncDatabase = async () => {
             console.error('Error adding notice_period and probation_period to employees:', e);
         }
 
-        console.log('Database synced: channel_configs, goals, visitors, and shifts tables are ready.');
+        const attendanceBreaksSql = `
+        CREATE TABLE IF NOT EXISTS attendance_breaks (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            attendance_id INT NOT NULL,
+            start_time DATETIME NOT NULL,
+            end_time DATETIME NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (attendance_id) REFERENCES attendance(id) ON DELETE CASCADE
+        );
+        `;
+        await pool.query(attendanceBreaksSql);
+
+        console.log('Database synced: channel_configs, goals, visitors, shifts, and attendance_breaks tables are ready.');
     } catch (error) {
         console.error('Error syncing database:', error);
     }

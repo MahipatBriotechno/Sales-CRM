@@ -101,29 +101,27 @@ const attendanceController = {
             // 4. Status Determination based on shift settings (or fallback to company settings)
             let status = 'present';
             
-            if (shift && shift.late_marking) {
-                const startTimeStr = shift.check_in_time || '09:00:00';
-                const graceMinutes = shift.grace_period || 0;
+            let checkInTimeStr = '09:00:00';
+            let graceMins = 15;
+            let evaluateLate = true;
 
-                const [sHour, sMin, sSec] = startTimeStr.split(':').map(Number);
+            if (shift && settings?.multipleShiftsEnabled) {
+                checkInTimeStr = shift.check_in_time || '09:00:00';
+            } else if (settings) {
+                checkInTimeStr = settings.attendanceStartTime || '09:00:00';
+            }
+
+            if (settings) {
+                // Always use global settings for grace period and late marks
+                graceMins = settings.lateMarkAfter !== undefined && settings.lateMarkAfter !== null ? settings.lateMarkAfter : (settings.graceTime || 15);
+            }
+
+            if (evaluateLate) {
+                const [sHour, sMin, sSec] = checkInTimeStr.split(':').map(Number);
                 const startDateTime = new Date();
-                startDateTime.setHours(sHour, sMin, sSec || 0);
+                startDateTime.setHours(sHour, sMin, sSec || 0, 0);
 
-                const lateLimit = new Date(startDateTime.getTime() + graceMinutes * 60000);
-
-                if (currentTime > lateLimit) {
-                    status = 'late';
-                }
-            } else if (!shift && settings) {
-                // Fallback to global settings if no shift assigned
-                const startTimeStr = settings.attendanceStartTime || '09:00:00';
-                const graceMinutes = settings.graceTime || 15;
-
-                const [sHour, sMin, sSec] = startTimeStr.split(':').map(Number);
-                const startDateTime = new Date();
-                startDateTime.setHours(sHour, sMin, sSec || 0);
-
-                const lateLimit = new Date(startDateTime.getTime() + graceMinutes * 60000);
+                const lateLimit = new Date(startDateTime.getTime() + graceMins * 60000);
 
                 if (currentTime > lateLimit) {
                     status = 'late';
@@ -172,8 +170,15 @@ const attendanceController = {
             let work_minutes = 0;
             
             if (record && record.check_in) {
-                const start = new Date(`${record.date} ${record.check_in}`);
-                const end = new Date(`${record.date} ${currentTime}`);
+                const dateStr = new Date(record.date).toISOString().split('T')[0];
+                const start = new Date(`${dateStr}T${record.check_in}`);
+                let end = new Date(`${dateStr}T${currentTime}`);
+                
+                // If end time is earlier than start time, it means it's an overnight shift spanning into the next day
+                if (end < start) {
+                    end.setDate(end.getDate() + 1);
+                }
+                
                 const diff = (end - start) / 1000 / 60; // total minutes
                 work_minutes = diff > 0 ? diff : 0;
                 const h = Math.floor(work_minutes / 60);
@@ -256,6 +261,12 @@ const attendanceController = {
             const userId = req.user.id;
             const records = await Attendance.findAll(userId, { employee_id });
 
+            // Fetch breaks for these records
+            for (let record of records) {
+                const breaks = await Attendance.getBreaks(record.id);
+                record.breaks = breaks;
+            }
+
             // Calculate stats
             const stats = await Attendance.getEmployeeStats(employee_id, userId);
 
@@ -263,6 +274,59 @@ const attendanceController = {
         } catch (error) {
             console.error('Error fetching employee attendance:', error);
             res.status(500).json({ success: false, message: 'Error fetching employee attendance' });
+        }
+    },
+
+    startBreak: async (req, res) => {
+        try {
+            const { id } = req.params; // attendance_id
+            const userId = req.user.id;
+
+            // Fetch settings to check maxBreaks
+            const { pool } = require('../config/db');
+            const [settings] = await pool.query('SELECT * FROM attendance_settings WHERE user_id = ?', [userId]);
+            const maxBreaks = settings.length > 0 ? settings[0].maxBreaks : 2;
+            const breakEnabled = settings.length > 0 ? settings[0].breakEnabled : 1;
+
+            if (!breakEnabled) {
+                return res.status(400).json({ success: false, message: 'Breaks are disabled in settings' });
+            }
+
+            const breaks = await Attendance.getBreaks(id);
+            if (breaks.length >= maxBreaks) {
+                return res.status(400).json({ success: false, message: 'Maximum breaks limit reached' });
+            }
+
+            // Check if any break is currently active
+            const activeBreak = breaks.find(b => !b.end_time);
+            if (activeBreak) {
+                return res.status(400).json({ success: false, message: 'You are already on a break' });
+            }
+
+            await Attendance.startBreak(id);
+            res.json({ success: true, message: 'Break started successfully' });
+        } catch (error) {
+            console.error('Error starting break:', error);
+            res.status(500).json({ success: false, message: 'Error starting break' });
+        }
+    },
+
+    endBreak: async (req, res) => {
+        try {
+            const { id } = req.params; // attendance_id
+            
+            const breaks = await Attendance.getBreaks(id);
+            const activeBreak = breaks.find(b => !b.end_time);
+            
+            if (!activeBreak) {
+                return res.status(400).json({ success: false, message: 'No active break found' });
+            }
+
+            await Attendance.endBreak(activeBreak.id);
+            res.json({ success: true, message: 'Break ended successfully' });
+        } catch (error) {
+            console.error('Error ending break:', error);
+            res.status(500).json({ success: false, message: 'Error ending break' });
         }
     },
 

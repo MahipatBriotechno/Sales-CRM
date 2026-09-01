@@ -66,6 +66,10 @@ export const leadApi = createApi({
             },
             providesTags: ['Lead'],
         }),
+        getWatchTicker: builder.query({
+            query: () => 'leads/watch-ticker',
+            providesTags: ['Lead'],
+        }),
         getLeadById: builder.query({
             query: (id) => `leads/${id}`,
             providesTags: (result, error, id) => [{ type: 'Lead', id }],
@@ -383,6 +387,7 @@ export const leadApi = createApi({
 
 export const {
     useGetLeadsQuery,
+    useGetWatchTickerQuery,
     useGetLeadByIdQuery,
     useCreateLeadMutation,
     useBulkCreateLeadsMutation,

@@ -555,7 +555,8 @@ const integrationController = {
             });
         } catch (error) {
             console.error('Fetch Templates Error:', error.response?.data || error.message);
-            const status = error.response?.status || 400;
+            let status = error.response?.status || 400;
+            if (status === 401) status = 400; // Prevent frontend from treating external 401 as CRM session expiry
             res.status(status).json({
                 success: false,
                 message: error.response?.data?.error?.message || error.message
@@ -622,7 +623,9 @@ const integrationController = {
             res.json({ success: true, data: response.data, message: "Message sent successfully" });
         } catch (error) {
             console.error('Send Template Error:', error.response?.data || error.message);
-            res.status(400).json({
+            let status = error.response?.status || 400;
+            if (status === 401) status = 400; // Prevent frontend from treating external 401 as CRM session expiry
+            res.status(status).json({
                 success: false,
                 message: error.response?.data?.error?.message || error.message
             });

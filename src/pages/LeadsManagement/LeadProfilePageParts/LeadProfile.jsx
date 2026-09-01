@@ -271,7 +271,7 @@ export default function CRMLeadDetail() {
       { label: "Lost", status: "Not Qualified", color: "bg-red-600", active: isDropped },
     ];
 
-  const currentStageIndex = isWon ? 2 : isDropped ? 3 : (isFollowUp || leadData?.tag === "Not Connected") ? 1 : 0;
+  const currentStageIndex = effectiveStages.findIndex(s => s.active);
 
   const isOnlyCallTabEnabled = (leadData?.call_count > 0) && !isFollowUp && !isWon && !isDropped;
   const isTabsEnabled = isFollowUp || isWon || isDropped || (leadData?.call_count > 0);
@@ -860,12 +860,12 @@ export default function CRMLeadDetail() {
     <>
       <div className="min-h-screen bg-gray-0 flex flex-col">
         {/* Back Button */}
-        <div className="bg-white px-8 py-4 border-b">
+        <div className="bg-white px-8 py-3 border-b border-gray-100 flex items-center">
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-bold tracking-tight transition-colors"
           >
-            <ArrowLeftCircle size={22} className="text-gray-500" />
+            <ArrowLeftCircle size={20} className="text-gray-500" />
             Back to Leads
           </button>
         </div>
@@ -899,7 +899,7 @@ export default function CRMLeadDetail() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setShowJourney(!showJourney)}
-                    className="flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 rounded-sm font-semibold text-sm hover:bg-orange-100 transition-all border border-orange-100 shadow-sm active:scale-95 group font-primary"
+                    className="flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 rounded-none font-semibold text-sm hover:bg-orange-100 transition-all border border-orange-100 shadow-sm active:scale-95 group font-primary"
                   >
                     View Journey
                     <ChevronDown size={16} className={`transition-transform duration-300 ${showJourney ? 'rotate-180' : ''}`} />
@@ -908,7 +908,7 @@ export default function CRMLeadDetail() {
                   <button
                     disabled={!canNotQualified}
                     onClick={() => handleUpdateStatus("Not Qualified")}
-                    className={`px-4 py-2 rounded-sm text-sm font-semibold font-primary border transition-all active:scale-95 shadow-sm min-w-[120px] ${leadData?.status === "Not Qualified" || leadData?.tag === "Lost" || leadData?.tag === "Dropped"
+                    className={`px-4 py-2 rounded-none text-sm font-semibold font-primary border transition-all active:scale-95 shadow-sm min-w-[120px] ${leadData?.status === "Not Qualified" || leadData?.tag === "Lost" || leadData?.tag === "Dropped"
                       ? "bg-red-600 text-white border-red-600 shadow-md"
                       : canNotQualified
                         ? "bg-red-50 text-red-600 border-red-100 hover:border-red-500 hover:bg-red-100"
@@ -922,7 +922,7 @@ export default function CRMLeadDetail() {
                   <div className="relative" ref={stageDropdownRef}>
                     <button
                       onClick={() => setShowStageDropdown(!showStageDropdown)}
-                      className={`flex items-center gap-2 px-5 py-2 rounded-sm text-sm font-semibold shadow-md text-white transition-all active:scale-95 border border-white/20 min-w-[200px] justify-between ${effectiveStages.find(s => s.active)?.color || 'bg-slate-700'} hover:brightness-110 font-primary`}
+                      className={`flex items-center gap-2 px-5 py-2 rounded-none text-sm font-semibold shadow-md text-white transition-all active:scale-95 border border-white/20 min-w-[200px] justify-between ${effectiveStages.find(s => s.active)?.color || 'bg-slate-700'} hover:brightness-110 font-primary`}
                     >
                       <div className="flex flex-row items-center gap-2 leading-tight">
                         <span className="">Current Stage</span>{" : "}
@@ -932,7 +932,7 @@ export default function CRMLeadDetail() {
                     </button>
 
                     {showStageDropdown && (
-                      <div className="absolute top-full right-0 mt-2 w-64 bg-white border border-gray-100 py-3 shadow-2xl rounded-sm z-[110] animate-fadeIn">
+                      <div className="absolute top-full right-0 mt-2 w-64 bg-white border border-gray-100 py-3 shadow-2xl rounded-none z-[110] animate-fadeIn">
                         <div className="px-4 mb-2 pb-2 border-b border-gray-50">
                           <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Update Pipeline Stage</h4>
                         </div>
@@ -949,7 +949,7 @@ export default function CRMLeadDetail() {
                                 className={`w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors group ${stage.active ? 'bg-orange-50/50' : ''}`}
                               >
                                 <div className="flex items-center gap-3">
-                                  <div className={`w-5 h-5 rounded-sm border-2 flex items-center justify-center transition-all ${isCompleted ? 'bg-green-500 border-green-500' : 'border-gray-200 group-hover:border-orange-300'}`}>
+                                  <div className={`w-5 h-5 rounded-none border-2 flex items-center justify-center transition-all ${isCompleted ? 'bg-green-500 border-green-500' : 'border-gray-200 group-hover:border-orange-300'}`}>
                                     {isCompleted && <Check size={14} className="text-white font-black" />}
                                   </div>
                                   <span className={`text-[13px] font-semibold ${stage.active ? 'text-orange-600' : 'text-gray-700'}`}>{stage.label}</span>
@@ -1253,11 +1253,11 @@ export default function CRMLeadDetail() {
                           if (!isTabDisabled) setActiveTab(id);
                         }}
                         disabled={isTabDisabled}
-                        className={`flex-1 py-2 font-bold font-primary flex items-center justify-center gap-2 border-b-2 transition-all whitespace-nowrap text-sm tracking-wide ${isTabDisabled
+                        className={`flex-1 py-3 font-bold font-primary flex items-center justify-center gap-2 border-b-[3px] transition-all whitespace-nowrap text-sm tracking-wide ${isTabDisabled
                           ? "opacity-30 cursor-not-allowed border-transparent text-gray-300"
                           : activeTab === id
-                            ? "border-orange-500 text-orange-600 bg-orange-50/10"
-                            : "border-transparent text-black hover:text-gray-600 hover:bg-gray-50/50"
+                            ? "border-orange-500 text-orange-600 bg-orange-50"
+                            : "border-transparent text-black hover:text-gray-600 hover:bg-gray-50"
                           }`}
                       >
                         <Icon size={id === 'whatsapp' ? 18 : 16} className={id === 'whatsapp' && activeTab === id ? 'text-[#25D366]' : (activeTab === id ? 'text-orange-500' : 'text-black')} />
@@ -1444,11 +1444,11 @@ export default function CRMLeadDetail() {
         {
           showDropModal && (
             <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[100] p-4 backdrop-blur-sm animate-fadeIn">
-              <div className="bg-white w-full max-w-xl rounded-sm shadow-2xl overflow-hidden animate-slideUp font-primary">
+              <div className="bg-white w-full max-w-xl rounded-none shadow-2xl overflow-hidden animate-slideUp font-primary">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4 flex items-center justify-between shadow-md">
                   <div className="flex items-center gap-4">
-                    <div className="bg-white bg-opacity-20 p-2.5 rounded-sm">
+                    <div className="bg-white bg-opacity-20 p-2.5 rounded-none">
                       <Zap size={24} className="text-white fill-white" />
                     </div>
                     <div>
@@ -1471,7 +1471,7 @@ export default function CRMLeadDetail() {
                 <div className="p-8 space-y-6">
                   {!showConfirmDrop ? (
                     <>
-                      <div className="bg-red-50 p-4 border border-red-100 rounded-sm flex items-start gap-3 shadow-sm">
+                      <div className="bg-red-50 p-4 border border-red-100 rounded-none flex items-start gap-3 shadow-sm">
                         <div className="w-1.5 h-1.5 bg-red-600 rounded-full mt-1.5 animate-pulse shrink-0"></div>
                         <div>
                           <p className="text-[13px] text-red-700 font-bold uppercase tracking-wider mb-0.5">
@@ -1491,7 +1491,7 @@ export default function CRMLeadDetail() {
                         <select
                           value={dropReason}
                           onChange={(e) => setDropReason(e.target.value)}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:ring-opacity-20 outline-none transition-all text-sm font-semibold bg-white hover:border-gray-300 shadow-sm"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-none focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:ring-opacity-20 outline-none transition-all text-sm font-semibold bg-white hover:border-gray-300 shadow-sm"
                         >
                           <option value="">Select a specific reason</option>
                           {dropReasons.map(reason => (
@@ -1509,7 +1509,7 @@ export default function CRMLeadDetail() {
                           value={dropRemarks}
                           onChange={(e) => setDropRemarks(e.target.value)}
                           placeholder="Explain why this lead isn't a good fit..."
-                          className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:ring-opacity-20 outline-none transition-all text-sm font-medium h-32 resize-none bg-white placeholder-gray-400 shadow-sm hover:border-gray-300"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-none focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:ring-opacity-20 outline-none transition-all text-sm font-medium h-32 resize-none bg-white placeholder-gray-400 shadow-sm hover:border-gray-300"
                         />
                       </div>
                     </>
@@ -1532,14 +1532,14 @@ export default function CRMLeadDetail() {
                   <div className="flex gap-4 pt-4 border-t border-gray-100">
                     <button
                       onClick={() => showConfirmDrop ? setShowConfirmDrop(false) : setShowDropModal(false)}
-                      className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all text-xs uppercase tracking-widest active:scale-95 bg-white shadow-sm"
+                      className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-none hover:bg-gray-100 transition-all text-xs uppercase tracking-widest active:scale-95 bg-white shadow-sm"
                     >
                       {showConfirmDrop ? "Back To Edit" : "Cancel"}
                     </button>
                     <button
                       onClick={handleDropLead}
                       disabled={!dropReason || !dropRemarks.trim()}
-                      className={`flex-1 px-6 py-3 font-bold rounded-sm transition-all text-xs uppercase tracking-widest active:scale-95 shadow-lg flex items-center justify-center gap-2 ${!dropReason || !dropRemarks.trim()
+                      className={`flex-1 px-6 py-3 font-bold rounded-none transition-all text-xs uppercase tracking-widest active:scale-95 shadow-lg flex items-center justify-center gap-2 ${!dropReason || !dropRemarks.trim()
                         ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
                         : "bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800"
                         }`}
@@ -1556,20 +1556,20 @@ export default function CRMLeadDetail() {
         <div className="fixed bottom-10 right-10 flex flex-row gap-4 z-50">
           <a
             href={leadData?.email ? `mailto:${leadData.email}` : '#'}
-            className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 border-2 border-white rounded-xl flex items-center justify-center text-white shadow-xl hover:shadow-blue-500/40 transition-all transform hover:-translate-y-1 active:scale-95"
+            className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 border-2 border-white rounded-none flex items-center justify-center text-white shadow-xl hover:shadow-blue-500/40 transition-all transform hover:-translate-y-1 active:scale-95"
           >
             <Mail size={24} />
           </a>
           <button
             onClick={() => setShowWhatsAppModal(true)}
-            className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 border-2 border-white rounded-xl flex items-center justify-center text-white shadow-xl hover:shadow-green-500/40 transition-all transform hover:-translate-y-1 active:scale-95"
+            className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 border-2 border-white rounded-none flex items-center justify-center text-white shadow-xl hover:shadow-green-500/40 transition-all transform hover:-translate-y-1 active:scale-95"
             title="Send WhatsApp Message"
           >
             <FaWhatsapp size={26} />
           </button>
           <button
             onClick={openQrCall}
-            className="w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 border-2 border-white rounded-xl flex items-center justify-center text-white shadow-xl hover:shadow-orange-500/40 transition-all transform hover:-translate-y-1 active:scale-95"
+            className="w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 border-2 border-white rounded-none flex items-center justify-center text-white shadow-xl hover:shadow-orange-500/40 transition-all transform hover:-translate-y-1 active:scale-95"
           >
             <Phone size={24} />
           </button>

@@ -59,6 +59,7 @@ import {
   useGetAttendanceSettingsQuery,
   useUpdateAttendanceSettingsMutation,
 } from "../../../store/api/attendanceApi";
+import { useGetShiftsQuery } from "../../../store/api/shiftApi";
 import { toast } from "react-hot-toast";
 import NumberCard from "../../../components/NumberCard";
 import ActionGuard from "../../../components/common/ActionGuard";
@@ -149,11 +150,8 @@ export default function AttendanceManagement() {
     defaultShift: "morning",
   });
 
-  const [shifts] = useState([
-    { id: "morning", name: "Morning Shift", start: "09:00", end: "18:00" },
-    { id: "evening", name: "Evening Shift", start: "14:00", end: "23:00" },
-    { id: "night", name: "Night Shift", start: "22:00", end: "07:00" },
-  ]);
+  const { data: shiftApiData } = useGetShiftsQuery();
+  const shifts = shiftApiData?.shifts || [];
 
   const leaveQuotas = [
     {
@@ -271,7 +269,7 @@ export default function AttendanceManagement() {
 
   const calculateTotalTime = (checkIn, checkOut, workHours) => {
     let totalMinutes = 0;
-    
+
     if (checkIn && checkOut && checkIn !== "-" && checkOut !== "-") {
       const parseTime = (t) => {
         const parts = t.split(":");
@@ -283,10 +281,10 @@ export default function AttendanceManagement() {
       if (totalMinutes < 0) totalMinutes += 24 * 60; // handle overnight
     } else if (workHours && !workHours.includes('NaN') && workHours !== "-") {
       if (workHours.includes(':')) {
-         const parts = workHours.split(':');
-         totalMinutes = parseInt(parts[0] || 0) * 60 + parseInt(parts[1] || 0);
+        const parts = workHours.split(':');
+        totalMinutes = parseInt(parts[0] || 0) * 60 + parseInt(parts[1] || 0);
       } else {
-         totalMinutes = parseFloat(workHours) * 60;
+        totalMinutes = parseFloat(workHours) * 60;
       }
     } else {
       return "-";
@@ -294,7 +292,7 @@ export default function AttendanceManagement() {
 
     const hrs = Math.floor(totalMinutes / 60);
     const mins = Math.floor(totalMinutes % 60);
-    
+
     if (hrs === 0 && mins === 0) return "-";
     if (hrs === 0) return `${mins} mins`;
     if (mins === 0) return `${hrs} hrs`;
@@ -430,7 +428,7 @@ export default function AttendanceManagement() {
                 </div>
 
                 {/* Active Table */}
-                <div className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-none  border border-gray-200 overflow-hidden">
                   <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
                     <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -441,14 +439,14 @@ export default function AttendanceManagement() {
                       <input
                         type="text"
                         placeholder="Search employee name or UID..."
-                        className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-sm focus:ring-2 focus:ring-orange-500 outline-none transition-all text-sm"
+                        className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-none focus:ring-2 focus:ring-orange-500 outline-none transition-all text-sm"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                       />
                     </div>
                   </div>
 
-                  <div className="overflow-x-auto">
+                  <div className="overflow-hidden">
                     <table className="w-full text-left">
                       <thead>
                         <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
@@ -486,14 +484,14 @@ export default function AttendanceManagement() {
                               <td className="px-6 py-4">
                                 <div className="flex items-center gap-3">
                                   {record.selfie ? (
-                                    <img 
-                                      src={record.selfie} 
-                                      alt="" 
+                                    <img
+                                      src={record.selfie}
+                                      alt=""
                                       onClick={() => setSelectedImage({ url: record.selfie, time: record.check_in, ip: record.ip_address })}
-                                      className="w-10 h-10 rounded-xl object-cover border-2 border-orange-200 cursor-pointer hover:opacity-80 transition-opacity"
+                                      className="w-10 h-10 rounded-none object-cover border-2 border-orange-200 cursor-pointer hover:opacity-80 transition-opacity"
                                     />
                                   ) : (
-                                    <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center font-bold text-orange-600 border border-orange-200">
+                                    <div className="w-10 h-10 rounded-none bg-orange-100 flex items-center justify-center font-bold text-orange-600 border border-orange-200">
                                       {record.employee_name?.charAt(0)}
                                     </div>
                                   )}
@@ -510,7 +508,7 @@ export default function AttendanceManagement() {
                                 </div>
                               </td>
                               <td className="px-6 py-4 text-center">
-                                <span className={`px-2 py-1 rounded-[2px] text-[10px] font-bold border uppercase tracking-wider ${record.status === 'present' ? 'bg-green-100 text-green-600 border-green-200' :
+                                <span className={`px-2 py-1 rounded-none text-[10px] font-bold border uppercase tracking-wider ${record.status === 'present' ? 'bg-green-100 text-green-600 border-green-200' :
                                   record.status === 'late' ? 'bg-orange-100 text-orange-600 border-orange-200' :
                                     'bg-red-100 text-red-600 border-red-200'
                                   }`}>
@@ -526,7 +524,7 @@ export default function AttendanceManagement() {
                                     <ActionGuard permission="attendance_edit" module="Attendance Management" type="update">
                                       <button
                                         onClick={() => handleManualCheckOut(record)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-500 rounded-sm text-red-600 hover:text-white transition-all border border-red-100 shadow-sm text-[10px] font-bold uppercase tracking-wider group"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-500 rounded-none text-red-600 hover:text-white transition-all border border-red-100  text-[10px] font-bold uppercase tracking-wider group"
                                         title="Force Check Out"
                                       >
                                         <LogOut className="w-3.5 h-3.5" />
@@ -534,7 +532,7 @@ export default function AttendanceManagement() {
                                       </button>
                                     </ActionGuard>
                                   ) : (
-                                    <span className="text-[10px] font-bold text-green-600 bg-green-50 px-3 py-1.5 rounded-sm border border-green-100 uppercase tracking-tighter">
+                                    <span className="text-[10px] font-bold text-green-600 bg-green-50 px-3 py-1.5 rounded-none border border-green-100 uppercase tracking-tighter">
                                       COMPLETED at {record.check_out}
                                     </span>
                                   )}
@@ -552,13 +550,13 @@ export default function AttendanceManagement() {
 
             {mainTab === "records" && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-none  border border-gray-200 overflow-hidden">
                   <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                     <h2 className="text-xl font-bold text-gray-800">Historical Records Management</h2>
                     <div className="flex gap-2">
-                      <button className="p-2 hover:bg-gray-100 rounded-sm text-gray-400"><Filter className="w-5 h-5" /></button>
+                      <button className="p-2 hover:bg-gray-100 rounded-none text-gray-400"><Filter className="w-5 h-5" /></button>
                       <ActionGuard permission="attendance_reports" module="Attendance Management" type="read">
-                        <button className="p-2 hover:bg-gray-100 rounded-sm text-gray-400"><Download className="w-5 h-5" /></button>
+                        <button className="p-2 hover:bg-gray-100 rounded-none text-gray-400"><Download className="w-5 h-5" /></button>
                       </ActionGuard>
                     </div>
                   </div>
@@ -581,14 +579,14 @@ export default function AttendanceManagement() {
                               <td className="px-6 py-4">
                                 <div className="flex items-center gap-3">
                                   {record.selfie ? (
-                                    <img 
-                                      src={record.selfie} 
-                                      alt="" 
+                                    <img
+                                      src={record.selfie}
+                                      alt=""
                                       onClick={() => setSelectedImage({ url: record.selfie, time: record.check_in, ip: record.ip_address })}
-                                      className="w-10 h-10 rounded-xl object-cover border-2 border-slate-200 cursor-pointer hover:opacity-80 transition-opacity"
+                                      className="w-10 h-10 rounded-none object-cover border-2 border-slate-200 cursor-pointer hover:opacity-80 transition-opacity"
                                     />
                                   ) : (
-                                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-600 border border-slate-200 uppercase">
+                                    <div className="w-10 h-10 rounded-none bg-slate-100 flex items-center justify-center font-bold text-slate-600 border border-slate-200 uppercase">
                                       {record.employee_name?.charAt(0)}
                                     </div>
                                   )}
@@ -603,7 +601,7 @@ export default function AttendanceManagement() {
                                 {calculateTotalTime(record.check_in, record.check_out, record.work_hours)}
                               </td>
                               <td className="px-6 py-4 text-center">
-                                <span className={`px-2 py-1 rounded-[2px] text-[10px] font-bold border uppercase tracking-wider ${record.status === 'present' ? 'bg-green-100 text-green-600 border-green-200' :
+                                <span className={`px-2 py-1 rounded-none text-[10px] font-bold border uppercase tracking-wider ${record.status === 'present' ? 'bg-green-100 text-green-600 border-green-200' :
                                   record.status === 'absent' ? 'bg-red-100 text-red-600 border-red-200' : 'bg-orange-100 text-orange-600 border-orange-200'
                                   }`}>
                                   {record.status}
@@ -612,10 +610,10 @@ export default function AttendanceManagement() {
                               <td className="px-6 py-4 text-right">
                                 <div className="flex justify-end gap-2">
                                   <ActionGuard permission="attendance_edit" module="Attendance Management" type="update">
-                                    <button className="p-2 bg-blue-50 hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 shadow-sm" title="Edit Record"><Edit className="w-4 h-4" /></button>
+                                    <button className="p-2 bg-blue-50 hover:bg-blue-500 rounded-none text-blue-600 hover:text-white transition-all border border-blue-100 " title="Edit Record"><Edit className="w-4 h-4" /></button>
                                   </ActionGuard>
                                   <ActionGuard permission="attendance_delete" module="Attendance Management" type="delete">
-                                    <button onClick={() => handleDeleteRecord(record.id)} className="p-2 bg-red-50 hover:bg-red-500 rounded-sm text-red-600 hover:text-white transition-all border border-red-100 shadow-sm" title="Delete Record"><Trash2 className="w-4 h-4" /></button>
+                                    <button onClick={() => handleDeleteRecord(record.id)} className="p-2 bg-red-50 hover:bg-red-500 rounded-none text-red-600 hover:text-white transition-all border border-red-100 " title="Delete Record"><Trash2 className="w-4 h-4" /></button>
                                   </ActionGuard>
                                 </div>
                               </td>
@@ -641,7 +639,7 @@ export default function AttendanceManagement() {
             {mainTab === "settings" && (
               <div className="animate-in fade-in slide-in-from-right-4 duration-500">
                 {/* Info Banner */}
-                <div className="bg-gradient-to-r from-orange-50 to-orange-50 border-l-4 border-orange-500 p-4 mb-6 rounded-sm shadow-sm">
+                <div className="bg-gradient-to-r from-orange-50 to-orange-50 border-l-4 border-orange-500 p-4 mb-6 rounded-none ">
                   <div className="flex items-start gap-3">
                     <Info className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
                     <div>
@@ -651,7 +649,7 @@ export default function AttendanceManagement() {
                   </div>
                 </div>
 
-                <div className="bg-white/90 backdrop-blur-sm rounded-sm shadow-xl overflow-hidden border border-gray-200">
+                <div className="bg-white/90 backdrop-blur-sm rounded-none  overflow-hidden border border-gray-200">
                   <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-1">
                     <div className="flex overflow-x-auto scrollbar-hide">
                       {tabs.map((tab) => {
@@ -661,7 +659,7 @@ export default function AttendanceManagement() {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex-1 min-w-[140px] px-4 py-3 flex items-center justify-center gap-2 text-sm font-bold transition-all ${activeTab === tab.id
-                              ? "bg-white text-orange-600 shadow-md scale-105 rounded-t-sm"
+                              ? "bg-white text-orange-600 shadow-md rounded-t-sm"
                               : "text-white hover:bg-white/20"
                               }`}
                           >
@@ -677,7 +675,7 @@ export default function AttendanceManagement() {
                     {/* General Settings */}
                     {activeTab === "general" && (
                       <div className="space-y-6">
-                        <div className="bg-gradient-to-r from-orange-50 to-orange-50 p-4 rounded-sm border border-orange-200">
+                        <div className="bg-gradient-to-r from-orange-50 to-orange-50 p-4 rounded-none border border-orange-200">
                           <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
                             <Clock className="w-5 h-5 text-blue-600" />
                             Working Hours Configuration
@@ -704,7 +702,7 @@ export default function AttendanceManagement() {
                                     e.target.value
                                   )
                                 }
-                                className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                               />
                             </div>
                             <p className="text-xs text-gray-500 mt-1">
@@ -727,7 +725,7 @@ export default function AttendanceManagement() {
                                     e.target.value
                                   )
                                 }
-                                className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                               />
                             </div>
                             <p className="text-xs text-gray-500 mt-1">
@@ -747,7 +745,7 @@ export default function AttendanceManagement() {
                                 onChange={(e) =>
                                   handleSettingChange("graceTime", e.target.value)
                                 }
-                                className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                 min="0"
                                 max="60"
                               />
@@ -769,7 +767,7 @@ export default function AttendanceManagement() {
                                 onChange={(e) =>
                                   handleSettingChange("lateMarkAfter", e.target.value)
                                 }
-                                className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                 min="0"
                                 max="120"
                               />
@@ -794,7 +792,7 @@ export default function AttendanceManagement() {
                                     e.target.value
                                   )
                                 }
-                                className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                 min="1"
                                 max="12"
                               />
@@ -819,7 +817,7 @@ export default function AttendanceManagement() {
                                     e.target.value
                                   )
                                 }
-                                className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                 min="1"
                                 max="8"
                               />
@@ -830,7 +828,7 @@ export default function AttendanceManagement() {
                           </div>
                         </div>
 
-                        <div className="bg-white border-2 border-gray-200 rounded-sm p-4">
+                        <div className="bg-white border-2 border-gray-200 rounded-none p-4">
                           <div className="flex items-center justify-between">
                             <div>
                               <h4 className="text-sm font-bold text-gray-800 flex items-center gap-2">
@@ -870,7 +868,7 @@ export default function AttendanceManagement() {
                                     e.target.value
                                   )
                                 }
-                                className="w-full px-4 py-2 border-2 border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                className="w-full px-4 py-2 border-2 border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                               />
                             </div>
                           )}
@@ -881,7 +879,7 @@ export default function AttendanceManagement() {
                     {/* Check-in Methods */}
                     {activeTab === "checkin" && (
                       <div className="space-y-6">
-                        <div className="bg-gradient-to-r from-orange-50 to-orange-50 p-4 rounded-sm border border-green-200">
+                        <div className="bg-gradient-to-r from-orange-50 to-orange-50 p-4 rounded-none border border-green-200">
                           <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
                             <Smartphone className="w-5 h-5 text-green-600" />
                             Check-in & Check-out Methods
@@ -893,10 +891,10 @@ export default function AttendanceManagement() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {/* WiFi Method */}
-                          <div className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-all">
+                          <div className="bg-white border-2 border-gray-200 rounded-none p-4 hover:border-blue-300 transition-all">
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-3">
-                                <div className="p-2 bg-blue-100 rounded-lg">
+                                <div className="p-2 bg-blue-100 rounded-none">
                                   <Wifi className="w-6 h-6 text-blue-600" />
                                 </div>
                                 <div>
@@ -935,7 +933,7 @@ export default function AttendanceManagement() {
                                     onChange={(e) =>
                                       handleSettingChange("wifiSSID", e.target.value)
                                     }
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                     placeholder="CompanyWiFi"
                                   />
                                 </div>
@@ -953,7 +951,7 @@ export default function AttendanceManagement() {
                                           e.target.value
                                         )
                                       }
-                                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                       placeholder="Enter password"
                                     />
                                     <button
@@ -982,7 +980,7 @@ export default function AttendanceManagement() {
                                         e.target.value
                                       )
                                     }
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                     placeholder="192.168.1.0/24"
                                   />
                                 </div>
@@ -991,10 +989,10 @@ export default function AttendanceManagement() {
                           </div>
 
                           {/* QR Code Method */}
-                          <div className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-purple-300 transition-all">
+                          <div className="bg-white border-2 border-gray-200 rounded-none p-4 hover:border-purple-300 transition-all">
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-3">
-                                <div className="p-2 bg-purple-100 rounded-lg">
+                                <div className="p-2 bg-purple-100 rounded-none">
                                   <QrCode className="w-6 h-6 text-purple-600" />
                                 </div>
                                 <div>
@@ -1023,7 +1021,7 @@ export default function AttendanceManagement() {
                             </div>
                             {settings.qrCodeEnabled && (
                               <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col items-center">
-                                <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 mb-3">
+                                <div className="bg-white p-3 rounded-none  border border-gray-100 mb-3">
                                   <QRCodeCanvas
                                     value={`${window.location.origin}/hrm/attendance/employee?secret=${settings.qrSecret}`}
                                     size={160}
@@ -1047,10 +1045,10 @@ export default function AttendanceManagement() {
 
 
                           {/* GPS Location */}
-                          <div className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-orange-300 transition-all">
+                          <div className="bg-white border-2 border-gray-200 rounded-none p-4 hover:border-orange-300 transition-all">
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-3">
-                                <div className="p-2 bg-orange-100 rounded-lg">
+                                <div className="p-2 bg-orange-100 rounded-none">
                                   <MapPin className="w-6 h-6 text-orange-600" />
                                 </div>
                                 <div>
@@ -1092,7 +1090,7 @@ export default function AttendanceManagement() {
                                         e.target.value
                                       )
                                     }
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                                     placeholder="23.8103"
                                   />
                                 </div>
@@ -1109,7 +1107,7 @@ export default function AttendanceManagement() {
                                         e.target.value
                                       )
                                     }
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                                     placeholder="90.4125"
                                   />
                                 </div>
@@ -1126,7 +1124,7 @@ export default function AttendanceManagement() {
                                         e.target.value
                                       )
                                     }
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                                     placeholder="100"
                                   />
                                 </div>
@@ -1135,10 +1133,10 @@ export default function AttendanceManagement() {
                           </div>
 
                           {/* Anywhere Check-in */}
-                          <div className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition-all">
+                          <div className="bg-white border-2 border-gray-200 rounded-none p-4 hover:border-indigo-300 transition-all">
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-3">
-                                <div className="p-2 bg-indigo-100 rounded-lg">
+                                <div className="p-2 bg-indigo-100 rounded-none">
                                   <Globe className="w-6 h-6 text-indigo-600" />
                                 </div>
                                 <div>
@@ -1178,7 +1176,7 @@ export default function AttendanceManagement() {
                     {/* Timing & Breaks */}
                     {activeTab === "timing" && (
                       <div className="space-y-6">
-                        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-lg border border-yellow-200">
+                        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-none border border-yellow-200">
                           <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
                             <Timer className="w-5 h-5 text-yellow-600" />
                             Break Time & Half Day Configuration
@@ -1189,7 +1187,7 @@ export default function AttendanceManagement() {
                         </div>
 
                         {/* Half Day Settings */}
-                        <div className="bg-white border-2 border-gray-200 rounded-lg p-4">
+                        <div className="bg-white border-2 border-gray-200 rounded-none p-4">
                           <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
                             <Clock className="w-5 h-5 text-yellow-500" />
                             Half Day Timing
@@ -1208,7 +1206,7 @@ export default function AttendanceManagement() {
                                     e.target.value
                                   )
                                 }
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm"
+                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm"
                               />
                             </div>
                             <div>
@@ -1224,7 +1222,7 @@ export default function AttendanceManagement() {
                                     e.target.value
                                   )
                                 }
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm"
+                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm"
                               />
                             </div>
                           </div>
@@ -1235,7 +1233,7 @@ export default function AttendanceManagement() {
                         </div>
 
                         {/* Break Settings */}
-                        <div className="bg-white border-2 border-gray-200 rounded-lg p-4">
+                        <div className="bg-white border-2 border-gray-200 rounded-none p-4">
                           <div className="flex items-center justify-between mb-4">
                             <h4 className="text-sm font-bold text-gray-800 flex items-center gap-2">
                               <Activity className="w-5 h-5 text-orange-500" />
@@ -1272,7 +1270,7 @@ export default function AttendanceManagement() {
                                         e.target.value
                                       )
                                     }
-                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                                     min="15"
                                     max="120"
                                   />
@@ -1287,13 +1285,13 @@ export default function AttendanceManagement() {
                                     onChange={(e) =>
                                       handleSettingChange("maxBreaks", e.target.value)
                                     }
-                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                                     min="1"
                                     max="5"
                                   />
                                 </div>
                               </div>
-                              <div className="flex items-center gap-3 bg-orange-50 p-3 rounded-lg">
+                              <div className="flex items-center gap-3 bg-orange-50 p-3 rounded-none">
                                 <input
                                   type="checkbox"
                                   checked={settings.deductBreakTime}
@@ -1314,7 +1312,7 @@ export default function AttendanceManagement() {
                         </div>
 
                         {/* Overtime Settings */}
-                        <div className="bg-white border-2 border-gray-200 rounded-lg p-4">
+                        <div className="bg-white border-2 border-gray-200 rounded-none p-4">
                           <div className="flex items-center justify-between mb-4">
                             <h4 className="text-sm font-bold text-gray-800 flex items-center gap-2">
                               <Zap className="w-5 h-5 text-blue-500" />
@@ -1350,7 +1348,7 @@ export default function AttendanceManagement() {
                                       e.target.value
                                     )
                                   }
-                                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                 />
                               </div>
                               <div>
@@ -1366,7 +1364,7 @@ export default function AttendanceManagement() {
                                       e.target.value
                                     )
                                   }
-                                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                   step="0.1"
                                   min="1"
                                   max="3"
@@ -1385,7 +1383,7 @@ export default function AttendanceManagement() {
                                       e.target.value
                                     )
                                   }
-                                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                   min="1"
                                   max="8"
                                 />
@@ -1399,7 +1397,7 @@ export default function AttendanceManagement() {
                     {/* Leave Policy */}
                     {activeTab === "leaves" && (
                       <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-                        <div className="bg-gradient-to-r from-[#FF7B1D] to-[#e66a15] p-8 rounded-2xl text-white relative overflow-hidden shadow-xl shadow-orange-100">
+                        <div className="bg-gradient-to-r from-[#FF7B1D] to-[#e66a15] p-8 rounded-none text-white relative overflow-hidden  shadow-orange-100">
                           <div className="relative z-10 flex items-center justify-between">
                             <div>
                               <h3 className="text-2xl font-black mb-2 flex items-center gap-3">
@@ -1410,7 +1408,7 @@ export default function AttendanceManagement() {
                                 Configure your organization's leave architecture by defining annual quotas for various categories of time-off.
                               </p>
                             </div>
-                            <div className="p-4 bg-white/10 rounded-2xl backdrop-blur-md border border-white/20">
+                            <div className="p-4 bg-white/10 rounded-none backdrop-blur-md border border-white/20">
                               <Briefcase className="w-12 h-12 text-white/80" />
                             </div>
                           </div>
@@ -1421,10 +1419,10 @@ export default function AttendanceManagement() {
                           {leaveQuotas.map((leave) => (
                             <div
                               key={leave.key}
-                              className={`bg-white border-2 ${leave.borderColor} rounded-2xl p-6 transition-all hover:shadow-lg hover:shadow-gray-100 group`}
+                              className={`bg-white border-2 ${leave.borderColor} rounded-none p-6 transition-all hover:shadow-lg hover:shadow-gray-100 group`}
                             >
                               <div className="flex items-start justify-between mb-6">
-                                <div className={`p-4 ${leave.bgColor} rounded-2xl transition-transform group-hover:scale-110 duration-300`}>
+                                <div className={`p-4 ${leave.bgColor} rounded-none transition-transform group-hover:scale-110 duration-300`}>
                                   <span className={leave.iconColor}>{leave.icon}</span>
                                 </div>
                                 <div className="text-right">
@@ -1436,7 +1434,7 @@ export default function AttendanceManagement() {
                                       type="number"
                                       value={settings[leave.key] || 0}
                                       onChange={(e) => handleSettingChange(leave.key, e.target.value)}
-                                      className="w-16 px-2 py-1.5 bg-gray-50 border-2 border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7B1D] text-center font-black text-gray-900"
+                                      className="w-16 px-2 py-1.5 bg-gray-50 border-2 border-gray-100 rounded-none focus:outline-none focus:ring-2 focus:ring-[#FF7B1D] text-center font-black text-gray-900"
                                       min="0"
                                       max="365"
                                     />
@@ -1468,7 +1466,7 @@ export default function AttendanceManagement() {
                                 "Pro-rated leave calculation for mid-year joiners.",
                                 "Public holidays are excluded from leave deductions."
                               ].map((note, i) => (
-                                <div key={i} className="flex gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                                <div key={i} className="flex gap-4 p-4 bg-white/5 rounded-none border border-white/10 hover:bg-white/10 transition-colors">
                                   <div className="w-6 h-6 bg-[#FF7B1D] rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-black">
                                     {i + 1}
                                   </div>
@@ -1485,7 +1483,7 @@ export default function AttendanceManagement() {
                     {/* Notifications */}
                     {activeTab === "notifications" && (
                       <div className="space-y-6">
-                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-none border border-blue-200">
                           <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
                             <Bell className="w-5 h-5 text-blue-600" />
                             Notification Settings
@@ -1530,7 +1528,7 @@ export default function AttendanceManagement() {
                           ].map((notif) => (
                             <div
                               key={notif.key}
-                              className="bg-white border-2 border-gray-200 rounded-lg p-4"
+                              className="bg-white border-2 border-gray-200 rounded-none p-4"
                             >
                               <div className="flex items-center justify-between">
                                 <div>
@@ -1562,7 +1560,7 @@ export default function AttendanceManagement() {
                     {/* Advanced Settings */}
                     {activeTab === "advanced" && (
                       <div className="space-y-6">
-                        <div className="bg-gradient-to-r from-gray-50 to-slate-50 p-4 rounded-lg border border-gray-200">
+                        <div className="bg-gradient-to-r from-gray-50 to-slate-50 p-4 rounded-none border border-gray-200">
                           <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
                             <Shield className="w-5 h-5 text-gray-600" />
                             Advanced Configuration
@@ -1573,7 +1571,7 @@ export default function AttendanceManagement() {
                         </div>
 
                         {/* Shift Management */}
-                        <div className="bg-white border-2 border-gray-200 rounded-lg p-4">
+                        <div className="bg-white border-2 border-gray-200 rounded-none p-4">
                           <div className="flex items-center justify-between mb-4">
                             <h4 className="text-sm font-bold text-gray-800 flex items-center gap-2">
                               <Clock className="w-5 h-5 text-indigo-500" />
@@ -1608,16 +1606,16 @@ export default function AttendanceManagement() {
                                       e.target.value
                                     )
                                   }
-                                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                                 >
                                   {shifts.map((shift) => (
                                     <option key={shift.id} value={shift.id}>
-                                      {shift.name} ({shift.start} - {shift.end})
+                                      {shift.shift_name} ({shift.check_in_time} - {shift.check_out_time})
                                     </option>
                                   ))}
                                 </select>
                               </div>
-                              <div className="bg-indigo-50 p-3 rounded-lg">
+                              <div className="bg-indigo-50 p-3 rounded-none">
                                 <p className="text-xs text-gray-700 font-semibold mb-2">
                                   Available Shifts:
                                 </p>
@@ -1627,10 +1625,10 @@ export default function AttendanceManagement() {
                                     className="flex items-center justify-between py-2 border-b border-indigo-200 last:border-0"
                                   >
                                     <span className="text-xs font-medium text-gray-700">
-                                      {shift.name}
+                                      {shift.shift_name}
                                     </span>
                                     <span className="text-xs text-gray-600">
-                                      {shift.start} - {shift.end}
+                                      {shift.check_in_time} - {shift.check_out_time}
                                     </span>
                                   </div>
                                 ))}
@@ -1640,7 +1638,7 @@ export default function AttendanceManagement() {
                         </div>
 
                         {/* Weekend Configuration */}
-                        <div className="bg-white border-2 border-gray-200 rounded-lg p-4">
+                        <div className="bg-white border-2 border-gray-200 rounded-none p-4">
                           <h4 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
                             <Calendar className="w-5 h-5 text-purple-500" />
                             Weekend Days
@@ -1667,7 +1665,7 @@ export default function AttendanceManagement() {
                                       : [...settings.weekendDays, day]
                                   );
                                 }}
-                                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${settings.weekendDays.includes(day)
+                                className={`px-3 py-2 rounded-none text-xs font-semibold transition-all ${settings.weekendDays.includes(day)
                                   ? "bg-purple-600 text-white"
                                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                   }`}
@@ -1679,7 +1677,7 @@ export default function AttendanceManagement() {
                         </div>
 
                         {/* Security Settings */}
-                        <div className="bg-white border-2 border-gray-200 rounded-lg p-4">
+                        {/* <div className="bg-white border-2 border-gray-200 rounded-none p-4">
                           <h4 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
                             <Lock className="w-5 h-5 text-red-500" />
                             Security & Access
@@ -1714,14 +1712,14 @@ export default function AttendanceManagement() {
                               </label>
                             </div>
                           </div>
-                        </div>
+                        </div> */}
                       </div>
                     )}
                     {/* Save & Reset Buttons */}
                     <div className="mt-10 pt-6 border-t border-gray-100 flex items-center justify-end gap-3">
                       <button
                         onClick={handleReset}
-                        className="px-6 py-2.5 bg-gray-100 text-gray-600 rounded-sm text-sm font-bold hover:bg-gray-200 transition-all flex items-center gap-2"
+                        className="px-6 py-2.5 bg-gray-100 text-gray-600 rounded-none text-sm font-bold hover:bg-gray-200 transition-all flex items-center gap-2"
                       >
                         <RefreshCw className="w-4 h-4" />
                         Reset Defaults
@@ -1730,7 +1728,7 @@ export default function AttendanceManagement() {
                         <button
                           onClick={handleSave}
                           disabled={isUpdating}
-                          className="px-10 py-2.5 bg-[#FF7B1D] text-white rounded-sm text-sm font-bold hover:bg-[#e66a15] shadow-lg shadow-orange-200 transition-all flex items-center gap-2 disabled:opacity-50"
+                          className="px-10 py-2.5 bg-[#FF7B1D] text-white rounded-none text-sm font-bold hover:bg-[#e66a15] shadow-lg shadow-orange-200 transition-all flex items-center gap-2 disabled:opacity-50"
                         >
                           {isUpdating ? (
                             <div className="w-4 h-4 border-2 border-white/30 border-t-white animate-spin rounded-full" />
@@ -1752,7 +1750,7 @@ export default function AttendanceManagement() {
       {/* Lightbox for Image Preview */}
       {selectedImage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setSelectedImage(null)}>
-          <div className="bg-white rounded-2xl overflow-hidden shadow-2xl max-w-lg w-full relative animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-none overflow-hidden shadow-2xl max-w-lg w-full relative animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
             <div className="absolute top-4 right-4 z-10">
               <button onClick={() => setSelectedImage(null)} className="p-2 bg-black/50 hover:bg-black/80 rounded-full text-white backdrop-blur-md transition-all">
                 <X className="w-5 h-5" />
@@ -1765,11 +1763,11 @@ export default function AttendanceManagement() {
                 Check-in Snapshot
               </h3>
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                <div className="bg-gray-50 p-3 rounded-none border border-gray-100">
                   <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Timestamp</p>
                   <p className="text-sm font-semibold text-gray-800">{selectedImage.time || 'N/A'}</p>
                 </div>
-                <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                <div className="bg-gray-50 p-3 rounded-none border border-gray-100">
                   <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">IP Address</p>
                   <p className="text-sm font-semibold text-gray-800">{selectedImage.ip || 'N/A'}</p>
                 </div>
@@ -1786,9 +1784,9 @@ export default function AttendanceManagement() {
             <div className="sticky top-0 bg-white/90 backdrop-blur-md border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
               <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
                 {selectedEmployeeForDetail.selfie ? (
-                  <img src={selectedEmployeeForDetail.selfie} alt="" className="w-10 h-10 rounded-xl object-cover border border-orange-200" />
+                  <img src={selectedEmployeeForDetail.selfie} alt="" className="w-10 h-10 rounded-none object-cover border border-orange-200" />
                 ) : (
-                  <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600">
+                  <div className="w-10 h-10 rounded-none bg-orange-100 flex items-center justify-center text-orange-600">
                     {selectedEmployeeForDetail.employee_name?.charAt(0)}
                   </div>
                 )}
@@ -1801,20 +1799,20 @@ export default function AttendanceManagement() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-6">
               {/* Stats */}
               <div className="grid grid-cols-2 gap-4">
-                 <div className="bg-green-50 p-4 rounded-2xl border border-green-100">
-                   <p className="text-xs font-bold text-green-600 uppercase mb-1">Status Today</p>
-                   <p className="text-2xl font-black text-green-700 capitalize">{selectedEmployeeForDetail.status || 'Present'}</p>
-                 </div>
-                 <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100">
-                   <p className="text-xs font-bold text-orange-600 uppercase mb-1">Total Hours</p>
-                   <p className="text-2xl font-black text-orange-700">{selectedEmployeeForDetail.work_hours || '0h 0m'}</p>
-                 </div>
+                <div className="bg-green-50 p-4 rounded-none border border-green-100">
+                  <p className="text-xs font-bold text-green-600 uppercase mb-1">Status Today</p>
+                  <p className="text-2xl font-black text-green-700 capitalize">{selectedEmployeeForDetail.status || 'Present'}</p>
+                </div>
+                <div className="bg-orange-50 p-4 rounded-none border border-orange-100">
+                  <p className="text-xs font-bold text-orange-600 uppercase mb-1">Total Hours</p>
+                  <p className="text-2xl font-black text-orange-700">{selectedEmployeeForDetail.work_hours || '0h 0m'}</p>
+                </div>
               </div>
-              
+
               {/* Timeline */}
               <div>
                 <h3 className="font-bold text-gray-800 mb-4">Today's Timeline</h3>
@@ -1838,7 +1836,7 @@ export default function AttendanceManagement() {
               </div>
 
               {/* Contact Info (Placeholder) */}
-              <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+              <div className="bg-gray-50 rounded-none p-4 border border-gray-100">
                 <h3 className="font-bold text-gray-800 mb-3 text-sm">Additional Information</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">

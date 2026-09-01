@@ -62,7 +62,7 @@ const EmployeeGridView = ({ employees, onEdit, onDelete, onView }) => {
               className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition-all relative group flex flex-col h-full overflow-hidden"
             >
               <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                <ActionGuard permission="employee_read" module="Employee Management" type="read">
+                {/* <ActionGuard permission="employee_read" module="Employee Management" type="read">
                   <button
                     onClick={(e) => { e.stopPropagation(); onView(emp, { monitor: true, type: 'video' }); }}
                     className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-sm bg-white shadow-sm border border-orange-100"
@@ -79,7 +79,7 @@ const EmployeeGridView = ({ employees, onEdit, onDelete, onView }) => {
                   >
                     <Mic size={16} />
                   </button>
-                </ActionGuard>
+                </ActionGuard> */}
                 <ActionGuard permission="employee_read" module="Employee Management" type="read">
                   <button
                     onClick={(e) => { e.stopPropagation(); onView(emp); }}

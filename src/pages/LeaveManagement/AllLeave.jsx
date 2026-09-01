@@ -52,11 +52,11 @@ const ViewLeaveModal = ({ isOpen, onClose, leave }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 font-primary">
-      <div className="bg-white w-full max-w-2xl shadow-2xl rounded-lg animate-scaleIn overflow-hidden">
+      <div className="bg-white w-full max-w-2xl rounded-none animate-scaleIn overflow-hidden shadow-2xl">
         {/* Header */}
         <div className="bg-[#FF7B1D] px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white backdrop-blur-sm">
+            <div className="w-10 h-10 rounded-none bg-white/20 flex items-center justify-center text-white backdrop-blur-sm">
               <User size={20} />
             </div>
             <div>
@@ -66,7 +66,7 @@ const ViewLeaveModal = ({ isOpen, onClose, leave }) => {
           </div>
           <button
             onClick={onClose}
-            className="text-white hover:bg-white/20 p-2 transition-all rounded"
+            className="text-white hover:bg-white/20 p-2 transition-all rounded-none"
           >
             <X size={24} />
           </button>
@@ -76,8 +76,8 @@ const ViewLeaveModal = ({ isOpen, onClose, leave }) => {
           {/* Stats Cards Row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Total Days */}
-            <div className="bg-[#E6F4FE] rounded-xl p-6 flex flex-col items-center justify-center text-center gap-2 border border-[#B3D7FF]/30">
-              <div className="bg-[#0070FF] p-2.5 rounded-lg text-white mb-1 shadow-sm">
+            <div className="bg-[#E6F4FE] rounded-none p-6 flex flex-col items-center justify-center text-center gap-2 border border-[#B3D7FF]">
+              <div className="bg-[#0070FF] p-2.5 rounded-none text-white mb-1">
                 <Calendar size={20} />
               </div>
               <span className="text-3xl font-bold text-[#004BB3]">{leave.days}</span>
@@ -87,12 +87,12 @@ const ViewLeaveModal = ({ isOpen, onClose, leave }) => {
             </div>
 
             {/* Leave Type */}
-            <div className="bg-[#F3E8FF] rounded-xl p-6 flex flex-col items-center justify-center text-center gap-2 border border-[#E9D5FF]/30">
-              <div className="bg-[#9333EA] p-2.5 rounded-lg text-white mb-1 shadow-sm">
+            <div className="bg-[#F3E8FF] rounded-none p-6 flex flex-col items-center justify-center text-center gap-2 border border-[#E9D5FF]">
+              <div className="bg-[#9333EA] p-2.5 rounded-none text-white mb-1">
                 <FileText size={20} />
               </div>
               <span className="text-base font-bold text-[#6B21A8] capitalize">
-                {leave.leave_type}
+                {leave.status === 'sick' ? 'Sick Leave' : leave.status === 'casual' ? 'Casual Leave' : leave.leave_type || 'Leave'}
               </span>
               <span className="text-xs font-bold text-[#9333EA] uppercase tracking-wider">
                 Leave Type
@@ -100,8 +100,8 @@ const ViewLeaveModal = ({ isOpen, onClose, leave }) => {
             </div>
 
             {/* Status */}
-            <div className={`${statusColor} rounded-xl p-6 flex flex-col items-center justify-center text-center gap-2 border border-current/10 bg-opacity-50`}>
-              <div className="p-2 rounded-full bg-white/50 mb-1 shadow-sm">
+            <div className={`${statusColor} rounded-none p-6 flex flex-col items-center justify-center text-center gap-2 border border-current bg-opacity-50`}>
+              <div className="p-2 rounded-none bg-white/50 mb-1">
                 {statusIcon}
               </div>
               <span className="text-base font-bold capitalize">
@@ -114,16 +114,16 @@ const ViewLeaveModal = ({ isOpen, onClose, leave }) => {
           </div>
 
           {/* Date Range */}
-          <div className="flex justify-between items-center border-t border-b border-gray-100 py-6">
+          <div className="flex justify-between items-center border-t border-b border-gray-200 py-6">
             <div className="text-center md:text-left">
-              <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1.5">From Date</p>
+              <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1.5">From Date</p>
               <p className="text-lg font-bold text-gray-800">
                 {new Date(leave.from_date).toLocaleDateString()}
               </p>
             </div>
             <div className="h-10 w-px bg-gray-200 hidden md:block"></div>
             <div className="text-center md:text-right">
-              <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1.5">To Date</p>
+              <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1.5">To Date</p>
               <p className="text-lg font-bold text-gray-800">
                 {new Date(leave.to_date).toLocaleDateString()}
               </p>
@@ -132,20 +132,20 @@ const ViewLeaveModal = ({ isOpen, onClose, leave }) => {
 
           {/* Reason */}
           <div>
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
               <FileText size={14} /> Reason
             </h3>
-            <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 text-sm font-medium text-gray-600 leading-relaxed shadow-sm">
+            <div className="bg-gray-50 p-5 rounded-none border border-gray-200 text-sm font-medium text-gray-800 leading-relaxed">
               {leave.reason || "No reason provided."}
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-8 py-5 bg-gray-50 border-t border-gray-100 flex justify-end">
+        <div className="px-8 py-5 bg-gray-50 border-t border-gray-200 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 font-bold rounded text-sm hover:bg-gray-50 transition-all shadow-sm active:scale-95  tracking-wide"
+            className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 font-bold rounded-none text-sm hover:bg-gray-50 transition-all active:scale-95 tracking-wide"
           >
             Close Details
           </button>

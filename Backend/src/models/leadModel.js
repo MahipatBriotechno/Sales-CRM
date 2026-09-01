@@ -260,8 +260,18 @@ const Lead = {
         return result.affectedRows;
     },
 
-    findAll: async (userId, page = 1, limit = 10, search = '', status = 'All', pipelineId = null, tag = null, type = null, subview = 'All', priority = 'All', services = 'All', dateFrom = null, dateTo = null, name = '', mobile_number = '') => {
+    findAll: async (user, page = 1, limit = 10, search = '', status = 'All', pipelineId = null, tag = null, type = null, subview = 'All', priority = 'All', services = 'All', dateFrom = null, dateTo = null, name = '', mobile_number = '') => {
+        const userId = user.user_id || user.id; // Admin ID context
         const offset = (page - 1) * limit;
+        
+        let employeeFilter = "";
+        const employeeParams = [];
+        
+        if (user.role === 'Employee') {
+            employeeFilter = " AND (l.assigned_to = ? OR l.assigned_to = ? OR l.assigned_to = ?)";
+            employeeParams.push(user._id ? user._id.toString() : '', user._id || '', user.employee_name || '');
+        }
+
         let query = `
             SELECT l.*, l.lead_owner, p.name as pipeline_name, s.name as stage_name, COALESCE(e.employee_name, l.assigned_to) as employee_name,
             (SELECT COUNT(*) FROM leads l2 WHERE l2.mobile_number = l.mobile_number AND l2.user_id = l.user_id AND l.mobile_number IS NOT NULL AND l.mobile_number != '') as duplicate_count
@@ -269,9 +279,9 @@ const Lead = {
             LEFT JOIN pipelines p ON l.pipeline_id = p.id
             LEFT JOIN pipeline_stages s ON l.stage_id = s.id
             LEFT JOIN employees e ON (l.assigned_to = CAST(e.id AS CHAR) OR l.assigned_to = e.employee_id OR l.assigned_to = e.employee_name)
-            WHERE l.user_id = ? AND l.is_deleted = 0
+            WHERE l.user_id = ? AND l.is_deleted = 0 ${employeeFilter}
         `;
-        const params = [userId];
+        const params = [userId, ...employeeParams];
 
         // Apply filters
         if (status && status !== 'All') { query += ' AND l.status = ?'; params.push(status); }
@@ -293,9 +303,9 @@ const Lead = {
 
         // Subview logic
         if (subview === 'new') {
-            query += " AND (l.tag = 'Not Contacted' OR l.tag = 'Pass' OR l.created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 DAY) OR (l.tag = 'Not Connected' AND l.next_call_at <= UTC_TIMESTAMP()))";
+            query += " AND (l.tag = 'Not Contacted' OR l.tag = 'Pass' OR l.created_at >= DATE_SUB(NOW(), INTERVAL 2 DAY) OR (l.tag = 'Not Connected' AND l.next_call_at <= NOW()))";
         } else if (subview === 'not-connected') {
-            query += " AND l.tag = 'Not Connected' AND (l.next_call_at IS NULL OR l.next_call_at > UTC_TIMESTAMP())";
+            query += " AND l.tag = 'Not Connected' AND (l.next_call_at IS NULL OR l.next_call_at > NOW())";
         } else if (subview === 'follow-up') {
             query += " AND (l.tag = 'Follow Up' OR l.tag = 'Missed')";
         } else if (subview === 'missed') {
@@ -313,8 +323,8 @@ const Lead = {
         }
 
         // Count query construction
-        let countQuery = 'SELECT COUNT(*) as total FROM leads l LEFT JOIN pipeline_stages s ON l.stage_id = s.id WHERE l.user_id = ? AND l.is_deleted = 0';
-        const countParams = [userId];
+        let countQuery = 'SELECT COUNT(*) as total FROM leads l LEFT JOIN pipeline_stages s ON l.stage_id = s.id WHERE l.user_id = ? AND l.is_deleted = 0' + employeeFilter;
+        const countParams = [userId, ...employeeParams];
 
         if (status && status !== 'All') { countQuery += ' AND l.status = ?'; countParams.push(status); }
         if (tag && tag !== 'All') { countQuery += ' AND l.tag = ?'; countParams.push(tag); }
@@ -333,8 +343,8 @@ const Lead = {
             countParams.push(term, term, term);
         }
 
-        if (subview === 'new') { countQuery += " AND (l.tag = 'Not Contacted' OR l.tag = 'Pass' OR l.created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 DAY) OR (l.tag = 'Not Connected' AND l.next_call_at <= UTC_TIMESTAMP()))"; }
-        else if (subview === 'not-connected') { countQuery += " AND l.tag = 'Not Connected' AND (l.next_call_at IS NULL OR l.next_call_at > UTC_TIMESTAMP())"; }
+        if (subview === 'new') { countQuery += " AND (l.tag = 'Not Contacted' OR l.tag = 'Pass' OR l.created_at >= DATE_SUB(NOW(), INTERVAL 2 DAY) OR (l.tag = 'Not Connected' AND l.next_call_at <= NOW()))"; }
+        else if (subview === 'not-connected') { countQuery += " AND l.tag = 'Not Connected' AND (l.next_call_at IS NULL OR l.next_call_at > NOW())"; }
         else if (subview === 'follow-up') { countQuery += " AND (l.tag = 'Follow Up' OR l.tag = 'Missed')"; }
         else if (subview === 'missed') { countQuery += " AND l.tag = 'Missed'"; }
         else if (subview === 'assigned') { countQuery += " AND l.assigned_to IS NOT NULL"; }
@@ -347,14 +357,17 @@ const Lead = {
         const totalFiltered = totalRows[0].total;
 
         // Dashboard Summary Stats (scopeless to specific filters but within user_id)
-        const [sumRows] = await pool.query(`
+        let sumQuery = `
             SELECT 
                 COUNT(*) as total,
                 SUM(CASE WHEN status = 'Active' THEN 1 ELSE 0 END) as active,
                 SUM(CASE WHEN tag = 'Closed' THEN 1 ELSE 0 END) as converted,
                 SUM(CASE WHEN tag = 'Lost' THEN 1 ELSE 0 END) as lost
-            FROM leads WHERE user_id = ? AND is_deleted = 0
-        `, [userId]);
+            FROM leads l WHERE l.user_id = ? AND l.is_deleted = 0 ${employeeFilter}
+        `;
+        const sumParams = [userId, ...employeeParams];
+        
+        const [sumRows] = await pool.query(sumQuery, sumParams);
 
         query += ' ORDER BY l.id DESC LIMIT ? OFFSET ?';
         params.push(parseInt(limit), parseInt(offset));
@@ -742,7 +755,7 @@ const Lead = {
              LEFT JOIN pipelines p ON l.pipeline_id = p.id
              LEFT JOIN pipeline_stages s ON l.stage_id = s.id
              WHERE l.user_id = ? 
-             AND l.next_call_at <= UTC_TIMESTAMP() 
+             AND l.next_call_at <= NOW() 
              AND l.tag = 'Follow Up'
              ORDER BY l.next_call_at DESC`,
             [userId]
@@ -774,7 +787,7 @@ const Lead = {
             `SELECT id FROM leads 
              WHERE user_id = ? 
              AND next_call_at IS NOT NULL 
-             AND next_call_at <= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 MINUTE)
+             AND next_call_at <= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
              AND tag = 'Follow Up'`,
             [userId]
         );

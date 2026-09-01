@@ -123,14 +123,14 @@ const UserAvatar = ({ name, profilePicture, size = "w-10 h-10 border" }) => {
 
   if (!imageUrl || imgError) {
     return (
-      <div className={`${size} rounded-sm ${getColorFromName(name)} flex items-center justify-center text-white font-bold text-[8px] border-gray-100 shadow-sm`} title={name}>
+      <div className={`${size} rounded-none ${getColorFromName(name)} flex items-center justify-center text-white font-bold text-[8px] border-gray-100 shadow-sm`} title={name}>
         {getInitials(name)}
       </div>
     );
   }
 
   return (
-    <div className={`${size} rounded-sm overflow-hidden flex items-center justify-center border-gray-200 bg-gray-50 shadow-sm`} title={name}>
+    <div className={`${size} rounded-none overflow-hidden flex items-center justify-center border-gray-200 bg-gray-50 shadow-sm`} title={name}>
       <img src={imageUrl} alt={name} className="w-full h-full object-cover" onError={() => setImgError(true)} />
     </div>
   );
@@ -177,10 +177,10 @@ export default function LeadTabs({
     if (!partModal.show) return null;
     return (
       <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-        <div className="bg-white rounded-sm shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300 ">
+        <div className="bg-white rounded-none shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300 ">
           <div className="bg-[#f36015] px-6 py-6 flex items-start justify-between relative overflow-hidden">
             <div className="flex gap-4 items-center">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-md flex items-center justify-center border border-white/30 shadow-inner">
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-none flex items-center justify-center border border-white/30 shadow-inner">
                 <Users size={28} className="text-white" />
               </div>
               <div>
@@ -190,7 +190,7 @@ export default function LeadTabs({
             </div>
             <button
               onClick={() => setPartModal({ show: false, attendees: [] })}
-              className="text-white hover:bg-white/10 p-2 rounded-md transition-colors absolute top-4 right-4"
+              className="text-white hover:bg-white/10 p-2 rounded-none transition-colors absolute top-4 right-4"
             >
               <X size={22} className="stroke-[2.5px]" />
             </button>
@@ -214,7 +214,7 @@ export default function LeadTabs({
                             {name}
                           </p>
                           {designation && (
-                            <span className="text-[10px] bg-orange-100 text-[#f36015] px-2 py-0.5 rounded-sm font-bold uppercase tracking-wider">
+                            <span className="text-[10px] bg-orange-100 text-[#f36015] px-2 py-0.5 rounded-none font-bold uppercase tracking-wider">
                               {designation}
                             </span>
                           )}
@@ -238,13 +238,13 @@ export default function LeadTabs({
           <div className="p-6 bg-slate-50/50 border-t border-slate-100 flex gap-3">
             <button
               onClick={() => setPartModal({ show: false, attendees: [] })}
-              className="flex-1 py-3.5 bg-white border border-slate-200 text-slate-600 font-bold text-sm rounded-sm hover:bg-slate-50 transition-all active:scale-[0.98] shadow-sm"
+              className="flex-1 py-3.5 bg-white border border-slate-200 text-slate-600 font-bold text-sm rounded-none hover:bg-slate-50 transition-all active:scale-[0.98] shadow-sm"
             >
               Cancel
             </button>
             <button
               onClick={() => setPartModal({ show: false, attendees: [] })}
-              className="flex-1 py-3.5 bg-[#f36015] text-white font-bold text-sm rounded-sm hover:bg-[#e05610] transition-all active:scale-[0.98] shadow-lg shadow-orange-500/20"
+              className="flex-1 py-3.5 bg-[#f36015] text-white font-bold text-sm rounded-none hover:bg-[#e05610] transition-all active:scale-[0.98] shadow-lg shadow-orange-500/20"
             >
               Done
             </button>
@@ -510,13 +510,13 @@ export default function LeadTabs({
               <button
                 disabled={isDisabled}
                 onClick={() => !isDisabled && setShowSortDropdown(!showSortDropdown)}
-                className={`flex items-center gap-2 bg-white border border-gray-200 px-4 py-1.5 rounded-sm text-[12px] font-bold text-gray-600 transition-all font-primary shadow-sm ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                className={`flex items-center gap-2 bg-white border border-gray-200 px-4 py-1.5 rounded-none text-[12px] font-bold text-gray-600 transition-all font-primary shadow-sm ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
               >
                 Sort By : {selectedSort}
                 <ChevronDown size={14} className="text-gray-400" />
               </button>
               {showSortDropdown && (
-                <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-100 rounded-sm shadow-xl z-50 py-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-100 rounded-none shadow-xl z-50 py-1 animate-in fade-in slide-in-from-top-1 duration-200">
                   {sortOptions.map((opt) => (
                     <button
                       key={opt}
@@ -559,7 +559,7 @@ export default function LeadTabs({
               {upcomingActivities.length > 0 && (
                 <div className="space-y-4 mb-10">
                   <div className="flex items-center gap-2">
-                    <span className="px-3 py-1.5 bg-[#F5ECF8] text-[#9333EA] rounded-sm text-sm font-bold font-primary shadow-sm inline-flex items-center gap-2 border border-[#E9D5FF] tracking-wide">
+                    <span className="px-3 py-1.5 bg-[#F5ECF8] text-[#9333EA] rounded-none text-sm font-bold font-primary shadow-sm inline-flex items-center gap-2 border border-[#E9D5FF] tracking-wide">
                       <Calendar size={13} className="text-[#A855F7]" /> Upcoming Activity
                     </span>
                   </div>
@@ -572,7 +572,7 @@ export default function LeadTabs({
                           if (upcoming.type === 'meeting') setActiveTab('meeting');
                           else if (upcoming.type === 'follow_up') setActiveTab('calls');
                         }}
-                        className="bg-white rounded-lg border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card"
+                        className="bg-white rounded-none border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card"
                       >
                         <div className="p-6 flex gap-5 items-start">
                           <div className={`w-14 h-14 ${upcoming.type === 'meeting' ? 'bg-[#9333EA]' : 'bg-orange-500'} rounded-full flex items-center justify-center flex-shrink-0 shadow-xl transition-transform group-hover/card:scale-105`}>
@@ -585,7 +585,7 @@ export default function LeadTabs({
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2 text-[13px] font-bold text-slate-400">
                                 <span className="text-orange-500/80 font-black">Scheduled on</span>
-                                <span className="text-slate-600 bg-slate-100/50 px-2 py-0.5 rounded-sm">{upcoming.time}</span>
+                                <span className="text-slate-600 bg-slate-100/50 px-2 py-0.5 rounded-none">{upcoming.time}</span>
                               </div>
                               {upcoming.type === 'meeting' && upcoming.originalData?.attendees && (
                                 <button
@@ -618,7 +618,7 @@ export default function LeadTabs({
                 </div>
               ) : activities.length === 0 ? (
                 !activitiesLoading && upcomingActivities.length === 0 && (
-                  <div className="text-center py-24 bg-white rounded-sm border-2 border-dashed border-gray-100 mx-6">
+                  <div className="text-center py-24 bg-white rounded-none border-2 border-dashed border-gray-100 mx-6">
                     <Zap size={48} className="mx-auto text-gray-200 mb-4" />
                     <p className="text-gray-400 font-bold font-primary capitalize tracking-wide text-sm">No activity history yet</p>
                   </div>
@@ -627,7 +627,7 @@ export default function LeadTabs({
                 activities.map((section, idx) => (
                   <div key={idx} className="relative">
                     <div className="mb-6">
-                      <span className="px-3 py-1 bg-[#F5ECF8] text-[#9333EA] rounded-sm text-[11px] font-bold font-primary shadow-sm inline-flex items-center gap-2 border border-[#E9D5FF]">
+                      <span className="px-3 py-1 bg-[#F5ECF8] text-[#9333EA] rounded-none text-[11px] font-bold font-primary shadow-sm inline-flex items-center gap-2 border border-[#E9D5FF]">
                         <Calendar size={12} /> {section.date}
                       </span>
                     </div>
@@ -642,7 +642,7 @@ export default function LeadTabs({
                             else if (activity.type === 'file') setActiveTab('files');
                             else if (activity.type === 'meeting') setActiveTab('meeting');
                           }}
-                          className="bg-white rounded-sm border border-gray-100 p-5 hover:border-orange-200 cursor-pointer transition-all hover:shadow-sm group flex gap-5 items-start"
+                          className="bg-white rounded-none border border-gray-100 p-5 hover:border-orange-200 cursor-pointer transition-all hover:shadow-sm group flex gap-5 items-start"
                         >
                           <div className={`w-10 h-10 ${activity.color} rounded-full flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105`}>
                             <activity.icon size={18} className="text-white fill-white/20" />
@@ -655,7 +655,7 @@ export default function LeadTabs({
                                 </h4>
                                 <p className="text-[12px] font-bold text-gray-400 font-primary">{activity.time}</p>
                               </div>
-                              <div className="flex items-center gap-2 bg-gray-50 px-2 py-1 rounded-sm border border-gray-100">
+                              <div className="flex items-center gap-2 bg-gray-50 px-2 py-1 rounded-none border border-gray-100">
                                 <UserAvatar name={activity.subtitle} profilePicture={activity.profilePicture} size="w-6 h-6 border border-white" />
                                 <span className="text-[11px] font-bold text-gray-600 capitalize">{activity.subtitle}</span>
                               </div>
@@ -683,13 +683,13 @@ export default function LeadTabs({
                   <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
                 </div>
               ) : notes.length === 0 ? (
-                <div className="text-center py-24 bg-white rounded-sm border-2 border-dashed border-gray-100 mx-6">
+                <div className="text-center py-24 bg-white rounded-none border-2 border-dashed border-gray-100 mx-6">
                   <FileText size={48} className="mx-auto text-gray-200 mb-4" />
                   <p className="text-gray-400 font-bold font-primary text-sm">Your notebook is empty</p>
                 </div>
               ) : (
                 notes.map((note) => (
-                  <div key={note.id} className="bg-white rounded-lg border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
+                  <div key={note.id} className="bg-white rounded-none border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
                     <div className="p-6">
                       <div className="flex gap-5 items-start mb-6">
                         <div className="w-14 h-14 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-xl transition-transform group-hover/card:scale-105">
@@ -698,7 +698,7 @@ export default function LeadTabs({
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1.5">
                             <div className="flex items-center gap-2">
-                              <div className="flex items-center gap-1.5 px-3 py-1 bg-orange-50 text-orange-600 rounded-sm text-[10px] font-black uppercase tracking-widest border border-orange-100">
+                              <div className="flex items-center gap-1.5 px-3 py-1 bg-orange-50 text-orange-600 rounded-none text-[10px] font-black uppercase tracking-widest border border-orange-100">
                                 <FileText size={12} className="fill-orange-600/10" />
                                 Note
                               </div>
@@ -707,10 +707,10 @@ export default function LeadTabs({
                               </div>
                             </div>
                             <div className="flex gap-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
-                              <button onClick={(e) => { e.stopPropagation(); onEditClick('note', note.originalData); }} className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-sm">
+                              <button onClick={(e) => { e.stopPropagation(); onEditClick('note', note.originalData); }} className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-none">
                                 <Edit2 size={16} />
                               </button>
-                              <button onClick={(e) => { e.stopPropagation(); onDeleteClick('note', note.id); }} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-sm">
+                              <button onClick={(e) => { e.stopPropagation(); onDeleteClick('note', note.id); }} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-none">
                                 <Trash2 size={16} />
                               </button>
                             </div>
@@ -726,12 +726,12 @@ export default function LeadTabs({
 
                       {/* Files Box - Reusing Meeting's Location Box style */}
                       {note.files && note.files.length > 0 && (
-                        <div className="mb-6 p-4 bg-slate-50/80 border border-slate-100 rounded-lg group-hover/card:border-orange-200 transition-colors">
+                        <div className="mb-6 p-4 bg-slate-50/80 border border-slate-100 rounded-none group-hover/card:border-orange-200 transition-colors">
                           <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-3 italic">Attached Documents</p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {note.files.map((file, fIdx) => (
-                              <div key={fIdx} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-100 hover:border-orange-200 transition-all shadow-sm group/file">
-                                <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm shadow-orange-500/10">
+                              <div key={fIdx} className="flex items-center gap-3 p-3 bg-white rounded-none border border-gray-100 hover:border-orange-200 transition-all shadow-sm group/file">
+                                <div className="w-10 h-10 bg-orange-500 rounded-none flex items-center justify-center flex-shrink-0 shadow-sm shadow-orange-500/10">
                                   {file.name.toLowerCase().endsWith('.xls') || file.name.toLowerCase().endsWith('.xlsx') ? (
                                     <FileSpreadsheet size={18} className="text-white" />
                                   ) : (
@@ -760,7 +760,7 @@ export default function LeadTabs({
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 italic">Recent Comments</p>
                           <div className="max-h-[220px] overflow-y-auto space-y-3 pr-2 custom-scrollbar">
                             {note.comments.map((comment, cIdx) => (
-                              <div key={cIdx} className="flex gap-3 bg-slate-50/50 p-3 rounded-sm border border-slate-100/50">
+                              <div key={cIdx} className="flex gap-3 bg-slate-50/50 p-3 rounded-none border border-slate-100/50">
                                 <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-slate-600">
                                   {comment.user_name?.substring(0, 2).toUpperCase() || '??'}
                                 </div>
@@ -785,7 +785,7 @@ export default function LeadTabs({
                             value={noteCommentText}
                             onChange={(e) => setNoteCommentText(e.target.value)}
                             placeholder="Type your comment here..."
-                            className="w-full p-4 bg-white border border-gray-100 rounded-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 text-[14px] font-medium transition-all resize-none shadow-sm font-primary outline-none"
+                            className="w-full p-4 bg-white border border-gray-100 rounded-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 text-[14px] font-medium transition-all resize-none shadow-sm font-primary outline-none"
                             rows={3}
                           />
                           <div className="flex justify-end items-center gap-4 mt-3">
@@ -814,7 +814,7 @@ export default function LeadTabs({
                                   console.error("Failed to add comment:", err);
                                 }
                               }}
-                              className="px-6 py-2.5 bg-orange-500 text-white rounded-sm text-[12px] font-black capitalize tracking-wide hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20 disabled:opacity-50 disabled:shadow-none active:scale-95 font-primary"
+                              className="px-6 py-2.5 bg-orange-500 text-white rounded-none text-[12px] font-black capitalize tracking-wide hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20 disabled:opacity-50 disabled:shadow-none active:scale-95 font-primary"
                             >
                               Post Comment
                             </button>
@@ -843,7 +843,7 @@ export default function LeadTabs({
                               setNoteCommentText("");
                             }
                           }}
-                          className={`px-4 py-2 border transition-all font-bold text-[12px] font-primary flex items-center gap-2 shadow-sm active:scale-95 rounded-sm ${openCommentNoteId === note.id ? 'bg-orange-600 text-white border-orange-600' : 'bg-white border-orange-200 text-orange-600 hover:bg-orange-50'}`}
+                          className={`px-4 py-2 border transition-all font-bold text-[12px] font-primary flex items-center gap-2 shadow-sm active:scale-95 rounded-none ${openCommentNoteId === note.id ? 'bg-orange-600 text-white border-orange-600' : 'bg-white border-orange-200 text-orange-600 hover:bg-orange-50'}`}
                         >
                           {openCommentNoteId === note.id ? <X size={14} className="stroke-[3px]" /> : <Plus size={14} className="stroke-[3px]" />}
                           {openCommentNoteId === note.id ? "Cancel" : "Add Comment"}
@@ -867,13 +867,13 @@ export default function LeadTabs({
                   <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                 </div>
               ) : calls.length === 0 ? (
-                <div className="text-center py-24 bg-white rounded-sm border-2 border-dashed border-gray-100 mx-6">
+                <div className="text-center py-24 bg-white rounded-none border-2 border-dashed border-gray-100 mx-6">
                   <Phone size={48} className="mx-auto text-gray-200 mb-4" />
                   <p className="text-gray-400 font-bold font-primary text-sm">No calls recorded yet</p>
                 </div>
               ) : (
                 calls.map((call) => (
-                  <div key={call.id} className="bg-white rounded-lg border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-blue-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
+                  <div key={call.id} className="bg-white rounded-none border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-blue-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
                     <div className="p-6">
                       <div className="flex gap-5 items-start mb-6">
                         <div className="w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-xl transition-transform group-hover/card:scale-105">
@@ -882,7 +882,7 @@ export default function LeadTabs({
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1.5">
                             <div className="flex items-center gap-2">
-                              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-sm text-[10px] font-black uppercase tracking-widest border ${call.priority === 'High' ? 'bg-red-50 text-red-600 border-red-100' :
+                              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-none text-[10px] font-black uppercase tracking-widest border ${call.priority === 'High' ? 'bg-red-50 text-red-600 border-red-100' :
                                 call.priority === 'Medium' ? 'bg-orange-50 text-orange-600 border-orange-100' :
                                   'bg-green-50 text-green-600 border-green-100'
                                 }`}>
@@ -893,7 +893,7 @@ export default function LeadTabs({
                               </div>
                             </div>
                             <div className="flex gap-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
-                              <button onClick={(e) => { e.stopPropagation(); onDeleteClick('call', call.id); }} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-sm shadow-sm bg-white border border-gray-50">
+                              <button onClick={(e) => { e.stopPropagation(); onDeleteClick('call', call.id); }} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-none shadow-sm bg-white border border-gray-50">
                                 <Trash2 size={16} />
                               </button>
                             </div>
@@ -905,14 +905,26 @@ export default function LeadTabs({
                                 'text-green-600'
                               }`}>{call.status}</span>
                           </div>
+                          {call.content && call.content !== "No notes" && (
+                            <div className="mt-4 bg-slate-50 border border-slate-100 p-3 rounded-none relative">
+                              <div className="absolute top-0 left-0 w-1 h-full bg-blue-400"></div>
+                              <div className="flex items-center gap-1.5 mb-1.5 pl-1">
+                                <FileText size={12} className="text-slate-400" />
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Call Note</span>
+                              </div>
+                              <p className="text-[13px] font-bold text-slate-700 whitespace-pre-wrap break-words leading-relaxed pl-1">
+                                {call.content}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
 
                       {/* Details Box - Reusing Meeting's Location Box style */}
                       {call.nextFollowUp && (
-                        <div className="mb-6 p-4 bg-slate-50/80 border border-slate-100 rounded-lg group-hover/card:border-blue-200 transition-colors flex flex-wrap gap-6">
+                        <div className="mb-6 p-4 bg-slate-50/80 border border-slate-100 rounded-none group-hover/card:border-blue-200 transition-colors flex flex-wrap gap-6">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+                            <div className="w-9 h-9 bg-blue-100 text-blue-600 rounded-none flex items-center justify-center shadow-sm">
                               <CalendarClock size={18} />
                             </div>
                             <div>
@@ -951,7 +963,7 @@ export default function LeadTabs({
             <TabHeader title="Files" showSort={false} />
             <div className="p-6 space-y-4">
               {/* Manage Documents Hero Card */}
-              <div className="bg-white rounded-sm border border-gray-100 p-6 flex justify-between items-center shadow-sm">
+              <div className="bg-white rounded-none border border-gray-100 p-6 flex justify-between items-center shadow-sm">
                 <div>
                   <h3 className="text-[16px] font-bold text-gray-800 font-primary mb-1">Manage Documents</h3>
                   <p className="text-[13px] text-gray-400 font-medium font-primary">Send customizable quotes, proposals and contracts to close deals faster.</p>
@@ -959,7 +971,7 @@ export default function LeadTabs({
                 <button
                   disabled={isDisabled}
                   onClick={() => !isDisabled && onAddClick('file')}
-                  className={`px-6 py-2.5 rounded-sm transition-all font-bold text-[13px] font-primary shadow-lg active:scale-95 ${isDisabled ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' : 'bg-orange-500 text-white hover:bg-orange-600 shadow-orange-500/20'}`}
+                  className={`px-6 py-2.5 rounded-none transition-all font-bold text-[13px] font-primary shadow-lg active:scale-95 ${isDisabled ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' : 'bg-orange-500 text-white hover:bg-orange-600 shadow-orange-500/20'}`}
                 >
                   Create Document
                 </button>
@@ -970,13 +982,13 @@ export default function LeadTabs({
                   <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
                 </div>
               ) : files.length === 0 ? (
-                <div className="text-center py-24 bg-white rounded-sm border-2 border-dashed border-gray-100 mx-6">
+                <div className="text-center py-24 bg-white rounded-none border-2 border-dashed border-gray-100 mx-6">
                   <File size={48} className="mx-auto text-gray-200 mb-4" />
                   <p className="text-gray-400 font-bold font-primary text-sm">No files uploaded yet</p>
                 </div>
               ) : (
                 files.map((file) => (
-                  <div key={file.id} className="bg-white rounded-lg border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
+                  <div key={file.id} className="bg-white rounded-none border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
                     <div className="p-5">
                       <div className="flex gap-5 items-start ">
                         <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg transition-transform group-hover/card:scale-105">
@@ -985,7 +997,7 @@ export default function LeadTabs({
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1.5">
                             <div className="flex items-center gap-2">
-                              <div className="flex items-center gap-1.5 px-3 py-1 bg-orange-50 text-orange-600 rounded-sm text-[10px] font-black uppercase tracking-widest border border-orange-100">
+                              <div className="flex items-center gap-1.5 px-3 py-1 bg-orange-50 text-orange-600 rounded-none text-[10px] font-black uppercase tracking-widest border border-orange-100">
                                 Document
                               </div>
                             </div>
@@ -994,13 +1006,13 @@ export default function LeadTabs({
                                 e.stopPropagation();
                                 let path = file.originalData?.file_path || file.originalData?.path;
                                 onDownloadClick(path, file.title);
-                              }} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-sm transition-colors border border-transparent hover:border-blue-100 bg-white shadow-sm">
+                              }} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-none transition-colors border border-transparent hover:border-blue-100 bg-white shadow-sm">
                                 <Download size={16} />
                               </button>
-                              <button onClick={(e) => { e.stopPropagation(); onEditClick('file', file.originalData); }} className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-sm transition-colors border border-transparent hover:border-orange-100 bg-white shadow-sm">
+                              <button onClick={(e) => { e.stopPropagation(); onEditClick('file', file.originalData); }} className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-none transition-colors border border-transparent hover:border-orange-100 bg-white shadow-sm">
                                 <Edit2 size={16} />
                               </button>
-                              <button onClick={(e) => { e.stopPropagation(); onDeleteClick('file', file.id); }} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-sm transition-colors border border-transparent hover:border-red-100 bg-white shadow-sm">
+                              <button onClick={(e) => { e.stopPropagation(); onDeleteClick('file', file.id); }} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-none transition-colors border border-transparent hover:border-red-100 bg-white shadow-sm">
                                 <Trash2 size={16} />
                               </button>
                             </div>
@@ -1039,13 +1051,13 @@ export default function LeadTabs({
                   <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                 </div>
               ) : meetings.length === 0 ? (
-                <div className="text-center py-24 bg-white rounded-sm border-2 border-dashed border-gray-100 mx-6">
+                <div className="text-center py-24 bg-white rounded-none border-2 border-dashed border-gray-100 mx-6">
                   <Video size={48} className="mx-auto text-gray-200 mb-4" />
                   <p className="text-gray-400 font-bold font-primary text-sm">No upcoming meetings</p>
                 </div>
               ) : (
                 meetings.map((meeting) => (
-                  <div key={meeting.id} className="bg-white rounded-lg border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
+                  <div key={meeting.id} className="bg-white rounded-none border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
                     <div className="p-6">
                       <div className="flex gap-5 items-start mb-6">
                         <div className="w-14 h-14 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-xl transition-transform group-hover/card:scale-105">
@@ -1054,7 +1066,7 @@ export default function LeadTabs({
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1.5">
                             <div className="flex items-center gap-2">
-                              <div className="flex items-center gap-1.5 px-3 py-1 bg-purple-50 text-purple-600 rounded-sm text-[10px] font-black uppercase tracking-widest border border-purple-100">
+                              <div className="flex items-center gap-1.5 px-3 py-1 bg-purple-50 text-purple-600 rounded-none text-[10px] font-black uppercase tracking-widest border border-purple-100">
                                 {meeting.meeting_type === 'Online' ? <Video size={12} className="fill-purple-600/10" /> : <MapPin size={12} className="fill-purple-600/10" />}
                                 {meeting.meeting_type}
                               </div>
@@ -1066,10 +1078,10 @@ export default function LeadTabs({
                               </div>
                             </div>
                             <div className="flex gap-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
-                              <button onClick={(e) => { e.stopPropagation(); onEditClick('meeting', meeting.originalData); }} className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-sm">
+                              <button onClick={(e) => { e.stopPropagation(); onEditClick('meeting', meeting.originalData); }} className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-none">
                                 <Edit2 size={16} />
                               </button>
-                              <button onClick={(e) => { e.stopPropagation(); onDeleteClick('meeting', meeting.id); }} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-sm">
+                              <button onClick={(e) => { e.stopPropagation(); onDeleteClick('meeting', meeting.id); }} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-none">
                                 <Trash2 size={16} />
                               </button>
                             </div>
@@ -1084,8 +1096,8 @@ export default function LeadTabs({
                       </div>
 
                       {/* Location Box */}
-                      <div className="mb-6 p-4 bg-slate-50/80 border border-slate-100 rounded-lg flex items-start gap-4 transition-colors group-hover/card:border-purple-200">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm ${meeting.meeting_type === 'Online' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
+                      <div className="mb-6 p-4 bg-slate-50/80 border border-slate-100 rounded-none flex items-start gap-4 transition-colors group-hover/card:border-purple-200">
+                        <div className={`w-10 h-10 rounded-none flex items-center justify-center flex-shrink-0 shadow-sm ${meeting.meeting_type === 'Online' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
                           {meeting.meeting_type === 'Online' ? <Video size={18} /> : <MapPin size={18} />}
                         </div>
                         <div className="flex-1 overflow-hidden">
@@ -1152,14 +1164,14 @@ export default function LeadTabs({
           <div className="flex-1 bg-[#F9FBFC] overflow-auto animate-fadeIn min-h-[500px]">
             <TabHeader title="Email" showSort={false} />
             <div className="p-6">
-              <div className="bg-white rounded-sm border border-gray-100 p-8 flex justify-between items-center shadow-sm">
+              <div className="bg-white rounded-none border border-gray-100 p-8 flex justify-between items-center shadow-sm">
                 <div>
                   <h3 className="text-[18px] font-bold text-gray-800 font-primary mb-2">Manage Emails</h3>
                   <p className="text-[14px] text-gray-400 font-medium font-primary">You can send and reply to emails directly via this section.</p>
                 </div>
                 <button
                   disabled={isDisabled}
-                  className={`px-6 py-2.5 rounded-sm transition-all font-bold text-[13px] font-primary shadow-lg active:scale-95 ${isDisabled ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' : 'bg-orange-500 text-white hover:bg-orange-600 shadow-orange-500/20'}`}
+                  className={`px-6 py-2.5 rounded-none transition-all font-bold text-[13px] font-primary shadow-lg active:scale-95 ${isDisabled ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' : 'bg-orange-500 text-white hover:bg-orange-600 shadow-orange-500/20'}`}
                 >
                   Connect Account
                 </button>
@@ -1173,7 +1185,7 @@ export default function LeadTabs({
           <div className="flex-1 bg-[#F9FBFC] overflow-auto animate-fadeIn min-h-[500px]">
             <TabHeader title="WhatsApp Messenger" showSort={false} />
             <div className="p-6">
-              <div className="bg-white rounded-sm border border-gray-100 p-12 flex flex-col items-center text-center shadow-sm">
+              <div className="bg-white rounded-none border border-gray-100 p-12 flex flex-col items-center text-center shadow-sm">
                 <div className="w-20 h-20 bg-[#25D366] rounded-full flex items-center justify-center mb-6 shadow-lg shadow-[#25D366]/20">
                   <FaWhatsapp size={40} className="text-white" />
                 </div>
@@ -1183,14 +1195,14 @@ export default function LeadTabs({
                   <button
                     disabled={isDisabled}
                     onClick={() => setShowWhatsAppModal(true)}
-                    className={`px-10 py-3.5 rounded-sm transition-all font-bold text-[14px] font-primary shadow-lg active:scale-95 flex items-center gap-2 ${isDisabled ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' : 'bg-[#25D366] text-white hover:bg-[#128C7E] shadow-[#25D366]/20'}`}
+                    className={`px-10 py-3.5 rounded-none transition-all font-bold text-[14px] font-primary shadow-lg active:scale-95 flex items-center gap-2 ${isDisabled ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' : 'bg-[#25D366] text-white hover:bg-[#128C7E] shadow-[#25D366]/20'}`}
                   >
                     <FaWhatsapp size={18} />
                     Send Template Message
                   </button>
                   <button
                     disabled={isDisabled}
-                    className={`px-6 py-3.5 rounded-sm transition-all font-bold text-[14px] font-primary border border-gray-200 text-gray-600 hover:bg-gray-50 active:scale-95 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`px-6 py-3.5 rounded-none transition-all font-bold text-[14px] font-primary border border-gray-200 text-gray-600 hover:bg-gray-50 active:scale-95 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     Connect WhatsApp
                   </button>

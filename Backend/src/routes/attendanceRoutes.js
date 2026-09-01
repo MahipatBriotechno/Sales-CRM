@@ -11,6 +11,8 @@ router.put('/settings', attendanceSettingsController.updateSettings);
 
 router.post('/mark', attendanceController.markAttendance);
 router.put('/checkout/:id', attendanceController.checkOut);
+router.post('/break/start/:id', attendanceController.startBreak);
+router.put('/break/end/:id', attendanceController.endBreak);
 router.get('/all', attendanceController.getAllAttendance);
 router.get('/employee/:employee_id', attendanceController.getEmployeeAttendance);
 router.get('/stats', attendanceController.getDashboardStats);

@@ -70,7 +70,7 @@ const getLeads = async (req, res) => {
     try {
         await Lead.checkMissedLeads(req.user.id);
         const { page, limit, search, status, pipeline_id, tag, type, subview, priority, services, dateFrom, dateTo, name, mobile_number } = req.query;
-        const data = await Lead.findAll(req.user.id, page, limit, search, status, pipeline_id, tag, type, subview, priority, services, dateFrom, dateTo, name, mobile_number);
+        const data = await Lead.findAll(req.user, page, limit, search, status, pipeline_id, tag, type, subview, priority, services, dateFrom, dateTo, name, mobile_number);
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -839,6 +839,76 @@ const deleteLeadMeeting = async (req, res) => {
     }
 };
 
+const getWatchTicker = async (req, res) => {
+    try {
+        await Lead.checkMissedLeads(req.user.id);
+        const { pool } = require('../config/db');
+        const user = req.user;
+        const userId = user.user_id || user.id; // Admin ID context
+        
+        let employeeFilter = "";
+        const employeeParams = [];
+        
+        if (user.role === 'Employee') {
+            employeeFilter = " AND (l.assigned_to = ? OR l.assigned_to = ? OR l.assigned_to = ?)";
+            employeeParams.push(user._id ? user._id.toString() : '', user._id || '', user.employee_name || '');
+        }
+
+        const query = `
+            SELECT l.id, l.lead_id, l.name, l.tag as status, l.next_call_at, l.call_count, COALESCE(e.employee_name, l.assigned_to) as employee_name
+            FROM leads l
+            LEFT JOIN employees e ON (l.assigned_to = CAST(e.id AS CHAR) OR l.assigned_to = e.employee_id OR l.assigned_to = e.employee_name)
+            WHERE l.user_id = ? AND l.is_deleted = 0
+            ${employeeFilter}
+            AND (
+                l.tag = 'Missed' 
+                OR (l.next_call_at IS NOT NULL AND l.next_call_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) AND l.next_call_at <= DATE_ADD(NOW(), INTERVAL 24 HOUR))
+                OR (l.call_count = 0 AND l.tag = 'New Lead')
+            )
+            ORDER BY 
+                CASE WHEN l.tag = 'Missed' THEN 1
+                     WHEN l.call_count = 0 THEN 2
+                     ELSE 3 END,
+                l.next_call_at ASC
+            LIMIT 15
+        `;
+
+        const queryParams = [userId, ...employeeParams];
+        const [rows] = await pool.query(query, queryParams);
+
+        // Map to ticker items
+        const tickerItems = rows.map(lead => {
+            let type = 'info';
+            let message = '';
+            
+            const assigneeText = user.role !== 'Employee' && lead.employee_name ? ` (Assigned to: ${lead.employee_name})` : '';
+
+            if (lead.status === 'Missed') {
+                type = 'missed';
+                message = `Missed Call: ${lead.name || lead.lead_id}${assigneeText}`;
+            } else if (lead.call_count === 0) {
+                type = 'new';
+                message = `New Unattended Lead: ${lead.name || lead.lead_id}${assigneeText}`;
+            } else if (lead.next_call_at) {
+                type = 'upcoming';
+                message = `Follow-up Scheduled: ${lead.name || lead.lead_id}${assigneeText}`;
+            }
+
+            return {
+                id: lead.id,
+                lead_id: lead.lead_id,
+                type,
+                message,
+                time: lead.next_call_at
+            };
+        });
+
+        res.status(200).json(tickerItems);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 const getDueReminders = async (req, res) => {
     try {
         await Lead.checkMissedLeads(req.user.id);
@@ -1024,5 +1094,6 @@ module.exports = {
     getDueReminders,
     snoozeLead,
     convertLeadToClient,
-    addLeadActivity
+    addLeadActivity,
+    getWatchTicker
 };

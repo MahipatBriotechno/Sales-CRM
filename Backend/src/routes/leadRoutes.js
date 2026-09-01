@@ -40,7 +40,8 @@ const {
     getEmployeePerformance,
     convertLeadToClient,
     addLeadActivity,
-    getLeadDashboard
+    getLeadDashboard,
+    getWatchTicker
 } = require('../controllers/leadController');
 const { protect } = require('../middleware/authMiddleware');
 const { checkLimit } = require('../middleware/limitMiddleware');
@@ -55,6 +56,7 @@ router.get('/employee-performance/:id', protect, getEmployeePerformance);
 router.get('/check-call-conflict', protect, checkCallConflict);
 router.get('/due-reminders', protect, getDueReminders);
 router.get('/due-meetings', protect, getDueMeetings);
+router.get('/watch-ticker', protect, getWatchTicker);
 router.get('/:id', protect, getLeadById);
 router.put('/:id', protect, updateLead);
 router.delete('/:id', protect, deleteLead);

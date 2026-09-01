@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/authSlice';
 import uiReducer from './slices/uiSlice';
 import { limitErrorMiddleware } from './middleware/limitErrorMiddleware';
+import { authErrorMiddleware } from './middleware/authErrorMiddleware';
 import { authApi } from './api/authApi';
 import { businessApi } from './api/businessApi';
 import { departmentApi } from './api/departmentApi';
@@ -144,7 +145,7 @@ export const store = configureStore({
             walletApi.middleware,
             superAdminApi.middleware,
             shiftApi.middleware,
-            limitErrorMiddleware
-
+            limitErrorMiddleware,
+            authErrorMiddleware
         ),
 });

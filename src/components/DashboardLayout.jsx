@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import ProfileCompletionBanner from "./ProfileCompletionBanner";
+import GlobalAttendanceEnforcer from "./Attendance/GlobalAttendanceEnforcer";
 
 const LayoutContext = createContext(null);
 
@@ -42,6 +43,7 @@ const DashboardLayout = ({ children, isFullHeight = false }) => {
           ${sidebarOpen ? "xl:ml-[280px]" : "ml-0"} 
           ${isLocked ? "xl:ml-[280px]" : "xl:ml-[68px]"} ${isFull ? "h-[calc(100vh-64px)] flex flex-col overflow-hidden" : "min-h-screen"}`}
         >
+          <GlobalAttendanceEnforcer />
           <ProfileCompletionBanner />
           {isFull ? (
             <div className="flex-1 min-h-0 flex flex-col">

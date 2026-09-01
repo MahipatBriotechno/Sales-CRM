@@ -16,10 +16,10 @@ const NumberCard = ({ title, number, lineBorderClass, icon, iconBgColor, up, dow
     const style = colorMap[lineBorderClass] || colorMap["border-orange-500"];
 
     return (
-      <div className={`rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 ${style.border} ${style.bg} transition-all duration-300 hover:shadow-md cursor-pointer`} onClick={onClick}>
+      <div className={`rounded-none shadow-sm border border-gray-200 p-4 border-t-4 ${style.border} ${style.bg} transition-all duration-300 hover:shadow-md cursor-pointer`} onClick={onClick}>
         <div className="flex items-center justify-between font-primary">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm flex items-center justify-center shrink-0">
+            <div className="p-1.5 rounded-none bg-white border border-gray-100 shadow-sm flex items-center justify-center shrink-0">
               {icon && React.isValidElement(icon)
                 ? React.cloneElement(icon, { size: 18, className: style.text })
                 : icon}
@@ -27,7 +27,7 @@ const NumberCard = ({ title, number, lineBorderClass, icon, iconBgColor, up, dow
             <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight">{title}</h3>
           </div>
           <div className="flex flex-col items-end shrink-0">
-            <span className="bg-white text-gray-700 text-[11px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">
+            <span className="bg-white text-gray-700 text-[11px] font-bold px-2 py-0.5 rounded-none border border-gray-100 shadow-sm">
               {number}
             </span>
             {up && <span className="text-[9px] font-bold text-green-600 mt-1">{up}</span>}
@@ -39,7 +39,7 @@ const NumberCard = ({ title, number, lineBorderClass, icon, iconBgColor, up, dow
   }
 
   return (
-    <div className={`bg-white rounded-sm shadow-sm hover:shadow-md p-5 border-t-4 ${lineBorderClass}`}>
+    <div className={`bg-white rounded-none shadow-sm hover:shadow-md p-5 border-t-4 ${lineBorderClass}`}>
       <div className="flex items-center justify-between">
         <div>
           <p className="text-gray-500 text-sm font-medium">
@@ -60,7 +60,7 @@ const NumberCard = ({ title, number, lineBorderClass, icon, iconBgColor, up, dow
               {down}
             </div>
           )}
-          <div className={`${iconBgColor} p-3 rounded-lg`} >
+          <div className={`${iconBgColor} p-3 rounded-none`} >
             {icon}
           </div>
         </div>

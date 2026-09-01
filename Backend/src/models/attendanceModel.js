@@ -29,6 +29,29 @@ const Attendance = {
         );
     },
 
+    getBreaks: async (attendanceId) => {
+        const [rows] = await pool.query(
+            `SELECT * FROM attendance_breaks WHERE attendance_id = ? ORDER BY start_time ASC`,
+            [attendanceId]
+        );
+        return rows;
+    },
+
+    startBreak: async (attendanceId) => {
+        const [result] = await pool.query(
+            `INSERT INTO attendance_breaks (attendance_id, start_time) VALUES (?, NOW())`,
+            [attendanceId]
+        );
+        return result.insertId;
+    },
+
+    endBreak: async (breakId) => {
+        await pool.query(
+            `UPDATE attendance_breaks SET end_time = NOW() WHERE id = ?`,
+            [breakId]
+        );
+    },
+
     findAll: async (userId, filters = {}) => {
         const { date, employee_id, department_id, status, page = 1, limit = 100 } = filters;
         const offset = (page - 1) * limit;

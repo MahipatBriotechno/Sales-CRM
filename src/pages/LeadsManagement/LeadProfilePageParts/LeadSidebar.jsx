@@ -68,6 +68,9 @@ export default function LeadSidebar({
   const [sectionValues, setSectionValues] = useState({});
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [openMultiSelect, setOpenMultiSelect] = useState(null);
+  const [openSections, setOpenSections] = useState({ basic: true, location: false, business: false, contact: false, custom: false, ownership: false });
+
+  const toggleSection = (sec) => setOpenSections(prev => ({...prev, [sec]: !prev[sec]}));
 
   const startEditing = (field, value) => {
     setEditingField(field);
@@ -171,7 +174,7 @@ export default function LeadSidebar({
           <div className="flex flex-col gap-1 items-end flex-1 max-w-[200px] relative">
             {type === "select" ? (
               <select
-                className="w-full p-1.5 text-xs border border-orange-200 rounded-sm focus:border-orange-500 outline-none bg-white font-bold"
+                className="w-full p-1.5 text-xs border border-orange-200 rounded-none focus:border-orange-500 outline-none bg-white font-bold"
                 value={value}
                 onChange={(e) => isSectionEditing ? handleSectionValueChange(field, e.target.value) : setEditValue(e.target.value)}
                 autoFocus={isEditing}
@@ -185,13 +188,13 @@ export default function LeadSidebar({
               <div className="w-full relative">
                 <div
                   onClick={() => setOpenMultiSelect(prev => prev === field ? null : field)}
-                  className="w-full min-h-[30px] p-1.5 border border-orange-200 rounded-sm cursor-pointer flex flex-wrap gap-1 items-center bg-white hover:border-orange-500 transition-all shadow-sm"
+                  className="w-full min-h-[30px] p-1.5 border border-orange-200 rounded-none cursor-pointer flex flex-wrap gap-1 items-center bg-white hover:border-orange-500 transition-all shadow-sm"
                 >
                   {(!Array.isArray(value) || value.length === 0) ? (
                     <span className="text-[10px] text-gray-400 font-bold uppercase">Select Options...</span>
                   ) : (
                     value.map(item => (
-                      <span key={item} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-100 text-orange-600 text-[10px] font-black rounded-sm border border-orange-200">
+                      <span key={item} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-100 text-orange-600 text-[10px] font-black rounded-none border border-orange-200">
                         {item}
                         <Plus
                           size={10}
@@ -205,7 +208,7 @@ export default function LeadSidebar({
                 </div>
 
                 {openMultiSelect === field && (
-                  <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-sm shadow-xl z-[100] w-[200px] max-h-48 overflow-y-auto ring-1 ring-black ring-opacity-5">
+                  <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-none shadow-xl z-[100] w-[200px] max-h-48 overflow-y-auto ring-1 ring-black ring-opacity-5">
                     {interestedInOptions.map(option => (
                       <label key={option} className="flex items-center gap-2 px-3 py-2 hover:bg-orange-50 cursor-pointer transition-colors border-b last:border-0 border-gray-50">
                         <input
@@ -222,7 +225,7 @@ export default function LeadSidebar({
               </div>
             ) : type === "textarea" ? (
               <textarea
-                className="w-full p-1.5 text-xs border border-orange-200 rounded-sm focus:border-orange-500 outline-none bg-white font-bold min-h-[60px] resize-none"
+                className="w-full p-1.5 text-xs border border-orange-200 rounded-none focus:border-orange-500 outline-none bg-white font-bold min-h-[60px] resize-none"
                 value={value}
                 onChange={(e) => isSectionEditing ? handleSectionValueChange(field, e.target.value) : setEditValue(e.target.value)}
                 autoFocus={isEditing}
@@ -230,7 +233,7 @@ export default function LeadSidebar({
             ) : (
               <input
                 type={type}
-                className="w-full p-1.5 text-xs border border-orange-200 rounded-sm focus:border-orange-500 outline-none bg-white font-bold"
+                className="w-full p-1.5 text-xs border border-orange-200 rounded-none focus:border-orange-500 outline-none bg-white font-bold"
                 value={value}
                 onChange={(e) => isSectionEditing ? handleSectionValueChange(field, e.target.value) : setEditValue(e.target.value)}
                 autoFocus={isEditing}
@@ -245,14 +248,14 @@ export default function LeadSidebar({
                 <button
                   onClick={cancelEditing}
                   title="Cancel"
-                  className="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                  className="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-none shadow-sm transition-all active:scale-95"
                 >
                   <X size={12} strokeWidth={3} />
                 </button>
                 <button
                   onClick={() => saveEditing(field)}
                   title="Save Change"
-                  className="w-6 h-6 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                  className="w-6 h-6 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-none shadow-sm transition-all active:scale-95"
                 >
                   <Check size={12} strokeWidth={3} />
                 </button>
@@ -326,7 +329,7 @@ export default function LeadSidebar({
           <div className="flex flex-col gap-2 items-center mb-2 w-full animate-in fade-in slide-in-from-top-1 duration-200">
             <input
               type="text"
-              className="w-full max-w-[280px] p-2 text-xl border border-orange-200 rounded-sm focus:border-orange-500 outline-none bg-white font-bold text-center"
+              className="w-full max-w-[280px] p-2 text-xl border border-orange-200 rounded-none focus:border-orange-500 outline-none bg-white font-bold text-center"
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
               autoFocus
@@ -339,14 +342,14 @@ export default function LeadSidebar({
               <button
                 onClick={cancelEditing}
                 title="Cancel"
-                className="w-7 h-7 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-sm shadow-md transition-all active:scale-95"
+                className="w-7 h-7 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-none shadow-md transition-all active:scale-95"
               >
                 <X size={14} strokeWidth={3} />
               </button>
               <button
                 onClick={() => saveEditing('name')}
                 title="Save Name"
-                className="w-7 h-7 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm shadow-md transition-all active:scale-95"
+                className="w-7 h-7 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-none shadow-md transition-all active:scale-95"
               >
                 <Check size={14} strokeWidth={3} />
               </button>
@@ -360,7 +363,7 @@ export default function LeadSidebar({
             <ActionGuard permission="leads_edit" module="Leads Management" type="update">
               <button
                 onClick={() => startEditing('name', leadData?.name)}
-                className="absolute right-[5%] top-0 w-7 h-7 flex items-center justify-center bg-orange-500 text-white rounded-sm opacity-0 group-hover/name:opacity-100 transition-all hover:bg-orange-600 shadow-lg"
+                className="absolute right-[5%] top-0 w-7 h-7 flex items-center justify-center bg-orange-500 text-white rounded-none opacity-0 group-hover/name:opacity-100 transition-all hover:bg-orange-600 shadow-lg"
               >
                 <Edit2 size={12} />
               </button>
@@ -386,7 +389,7 @@ export default function LeadSidebar({
           <button
             onClick={() => setShowConvertModal(true)}
             disabled={leadData?.tag !== 'Follow Up' && leadData?.tag !== 'Missed'}
-            className={`py-2.5 rounded-sm text-sm font-semibold flex items-center justify-center gap-2 transition-all ${leadData?.tag === 'Follow Up' || leadData?.tag === 'Missed'
+            className={`py-2.5 rounded-none text-sm font-semibold flex items-center justify-center gap-2 transition-all ${leadData?.tag === 'Follow Up' || leadData?.tag === 'Missed'
               ? "bg-slate-800 hover:bg-slate-900 text-white shadow-sm"
               : "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
               }`}
@@ -397,7 +400,7 @@ export default function LeadSidebar({
         <ActionGuard permission="leads_view_own" module="Leads Management" type="read">
           <button
             onClick={() => handleQrCall && handleQrCall()}
-            className="bg-orange-500 hover:bg-orange-600 text-white py-2.5 rounded-sm text-sm font-semibold flex items-center justify-center gap-2 transition-colors "
+            className="bg-orange-500 hover:bg-orange-600 text-white py-2.5 rounded-none text-sm font-semibold flex items-center justify-center gap-2 transition-colors "
           >
             <Phone className="w-4 h-4" /> Call Now
           </button>
@@ -413,7 +416,7 @@ export default function LeadSidebar({
           <div className="flex items-center gap-2">
             <span className="font-bold text-slate-800">#{leadData?.id || "N/A"}</span>
             {(leadData?.tag === 'Duplicate' || leadData?.duplicate_count > 1) && (
-              <span className="text-[10px] text-rose-600 font-bold px-1.5 py-0.5 rounded-sm bg-rose-50 border border-rose-100 capitalize tracking-wide w-fit animate-pulse">
+              <span className="text-[10px] text-rose-600 font-bold px-1.5 py-0.5 rounded-none bg-rose-50 border border-rose-100 capitalize tracking-wide w-fit animate-pulse">
                 Duplicate {leadData?.duplicate_count > 1 ? `(${leadData.duplicate_count - 1})` : ''}
               </span>
             )}
@@ -424,7 +427,7 @@ export default function LeadSidebar({
           <span className="text-slate-500 font-bold uppercase tracking-wider flex items-center gap-2">
             <Zap className="w-4 h-4 text-slate-400" /> Lead Status
           </span>
-          <span className="px-3 py-1 rounded-sm text-[10px] font-black uppercase tracking-tighter bg-orange-100 text-orange-600 border border-orange-200">
+          <span className="px-3 py-1 rounded-none text-[10px] font-black uppercase tracking-tighter bg-orange-100 text-orange-600 border border-orange-200">
             {leadData?.tag || "New Lead"}
           </span>
         </div>
@@ -437,7 +440,7 @@ export default function LeadSidebar({
             <div className="flex items-center gap-1 animate-in fade-in slide-in-from-right-1 duration-200">
               <input
                 type="text"
-                className="w-24 p-1 text-xs border border-orange-200 rounded-sm focus:border-orange-500 outline-none bg-white font-bold text-emerald-600 text-right"
+                className="w-24 p-1 text-xs border border-orange-200 rounded-none focus:border-orange-500 outline-none bg-white font-bold text-emerald-600 text-right"
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
                 autoFocus
@@ -448,7 +451,7 @@ export default function LeadSidebar({
               />
               <button
                 onClick={() => saveEditing('budget')}
-                className="w-5 h-5 flex items-center justify-center bg-emerald-500 text-white rounded-sm shadow-sm"
+                className="w-5 h-5 flex items-center justify-center bg-emerald-500 text-white rounded-none shadow-sm"
               >
                 <Check size={10} strokeWidth={3} />
               </button>
@@ -461,7 +464,7 @@ export default function LeadSidebar({
               <ActionGuard permission="leads_edit" module="Leads Management" type="update">
                 <button
                   onClick={() => startEditing('budget', leadData?.value)}
-                  className="w-5 h-5 flex items-center justify-center bg-orange-500 text-white rounded-sm opacity-0 group-hover/budget:opacity-100 transition-all hover:bg-orange-600 shadow-sm"
+                  className="w-5 h-5 flex items-center justify-center bg-orange-500 text-white rounded-none opacity-0 group-hover/budget:opacity-100 transition-all hover:bg-orange-600 shadow-sm"
                 >
                   <Edit2 size={10} />
                 </button>
@@ -474,31 +477,32 @@ export default function LeadSidebar({
       {/* Main Content Area */}
       <div className="px-6 space-y-2 pb-20 pt-2">
         {/* Core Lead Info */}
-        <section>
-          <div className="flex items-center justify-between mb-1">
+        <section className="bg-white border border-gray-100 rounded-none mb-2 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between p-3 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => toggleSection('basic')}>
             <h3 className="text-slate-800 font-bold text-sm tracking-tight flex items-center gap-2">
               <User size={16} className="text-orange-500" />
               Basic Information
             </h3>
-            {editingSection === 'basic' ? (
+            <div className="flex items-center gap-2">
+              {editingSection === 'basic' ? (
               <div className="flex gap-1.5 animate-in fade-in slide-in-from-right-1 duration-200">
                 <button
                   onClick={cancelSectionEditing}
                   title="Cancel All"
-                  className="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                  className="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-none shadow-sm transition-all active:scale-95"
                 >
                   <X size={12} strokeWidth={3} />
                 </button>
                 <button
                   onClick={saveSectionEditing}
                   title="Save All Changes"
-                  className="w-6 h-6 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                  className="w-6 h-6 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-none shadow-sm transition-all active:scale-95"
                 >
                   <Check size={12} strokeWidth={3} />
                 </button>
               </div>
             ) : (
-              !editingSection && !editingField && (
+              null /* !editingSection && !editingField && (
                 <ActionGuard permission="leads_edit" module="Leads Management" type="update">
                   <button
                     onClick={() => {
@@ -507,15 +511,17 @@ export default function LeadSidebar({
                         : ['gender', 'email', 'phone', 'altMobileNumber', 'whatsapp_number', 'dateOfBirth', 'visibility'];
                       startSectionEditing('basic', fields);
                     }}
-                    className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-all shadow-md active:scale-95"
+                    className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-none hover:bg-orange-600 transition-all shadow-md active:scale-95"
                   >
                     <Edit2 size={13} />
                   </button>
                 </ActionGuard>
-              )
+              ) */
             )}
+              <ChevronDown size={16} className={`text-slate-400 transition-transform ${openSections.basic ? 'rotate-180' : ''}`} />
+            </div>
           </div>
-          <div className="space-y-0">
+          <div className={`space-y-0 p-3 pt-0 transition-all duration-300 ${openSections.basic ? 'block' : 'hidden'}`}>
             {leadType === 'Organization' ? (
               <>
                 {renderEditableField("Industry", "industry_type", leadData?.industry_type, "select", [
@@ -554,31 +560,32 @@ export default function LeadSidebar({
         </section>
 
         {/* Location Section */}
-        <section className="pt-2 border-t border-gray-100">
-          <div className="flex items-center justify-between mb-1">
+        <section className="bg-white border border-gray-100 rounded-none mb-2 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between p-3 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => toggleSection('location')}>
             <h3 className="text-slate-800 font-bold text-sm tracking-tight flex items-center gap-2">
               <MapPin size={16} className="text-orange-500" />
               Location Details
             </h3>
-            {editingSection === 'location' ? (
+            <div className="flex items-center gap-2">
+              {editingSection === 'location' ? (
               <div className="flex gap-1.5 animate-in fade-in slide-in-from-right-1 duration-200">
                 <button
                   onClick={cancelSectionEditing}
                   title="Cancel All"
-                  className="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                  className="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-none shadow-sm transition-all active:scale-95"
                 >
                   <X size={12} strokeWidth={3} />
                 </button>
                 <button
                   onClick={saveSectionEditing}
                   title="Save All Changes"
-                  className="w-6 h-6 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                  className="w-6 h-6 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-none shadow-sm transition-all active:scale-95"
                 >
                   <Check size={12} strokeWidth={3} />
                 </button>
               </div>
             ) : (
-              !editingSection && !editingField && (
+              null /* !editingSection && !editingField && (
                 <ActionGuard permission="leads_edit" module="Leads Management" type="update">
                   <button
                     onClick={() => {
@@ -587,15 +594,17 @@ export default function LeadSidebar({
                         : ['address', 'city', 'state', 'pincode', 'country'];
                       startSectionEditing('location', fields);
                     }}
-                    className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-all shadow-md active:scale-95"
+                    className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-none hover:bg-orange-600 transition-all shadow-md active:scale-95"
                   >
                     <Edit2 size={13} />
                   </button>
                 </ActionGuard>
-              )
+              ) */
             )}
+              <ChevronDown size={16} className={`text-slate-400 transition-transform ${openSections.location ? 'rotate-180' : ''}`} />
+            </div>
           </div>
-          <div className="space-y-0">
+          <div className={`space-y-0 p-3 pt-0 transition-all duration-300 ${openSections.location ? 'block' : 'hidden'}`}>
             {leadType === 'Organization' ? (
               <>
                 {renderEditableField("Address", "company_address", leadData?.company_address, "textarea", [], MapPin)}
@@ -617,43 +626,46 @@ export default function LeadSidebar({
         </section>
 
         {/* Business Section */}
-        <section className="pt-2 border-t border-gray-100">
-          <div className="flex items-center justify-between mb-1">
+        <section className="bg-white border border-gray-100 rounded-none mb-2 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between p-3 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => toggleSection('business')}>
             <h3 className="text-slate-800 font-bold text-sm tracking-tight flex items-center gap-2">
               <Briefcase size={16} className="text-orange-500" />
               Lead Specifics
             </h3>
-            {editingSection === 'business' ? (
+            <div className="flex items-center gap-2">
+              {editingSection === 'business' ? (
               <div className="flex gap-1.5 animate-in fade-in slide-in-from-right-1 duration-200">
                 <button
                   onClick={cancelSectionEditing}
                   title="Cancel All"
-                  className="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                  className="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-none shadow-sm transition-all active:scale-95"
                 >
                   <X size={12} strokeWidth={3} />
                 </button>
                 <button
                   onClick={saveSectionEditing}
                   title="Save All Changes"
-                  className="w-6 h-6 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                  className="w-6 h-6 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-none shadow-sm transition-all active:scale-95"
                 >
                   <Check size={12} strokeWidth={3} />
                 </button>
               </div>
             ) : (
-              !editingSection && !editingField && (
+              null /* !editingSection && !editingField && (
                 <ActionGuard permission="leads_edit" module="Leads Management" type="update">
                   <button
                     onClick={() => startSectionEditing('business', ['followUp', 'source', 'priority', 'referral_mobile'])}
-                    className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-all shadow-md active:scale-95"
+                    className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-none hover:bg-orange-600 transition-all shadow-md active:scale-95"
                   >
                     <Edit2 size={13} />
                   </button>
                 </ActionGuard>
-              )
+              ) */
             )}
+              <ChevronDown size={16} className={`text-slate-400 transition-transform ${openSections.business ? 'rotate-180' : ''}`} />
+            </div>
           </div>
-          <div className="space-y-0">
+          <div className={`space-y-0 p-3 pt-0 transition-all duration-300 ${openSections.business ? 'block' : 'hidden'}`}>
             {renderEditableField("Follow Up", "followUp", leadData?.followUp, "date", [], Clock)}
             {renderEditableField("Source", "source", leadData?.source, "text", [], TrendingUp)}
             {renderEditableField("Interested In", "services", leadData?.services, "multi-select", [], FileText)}
@@ -668,17 +680,20 @@ export default function LeadSidebar({
 
         {/* Contact Persons Section (For Organizations) */}
         {leadType === 'Organization' && leadData?.contact_persons && (
-          <section className="pt-2 border-t border-gray-100">
-            <h3 className="text-slate-800 font-bold text-sm tracking-tight flex items-center gap-2 mb-2">
-              <Users size={16} className="text-orange-500" />
-              Contact Persons
-            </h3>
-            <div className="space-y-2">
+          <section className="bg-white border border-gray-100 rounded-none mb-2 shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between p-3 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => toggleSection('contact')}>
+              <h3 className="text-slate-800 font-bold text-sm tracking-tight flex items-center gap-2">
+                <Users size={16} className="text-orange-500" />
+                Contact Persons
+              </h3>
+              <ChevronDown size={16} className={`text-slate-400 transition-transform ${openSections.contact ? 'rotate-180' : ''}`} />
+            </div>
+            <div className={`space-y-2 p-3 pt-0 transition-all duration-300 ${openSections.contact ? 'block' : 'hidden'}`}>
               {(() => {
                 try {
                   const persons = JSON.parse(leadData.contact_persons);
                   return persons.map((p, i) => (
-                    <div key={i} className="p-3 rounded-sm bg-slate-50 border border-slate-100">
+                    <div key={i} className="p-3 rounded-none bg-slate-50 border border-slate-100">
                       <div className="flex items-center gap-3 mb-2">
                         <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xs overflow-hidden">
                           {p.profile_image ? (
@@ -704,17 +719,20 @@ export default function LeadSidebar({
 
         {/* Custom Fields Section */}
         {leadData?.custom_fields && (
-          <section className="pt-2 border-t border-gray-100">
-            <h3 className="text-slate-800 font-bold text-sm tracking-tight flex items-center gap-2 mb-2">
-              <Layers size={16} className="text-orange-500" />
-              Additional Details
-            </h3>
-            <div className="grid grid-cols-1 gap-2">
+          <section className="bg-white border border-gray-100 rounded-none mb-2 shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between p-3 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => toggleSection('custom')}>
+              <h3 className="text-slate-800 font-bold text-sm tracking-tight flex items-center gap-2">
+                <Layers size={16} className="text-orange-500" />
+                Additional Details
+              </h3>
+              <ChevronDown size={16} className={`text-slate-400 transition-transform ${openSections.custom ? 'rotate-180' : ''}`} />
+            </div>
+            <div className={`grid grid-cols-1 gap-2 p-3 pt-0 transition-all duration-300 ${openSections.custom ? 'block' : 'hidden'}`}>
               {(() => {
                 try {
                   const custom = JSON.parse(leadData.custom_fields);
                   return custom.map((f, i) => (
-                    <div key={i} className="flex flex-col p-2 bg-slate-50/50 rounded-sm border-l-2 border-orange-400">
+                    <div key={i} className="flex flex-col p-2 bg-slate-50/50 rounded-none border-l-2 border-orange-400">
                       <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">{f.label}</span>
                       <span className="text-xs font-bold text-slate-800">{f.value}</span>
                     </div>
@@ -726,16 +744,17 @@ export default function LeadSidebar({
         )}
 
         {/* Stakeholders Section */}
-        <section className="pt-2 border-t border-gray-100">
-          <div className="flex items-center justify-between mb-1">
+        <section className="bg-white border border-gray-100 rounded-none mb-2 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between p-3 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => toggleSection('ownership')}>
             <h3 className="text-slate-800 font-bold text-sm tracking-tight flex items-center gap-2">
               <User size={16} className="text-orange-500" />
               Ownership
             </h3>
+            <ChevronDown size={16} className={`text-slate-400 transition-transform ${openSections.ownership ? 'rotate-180' : ''}`} />
           </div>
-          <div className="space-y-2">
+          <div className={`space-y-2 p-3 pt-0 transition-all duration-300 ${openSections.ownership ? 'block' : 'hidden'}`}>
             {/* Lead Owner */}
-            <div className="bg-slate-50/50 rounded-sm p-4 border border-slate-100">
+            <div className="bg-slate-50/50 rounded-none p-4 border border-slate-100">
               <p className="text-[10px] text-orange-500 font-black uppercase tracking-widest mb-3">Managed By (Owner)</p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white p-0.5 shadow-sm border border-emerald-100 overflow-hidden">
@@ -748,25 +767,25 @@ export default function LeadSidebar({
                 </div>
               </div>
             </div>
-            <div className="bg-slate-50/50 rounded-sm p-4 border border-slate-100 group/agent relative">
+            <div className="bg-slate-50/50 rounded-none p-4 border border-slate-100 group/agent relative">
               <div className="flex justify-between items-center mb-3">
                 <p className="text-[10px] text-orange-500 font-black uppercase tracking-widest">Assigned To</p>
-                {!editingSection && !editingField && (
+                {null /* !editingSection && !editingField && (
                   <ActionGuard permission="leads_edit" module="Leads Management" type="update">
                     <button
                       onClick={() => startEditing('assigned_to', leadData?.assigned_to)}
-                      className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm opacity-0 group-hover/agent:opacity-100 transition-all hover:bg-orange-600 shadow-md active:scale-95"
+                      className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-none opacity-0 group-hover/agent:opacity-100 transition-all hover:bg-orange-600 shadow-md active:scale-95"
                     >
                       <Edit2 size={13} />
                     </button>
                   </ActionGuard>
-                )}
+                ) */}
               </div>
 
               {editingField === 'assigned_to' ? (
                 <div className="flex flex-col gap-2 items-end animate-in fade-in slide-in-from-top-1 duration-200">
                   <select
-                    className="w-full p-2 text-xs border border-orange-200 rounded-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none bg-white transition-all font-bold"
+                    className="w-full p-2 text-xs border border-orange-200 rounded-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none bg-white transition-all font-bold"
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
                     autoFocus
@@ -780,14 +799,14 @@ export default function LeadSidebar({
                     <button
                       onClick={cancelEditing}
                       title="Cancel"
-                      className="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                      className="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-none shadow-sm transition-all active:scale-95"
                     >
                       <X size={12} strokeWidth={3} />
                     </button>
                     <button
                       onClick={() => saveEditing('assigned_to')}
                       title="Save Assignment"
-                      className="w-6 h-6 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                      className="w-6 h-6 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-none shadow-sm transition-all active:scale-95"
                     >
                       <Check size={12} strokeWidth={3} />
                     </button>
@@ -814,7 +833,7 @@ export default function LeadSidebar({
           <ActionGuard permission="quotation_create" module="Financial Documents" type="create">
             <button
               onClick={() => setShowModal && setShowModal(true)}
-              className="w-full bg-slate-900 text-white py-4 rounded-sm font-semibold text-sm shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 group"
+              className="w-full bg-slate-900 text-white py-4 rounded-none font-semibold text-sm shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 group"
             >
               <Plus size={18} className="text-orange-500 group-hover:rotate-90 transition-transform duration-300" />
               Generate Quotation

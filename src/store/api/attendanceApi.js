@@ -30,6 +30,20 @@ export const attendanceApi = createApi({
             }),
             invalidatesTags: ['Attendance'],
         }),
+        startBreak: builder.mutation({
+            query: (id) => ({
+                url: `/break/start/${id}`,
+                method: 'POST',
+            }),
+            invalidatesTags: ['Attendance'],
+        }),
+        endBreak: builder.mutation({
+            query: (id) => ({
+                url: `/break/end/${id}`,
+                method: 'PUT',
+            }),
+            invalidatesTags: ['Attendance'],
+        }),
         getAllAttendance: builder.query({
             query: (params) => ({
                 url: '/all',
@@ -85,4 +99,6 @@ export const {
     useDeleteAttendanceMutation,
     useGetAttendanceSettingsQuery,
     useUpdateAttendanceSettingsMutation,
+    useStartBreakMutation,
+    useEndBreakMutation,
 } = attendanceApi;

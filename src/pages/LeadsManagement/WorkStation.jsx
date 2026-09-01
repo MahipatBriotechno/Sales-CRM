@@ -48,6 +48,7 @@ import SendWhatsAppModal from "../../components/LeadManagement/SendWhatsAppModal
 import CallQrModal from "../../components/LeadManagement/CallQrModal";
 import AssignmentHistoryModal from "../../components/LeadManagement/AssignmentHistoryModal";
 import ActionGuard from "../../components/common/ActionGuard";
+import LiveTicker from "../../components/LeadManagement/LiveTicker";
 
 const safeParseDate = (dateStr) => {
   if (!dateStr) return null;
@@ -490,7 +491,7 @@ const WorkStationLeadsGridView = ({
                   return (
                     <div
                       key={lead.id}
-                      className={`group flex flex-col h-auto bg-white border ${isMissed ? 'border-red-500 ring-1 ring-red-500/10' : 'border-gray-200'} rounded-sm shadow-sm transition-all duration-300 relative overflow-hidden animate-slideIn`}
+                      className={`group flex flex-col h-auto bg-white border ${isMissed ? 'border-red-500 ring-1 ring-red-500/10' : 'border-gray-300'} rounded-sm transition-all duration-300 relative overflow-hidden animate-slideIn`}
                     >
 
                       {/* ── CARD BODY ── */}
@@ -1099,7 +1100,7 @@ export default function WorkStation() {
       <div className="bg-white sticky top-0 z-30">
         <div className="max-w-8xl mx-auto px-4 py-4 border-b">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
+            <div className="flex-shrink-0">
               <h1 className="text-2xl font-bold text-gray-800">
                 {filterStatus === "All" ? "Work Station" : `${filterStatus} Leads`}
               </h1>
@@ -1112,8 +1113,15 @@ export default function WorkStation() {
               </p>
             </div>
 
+            {/* Live Ticker in the center */}
+            <div className="flex-1 w-full hidden md:flex justify-center items-center px-4">
+              <div className="w-full max-w-3xl">
+                <LiveTicker onLeadClick={handleLeadClick} />
+              </div>
+            </div>
+
             {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 flex-shrink-0">
               {/* View Toggles */}
               <div className="flex p-1 bg-gray-50 border border-gray-200 rounded-sm shadow-sm">
                 <button
@@ -1155,7 +1163,7 @@ export default function WorkStation() {
                     }`}
                   title="Filters"
                 >
-                   {(filterStatus !== "All" || filterType !== "All" || filterPriority !== "All" || filterPipeline !== "" || filterCity !== "" || filterValue !== "" || filterDateFrom !== "" || filterDateTo !== "" || filterName !== "" || filterMobile !== "") ? <X size={18} strokeWidth={3} /> : <Filter size={18} strokeWidth={2.5} />}
+                  {(filterStatus !== "All" || filterType !== "All" || filterPriority !== "All" || filterPipeline !== "" || filterCity !== "" || filterValue !== "" || filterDateFrom !== "" || filterDateTo !== "" || filterName !== "" || filterMobile !== "") ? <X size={18} strokeWidth={3} /> : <Filter size={18} strokeWidth={2.5} />}
                 </button>
 
                 {isFilterOpen && (
