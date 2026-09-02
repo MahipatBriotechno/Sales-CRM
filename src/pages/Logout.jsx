@@ -16,9 +16,6 @@ export default function LogoutPopup({ onClose }) {
     setIsLoggingOut(true);
 
     try {
-      // Dispatch logout action to clear state and local storage
-      dispatch(logout());
-
       // Reset RTK Query cache for all APIs
       dispatch(authApi.util.resetApiState());
       dispatch(businessApi.util.resetApiState());
@@ -29,15 +26,16 @@ export default function LogoutPopup({ onClose }) {
       setIsLoggingOut(false);
       setIsLoggedOut(true);
 
-      // Navigate to login after showing success message
+      // Wait for success animation to play before clearing auth state
       setTimeout(() => {
-        navigate("/");
+        // Dispatch logout action to clear state and local storage
+        dispatch(logout());
+        // ProtectedRoute will automatically redirect to /login
       }, 1500);
     } catch (error) {
       console.error("Logout failed:", error);
       setIsLoggingOut(false);
-      // Still navigate even if there's an error
-      navigate("/");
+      dispatch(logout());
     }
   };
 

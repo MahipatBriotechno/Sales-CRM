@@ -26,7 +26,7 @@ const syncDatabase = async () => {
             employee_id INT,
             team_id INT,
             goal_title VARCHAR(255) NOT NULL,
-            goal_type ENUM('calls', 'revenue', 'meetings', 'leads', 'deals_won', 'followups', 'proposals', 'demos') NOT NULL,
+            goal_type ENUM('outbound_calls', 'connected_calls', 'meetings_booked', 'deals_won', 'revenue', 'leads', 'proposals') NOT NULL,
             target_value DECIMAL(15,2) NOT NULL,
             period ENUM('daily', 'weekly', 'monthly', 'quarterly', 'yearly') NOT NULL,
             start_date DATE NOT NULL,
@@ -61,9 +61,10 @@ const syncDatabase = async () => {
         }
 
         try {
-            await pool.query("ALTER TABLE goals MODIFY COLUMN goal_type ENUM('calls', 'revenue', 'meetings', 'leads', 'deals_won', 'followups', 'proposals', 'demos') NOT NULL");
+            await pool.query("ALTER TABLE goals MODIFY COLUMN goal_type ENUM('outbound_calls', 'connected_calls', 'meetings_booked', 'deals_won', 'revenue', 'leads', 'proposals', 'calls', 'followups', 'demos', 'meetings') NOT NULL");
+            console.log("Database Synced: goal_type ENUM updated successfully in goals table.");
         } catch (e) {
-            // Also safe to ignore
+            console.error("Error modifying goal_type ENUM in goals table:", e);
         }
 
         try {

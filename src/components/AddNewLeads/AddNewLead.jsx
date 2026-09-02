@@ -20,6 +20,7 @@ import {
   Clock
 } from "lucide-react";
 import { useCreateLeadMutation, useUpdateLeadMutation } from "../../store/api/leadApi";
+import { useGetCustomFieldsQuery } from "../../store/api/customFieldApi";
 import { useGetPipelinesQuery } from "../../store/api/pipelineApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import { toast } from "react-hot-toast";
@@ -61,13 +62,20 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
   const { data: employeesData } = useGetEmployeesQuery({ limit: 100 });
   const employees = employeesData?.employees || [];
   const { user } = useSelector((state) => state.auth);
+  
+  const { data: dbCustomFieldsResponse } = useGetCustomFieldsQuery('leads');
+  const dbCustomFields = dbCustomFieldsResponse?.customFields || [];
 
   const [leadType, setLeadType] = useState("Individual");
   const [assignmentType, setAssignmentType] = useState("Self");
   const [visibility, setVisibility] = useState("Public");
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState("");
+  // Old custom fields (manual key-value)
   const [customFields, setCustomFields] = useState([{ label: "", value: "" }]);
+  
+  // Dynamic fields from DB
+  const [dynamicFieldsData, setDynamicFieldsData] = useState({});
   const [contactPersons, setContactPersons] = useState([{
     name: "",
     profile_image: "",
@@ -202,10 +210,31 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
       if (leadToEdit.custom_fields) {
         try {
           const parsed = JSON.parse(leadToEdit.custom_fields);
-          setCustomFields(parsed.length > 0 ? parsed : [{ label: "", value: "" }]);
+          
+          // Separate parsed fields into dynamicFields (if they exist in dbCustomFields) and manual customFields
+          const dbLabels = dbCustomFields.map(f => f.field_label);
+          const initialDynamicFields = {};
+          const manualFields = [];
+          
+          if (parsed && Array.isArray(parsed)) {
+             parsed.forEach(field => {
+                 if (dbLabels.includes(field.label)) {
+                     initialDynamicFields[field.label] = field.value;
+                 } else {
+                     manualFields.push(field);
+                 }
+             });
+          }
+          
+          setDynamicFieldsData(initialDynamicFields);
+          setCustomFields(manualFields.length > 0 ? manualFields : [{ label: "", value: "" }]);
         } catch (e) {
           setCustomFields([{ label: "", value: "" }]);
+          setDynamicFieldsData({});
         }
+      } else {
+          setCustomFields([{ label: "", value: "" }]);
+          setDynamicFieldsData({});
       }
 
       // Parse contact persons if available
@@ -544,6 +573,15 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
 
   const handleSubmit = async () => {
     if (!validateAllMobiles()) return;
+    
+    // Combine manual custom fields and dynamic fields
+    const manualFieldsToSave = customFields.filter(cf => cf.label && cf.value);
+    const dynamicFieldsToSave = Object.keys(dynamicFieldsData)
+        .filter(key => dynamicFieldsData[key])
+        .map(key => ({ label: key, value: dynamicFieldsData[key] }));
+        
+    const combinedCustomFields = [...manualFieldsToSave, ...dynamicFieldsToSave];
+
     const payload = {
       ...formData,
       name: formData.name || (leadType === "Individual" ? formData.full_name : formData.organization_name) || "Untitled Lead",
@@ -555,12 +593,10 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
 
       description: null,
       dob: formData.dob || null,
-      custom_fields: JSON.stringify(customFields.filter(cf => cf.label && cf.value)),
+      custom_fields: JSON.stringify(combinedCustomFields),
       contact_persons: leadType === "Organization" ? JSON.stringify(contactPersons) : null,
       lead_owner: assignmentType === "Self" ? formData.lead_owner : null,
       created_at: `${formData.created_at}T${formData.created_time || "00:00"}:00`,
-      // owner_name: formData.lead_owner,
-      // owner: formData.lead_owner
     };
 
     try {
@@ -599,7 +635,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
       <div className="bg-white rounded-sm shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-slideUp">
         {/* Header */}
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between shrink-0">
@@ -1708,13 +1744,72 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
             </div>
           </div>
 
-          {/* Custom Fields */}
+          {/* Dynamic Custom Fields from DB */}
+          {dbCustomFields && dbCustomFields.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center pb-2 border-b border-gray-200">
+                <Layers size={20} className="text-[#FF7B1D] mr-2" />
+                <h3 className="text-lg font-bold text-gray-800 capitalize">
+                  Additional Details
+                </h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {dbCustomFields.map((field) => (
+                  <div key={field.id} className="group">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                      {field.field_label}
+                    </label>
+                    {field.field_type === 'dropdown' && field.options ? (
+                      <select
+                        className={inputStyles}
+                        value={dynamicFieldsData[field.field_label] || ""}
+                        onChange={(e) => setDynamicFieldsData({...dynamicFieldsData, [field.field_label]: e.target.value})}
+                      >
+                        <option value="">Select {field.field_label}</option>
+                        {field.options.map((opt, i) => (
+                          <option key={i} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    ) : field.field_type === 'date' ? (
+                      <div className="relative">
+                        <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500" />
+                        <input
+                          type="date"
+                          className={`${inputStyles} pl-11`}
+                          value={dynamicFieldsData[field.field_label] || ""}
+                          onChange={(e) => setDynamicFieldsData({...dynamicFieldsData, [field.field_label]: e.target.value})}
+                        />
+                      </div>
+                    ) : field.field_type === 'number' ? (
+                      <input
+                        type="number"
+                        className={inputStyles}
+                        placeholder={`Enter ${field.field_label.toLowerCase()}`}
+                        value={dynamicFieldsData[field.field_label] || ""}
+                        onChange={(e) => setDynamicFieldsData({...dynamicFieldsData, [field.field_label]: e.target.value})}
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        className={inputStyles}
+                        placeholder={`Enter ${field.field_label.toLowerCase()}`}
+                        value={dynamicFieldsData[field.field_label] || ""}
+                        onChange={(e) => setDynamicFieldsData({...dynamicFieldsData, [field.field_label]: e.target.value})}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Manual Custom Fields */}
           <div className="space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-gray-200">
               <div className="flex items-center gap-2">
                 <FileText size={20} className="text-[#FF7B1D]" />
                 <h3 className="text-lg font-bold text-gray-800 capitalize">
-                  Custom Fields
+                  Manual Custom Fields
                 </h3>
               </div>
               <button

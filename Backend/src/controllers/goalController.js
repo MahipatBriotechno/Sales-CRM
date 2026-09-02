@@ -21,6 +21,21 @@ const goalController = {
         }
     },
 
+    getMyGoals: async (req, res) => {
+        try {
+            if (req.user.role !== 'Employee') {
+                return res.status(200).json([]); // Only employees have assigned "My Goals" widget
+            }
+            const goals = await Goal.findMyActiveGoals(req.user._id, req.user.user_id);
+            // Enhance goals with live progress using the same utility
+            const enhancedGoals = await Promise.all(goals.map(g => Goal.getGoalProgress(g.id, req.user.user_id)));
+            res.status(200).json(enhancedGoals);
+        } catch (error) {
+            console.error("Error in getMyGoals:", error);
+            res.status(500).json({ status: false, message: error.message });
+        }
+    },
+
     updateGoal: async (req, res) => {
         try {
             await Goal.update(req.params.id, req.body, req.user.id);

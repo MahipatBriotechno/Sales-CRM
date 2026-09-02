@@ -899,7 +899,7 @@ export default function CRMLeadDetail() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setShowJourney(!showJourney)}
-                    className="flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 rounded-none font-semibold text-sm hover:bg-orange-100 transition-all border border-orange-100 shadow-sm active:scale-95 group font-primary"
+                    className="flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 rounded-none font-semibold text-sm hover:bg-orange-100 transition-all shadow-sm hover:shadow active:scale-95 group font-primary"
                   >
                     View Journey
                     <ChevronDown size={16} className={`transition-transform duration-300 ${showJourney ? 'rotate-180' : ''}`} />
@@ -908,11 +908,11 @@ export default function CRMLeadDetail() {
                   <button
                     disabled={!canNotQualified}
                     onClick={() => handleUpdateStatus("Not Qualified")}
-                    className={`px-4 py-2 rounded-none text-sm font-semibold font-primary border transition-all active:scale-95 shadow-sm min-w-[120px] ${leadData?.status === "Not Qualified" || leadData?.tag === "Lost" || leadData?.tag === "Dropped"
+                    className={`px-4 py-2 rounded-none text-sm font-semibold font-primary border transition-all active:scale-95 shadow-sm hover:shadow min-w-[120px] ${leadData?.status === "Not Qualified" || leadData?.tag === "Lost" || leadData?.tag === "Dropped"
                       ? "bg-red-600 text-white border-red-600 shadow-md"
                       : canNotQualified
                         ? "bg-red-50 text-red-600 border-red-100 hover:border-red-500 hover:bg-red-100"
-                        : "bg-gray-50 text-gray-200 border-gray-50 cursor-not-allowed"
+                        : "bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed"
                       }`}
                   >
                     Drop Lead
@@ -922,7 +922,7 @@ export default function CRMLeadDetail() {
                   <div className="relative" ref={stageDropdownRef}>
                     <button
                       onClick={() => setShowStageDropdown(!showStageDropdown)}
-                      className={`flex items-center gap-2 px-5 py-2 rounded-none text-sm font-semibold shadow-md text-white transition-all active:scale-95 border border-white/20 min-w-[200px] justify-between ${effectiveStages.find(s => s.active)?.color || 'bg-slate-700'} hover:brightness-110 font-primary`}
+                      className={`flex items-center gap-2 px-5 py-2 rounded-none text-sm font-semibold shadow-md text-white transition-all active:scale-95 border border-white/20 min-w-[200px] justify-between ${effectiveStages.find(s => s.active)?.color || 'bg-slate-700'} hover:brightness-110 font-primary hover:shadow-lg`}
                     >
                       <div className="flex flex-row items-center gap-2 leading-tight">
                         <span className="">Current Stage</span>{" : "}
@@ -932,7 +932,7 @@ export default function CRMLeadDetail() {
                     </button>
 
                     {showStageDropdown && (
-                      <div className="absolute top-full right-0 mt-2 w-64 bg-white border border-gray-100 py-3 shadow-2xl rounded-none z-[110] animate-fadeIn">
+                      <div className="absolute top-full right-0 mt-2 w-72 bg-white border border-gray-100 py-3 shadow-xl rounded-none z-[110] animate-fadeIn">
                         <div className="px-4 mb-2 pb-2 border-b border-gray-50">
                           <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Update Pipeline Stage</h4>
                         </div>
@@ -1234,8 +1234,19 @@ export default function CRMLeadDetail() {
               </div>
 
               {/* Tabs Navigation */}
-              <div className="bg-white border-b">
-                <div className="flex w-full overflow-x-auto no-scrollbar">
+              <div className="bg-white border-b px-8 py-3">
+                <div className="relative flex w-full overflow-x-auto no-scrollbar gap-2 p-1 bg-orange-50/50 rounded-none border border-orange-100">
+                  
+                  {/* Sliding Background Block */}
+                  <div 
+                    className="absolute top-1 bottom-1 bg-orange-500 shadow-md shadow-orange-500/20 transition-transform duration-300 ease-in-out z-0 rounded-none"
+                    style={{ 
+                      left: '4px',
+                      width: `calc((100% - 8px - 48px) / 7)`, 
+                      transform: `translateX(calc(${['activities', 'notes', 'calls', 'files', 'email', 'whatsapp', 'meeting'].indexOf(activeTab)} * 100% + ${['activities', 'notes', 'calls', 'files', 'email', 'whatsapp', 'meeting'].indexOf(activeTab)} * 8px))` 
+                    }}
+                  />
+
                   {[
                     { id: "activities", label: "Activities", Icon: Zap },
                     { id: "notes", label: "Notes", Icon: FileText },
@@ -1246,6 +1257,7 @@ export default function CRMLeadDetail() {
                     { id: "meeting", label: "Meeting", Icon: Users },
                   ].map(({ id, label, Icon }) => {
                     const isTabDisabled = id === "activities" ? false : (isOnlyCallTabEnabled ? (id !== "calls" && id !== "activities") : !isTabsEnabled);
+                    const isActive = activeTab === id;
                     return (
                       <button
                         key={id}
@@ -1253,14 +1265,14 @@ export default function CRMLeadDetail() {
                           if (!isTabDisabled) setActiveTab(id);
                         }}
                         disabled={isTabDisabled}
-                        className={`flex-1 py-3 font-bold font-primary flex items-center justify-center gap-2 border-b-[3px] transition-all whitespace-nowrap text-sm tracking-wide ${isTabDisabled
-                          ? "opacity-30 cursor-not-allowed border-transparent text-gray-300"
-                          : activeTab === id
-                            ? "border-orange-500 text-orange-600 bg-orange-50"
-                            : "border-transparent text-black hover:text-gray-600 hover:bg-gray-50"
+                        className={`relative z-10 flex-1 py-2.5 px-4 font-bold font-primary flex items-center justify-center gap-2 rounded-none transition-colors duration-300 whitespace-nowrap text-sm tracking-wide ${isTabDisabled
+                          ? "opacity-30 cursor-not-allowed text-gray-300"
+                          : isActive
+                            ? "text-white"
+                            : "text-orange-900/60 hover:text-orange-600 hover:bg-orange-100/50"
                           }`}
                       >
-                        <Icon size={id === 'whatsapp' ? 18 : 16} className={id === 'whatsapp' && activeTab === id ? 'text-[#25D366]' : (activeTab === id ? 'text-orange-500' : 'text-black')} />
+                        <Icon size={id === 'whatsapp' ? 18 : 16} className={`transition-colors duration-300 ${isActive ? 'text-white' : (id === 'whatsapp' ? 'text-[#25D366]' : 'text-orange-400')}`} />
                         {label}
                       </button>
                     );

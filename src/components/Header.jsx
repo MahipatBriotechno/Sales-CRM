@@ -137,7 +137,7 @@ const Header = () => {
   const { sidebarLocked: isLocked } = useSelector((state) => state.ui);
 
   return (
-    <header className={`fixed top-0 left-0 right-0 ${isLocked ? "xl:left-[280px]" : "xl:left-[68px]"} h-[70px] flex items-center px-2 md:px-4 lg:px-8 z-40 bg-[#2b303b] transition-all duration-300`}>
+    <header className={`fixed top-0 left-0 right-0 ${isLocked ? "xl:left-[280px]" : "xl:left-[68px]"} h-[70px] flex items-center px-2 md:px-4 lg:px-8 z-[9995] bg-[#2b303b] transition-all duration-300`}>
       {/* Mobile Toggle Spacer */}
       <div className="w-14 xl:hidden flex-shrink-0" />
       {/* Left Clock */}

@@ -46,6 +46,7 @@ import { meetingApi } from './api/meetingApi';
 import { walletApi } from './api/walletApi';
 import { superAdminApi } from './api/superAdminApi';
 import { shiftApi } from './api/shiftApi';
+import { customFieldApi } from './api/customFieldApi';
 
 
 
@@ -96,6 +97,7 @@ export const store = configureStore({
         [walletApi.reducerPath]: walletApi.reducer,
         [superAdminApi.reducerPath]: superAdminApi.reducer,
         [shiftApi.reducerPath]: shiftApi.reducer,
+        [customFieldApi.reducerPath]: customFieldApi.reducer,
 
 
 
@@ -145,6 +147,7 @@ export const store = configureStore({
             walletApi.middleware,
             superAdminApi.middleware,
             shiftApi.middleware,
+            customFieldApi.middleware,
             limitErrorMiddleware,
             authErrorMiddleware
         ),

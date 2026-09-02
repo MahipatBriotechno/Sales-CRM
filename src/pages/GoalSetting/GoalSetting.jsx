@@ -54,7 +54,7 @@ const EMPTY_FORM = {
     goal_title: "",
     employee_ids: [],
     team_ids: [],
-    goal_type: "calls",
+    goal_type: "outbound_calls",
     target_value: "",
     period: "monthly",
     reward: "",
@@ -68,14 +68,14 @@ const EMPTY_FORM = {
 
 const getMetricIcon = (type) => {
     switch (type) {
-        case "calls": return <Phone className="text-blue-500" size={16} />;
+        case "outbound_calls": return <Phone className="text-blue-500" size={16} />;
+        case "connected_calls": return <CheckCircle2 className="text-green-500" size={16} />;
+        case "followups": return <RefreshCw className="text-indigo-500" size={16} />;
         case "revenue": return <DollarSign className="text-green-500" size={16} />;
-        case "meetings": return <Users className="text-purple-500" size={16} />;
+        case "meetings_booked": return <Users className="text-purple-500" size={16} />;
         case "leads": return <Plus className="text-orange-500" size={16} />;
         case "deals_won": return <Award className="text-yellow-600" size={16} />;
-        case "followups": return <RefreshCw className="text-indigo-500" size={16} />;
         case "proposals": return <ArrowUpRight className="text-cyan-500" size={16} />;
-        case "demos": return <Zap className="text-pink-500" size={16} />;
         default: return <Target className="text-orange-500" size={16} />;
     }
 };
@@ -108,42 +108,42 @@ const ProgressTimelineModal = ({ goal, assignee, onClose }) => {
             label: "Goal Created",
             date: startDate.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
             done: true,
-            color: "bg-green-500",
-            icon: <Target size={12} className="text-white" />,
+            color: "bg-green-500 border-green-500 text-white",
+            icon: <Target size={16} />,
         },
         {
             label: "25% Milestone",
-            date: `Target: ${Math.round(goal.target_value * 0.25)} ${goal.goal_type}`,
+            date: `Target: ${Math.round(goal.target_value * 0.25)} ${goal.goal_type?.replace(/_/g, ' ')}`,
             done: goal.progress_percentage >= 25,
-            color: goal.progress_percentage >= 25 ? "bg-green-500" : "bg-gray-200",
-            icon: <BarChart2 size={12} className="text-white" />,
+            color: goal.progress_percentage >= 25 ? "bg-green-500 border-green-500 text-white" : "bg-white border-gray-200 text-gray-300",
+            icon: <BarChart2 size={16} />,
         },
         {
             label: "50% Milestone",
-            date: `Target: ${Math.round(goal.target_value * 0.5)} ${goal.goal_type}`,
+            date: `Target: ${Math.round(goal.target_value * 0.5)} ${goal.goal_type?.replace(/_/g, ' ')}`,
             done: goal.progress_percentage >= 50,
-            color: goal.progress_percentage >= 50 ? "bg-orange-500" : "bg-gray-200",
-            icon: <Activity size={12} className="text-white" />,
+            color: goal.progress_percentage >= 50 ? "bg-orange-500 border-orange-500 text-white" : "bg-white border-gray-200 text-gray-300",
+            icon: <Activity size={16} />,
         },
         {
             label: "75% Milestone",
-            date: `Target: ${Math.round(goal.target_value * 0.75)} ${goal.goal_type}`,
+            date: `Target: ${Math.round(goal.target_value * 0.75)} ${goal.goal_type?.replace(/_/g, ' ')}`,
             done: goal.progress_percentage >= 75,
-            color: goal.progress_percentage >= 75 ? "bg-orange-500" : "bg-gray-200",
-            icon: <TrendingUp size={12} className="text-white" />,
+            color: goal.progress_percentage >= 75 ? "bg-orange-500 border-orange-500 text-white" : "bg-white border-gray-200 text-gray-300",
+            icon: <TrendingUp size={16} />,
         },
         {
             label: "Goal Deadline",
             date: endDate.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
             done: goal.progress_percentage >= 100,
-            color: goal.progress_percentage >= 100 ? "bg-green-500" : today > endDate ? "bg-red-500" : "bg-gray-200",
-            icon: <CheckCircle2 size={12} className="text-white" />,
+            color: goal.progress_percentage >= 100 ? "bg-green-500 border-green-500 text-white" : today > endDate ? "bg-red-500 border-red-500 text-white" : "bg-white border-gray-200 text-gray-300",
+            icon: <CheckCircle2 size={16} />,
         },
     ];
 
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
-            <div className="bg-white rounded-sm shadow-2xl w-full max-w-lg overflow-hidden font-primary text-left" onClick={e => e.stopPropagation()}>
+            <div className="bg-white rounded-sm shadow-2xl w-full max-w-4xl overflow-hidden font-primary text-left flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -160,99 +160,123 @@ const ProgressTimelineModal = ({ goal, assignee, onClose }) => {
                     </button>
                 </div>
 
-                <div className="p-6 space-y-5">
-                    {/* Status Row */}
-                    <div className="grid grid-cols-3 gap-3">
-                        <div className="bg-slate-50 rounded-sm border border-slate-200 p-3 text-center">
-                            <span className="text-[13px] font-semibold text-orange-400 block mb-1">Current</span>
-                            <span className="text-xl font-bold text-gray-800 font-primary">{Math.round(goal.current_value)}</span>
-                            <span className="text-[12px] text-gray-400 block font-semibold capitalize">{goal.goal_type}</span>
+                <div className="p-7 bg-slate-50 grid grid-cols-1 lg:grid-cols-2 gap-7 overflow-y-auto custom-scrollbar">
+                    {/* Left Column */}
+                    <div className="space-y-7 flex flex-col">
+                        {/* Status Row */}
+                        <div className="grid grid-cols-3 divide-x divide-gray-100 bg-white rounded-sm border border-gray-100 shadow-sm overflow-hidden">
+                            <div className="p-4 text-center transition-all hover:bg-orange-50/50">
+                                <span className="text-[11px] font-extrabold text-orange-400 uppercase tracking-widest block mb-2">Current</span>
+                                <span className="text-3xl font-extrabold text-gray-800 font-primary tabular-nums block leading-none">{Math.round(goal.current_value)}</span>
+                                <span className="text-[10px] text-gray-400 block font-bold uppercase tracking-wider mt-1.5">{goal.goal_type?.replace(/_/g, ' ')}</span>
+                            </div>
+                            <div className="p-4 text-center transition-all hover:bg-blue-50/50">
+                                <span className="text-[11px] font-extrabold text-blue-400 uppercase tracking-widest block mb-2">Target</span>
+                                <span className="text-3xl font-extrabold text-gray-800 font-primary tabular-nums block leading-none">{goal.target_value}</span>
+                                <span className="text-[10px] text-gray-400 block font-bold uppercase tracking-wider mt-1.5">{goal.goal_type?.replace(/_/g, ' ')}</span>
+                            </div>
+                            <div className="p-4 text-center transition-all hover:bg-green-50/50">
+                                <span className="text-[11px] font-extrabold text-green-400 uppercase tracking-widest block mb-2">Achieved</span>
+                                <span className={`text-3xl font-extrabold font-primary tabular-nums block leading-none ${goal.progress_percentage >= 80 ? 'text-green-600' : goal.progress_percentage >= 50 ? 'text-orange-500' : 'text-red-500'}`}>
+                                    {goal.progress_percentage}%
+                                </span>
+                                <span className={`text-[10px] block font-bold uppercase tracking-wider mt-1.5 ${status.color}`}>{status.label}</span>
+                            </div>
                         </div>
-                        <div className="bg-slate-50 rounded-sm border border-slate-200 p-3 text-center">
-                            <span className="text-[13px] font-semibold text-orange-400 block mb-1">Target</span>
-                            <span className="text-xl font-bold text-gray-800 font-primary">{goal.target_value}</span>
-                            <span className="text-[12px] text-gray-400 block font-semibold capitalize">{goal.goal_type}</span>
+
+                    {/* Progress Bars */}
+                    <div className="space-y-5 bg-white p-5 rounded-sm border border-gray-100 shadow-sm">
+                        {/* Goal Progress Bar */}
+                        <div>
+                            <div className="flex justify-between items-end mb-2">
+                                <span className="text-[13px] font-extrabold text-gray-700 uppercase tracking-widest flex items-center gap-2">
+                                    <Target size={14} className="text-orange-500" /> Goal Progress
+                                </span>
+                                <span className="text-[13px] font-extrabold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-sm">{goal.progress_percentage}%</span>
+                            </div>
+                            <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                                <div
+                                    className={`h-full rounded-full transition-all duration-1000 ${goal.progress_percentage >= 100 ? 'bg-gradient-to-r from-green-500 to-green-400' : goal.progress_percentage >= 50 ? 'bg-gradient-to-r from-orange-500 to-orange-400' : 'bg-gradient-to-r from-red-500 to-red-400'}`}
+                                    style={{ width: `${Math.min(goal.progress_percentage, 100)}%` }}
+                                />
+                            </div>
                         </div>
-                        <div className="bg-slate-50 rounded-sm border border-slate-200 p-3 text-center">
-                            <span className="text-[13px] font-semibold text-orange-400 block mb-1">Achieved</span>
-                            <span className={`text-xl font-bold font-primary ${goal.progress_percentage >= 80 ? 'text-green-600' : 'text-orange-500'}`}>{goal.progress_percentage}%</span>
-                            <span className={`text-[12px] block font-semibold ${status.color}`}>{status.label}</span>
+
+                        {/* Time Progress Bar */}
+                        <div>
+                            <div className="flex justify-between items-end mb-2">
+                                <span className="text-[13px] font-extrabold text-gray-700 uppercase tracking-widest flex items-center gap-2">
+                                    <Clock size={14} className="text-blue-500" /> Time Elapsed
+                                </span>
+                                <span className="text-[13px] font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-sm">{elapsedDays} / {totalDays} days</span>
+                            </div>
+                            <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                                <div
+                                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-1000"
+                                    style={{ width: `${Math.min(timeProgress, 100)}%` }}
+                                />
+                            </div>
+                            {goal.progress_percentage < timeProgress && (
+                                <div className="mt-3 bg-red-50 text-red-600 text-[12px] font-bold px-3 py-2 rounded-sm border border-red-100 flex items-center gap-2">
+                                    <AlertTriangle size={14} /> Warning: Progress is behind schedule by {timeProgress - goal.progress_percentage}%
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    {/* Progress Bar */}
-                    <div>
-                        <div className="flex justify-between mb-1.5">
-                            <span className="text-[13px] font-semibold text-orange-400 capitalize">Goal Progress</span>
-                            <span className="text-[13px] font-semibold text-gray-500">{goal.progress_percentage}% of target</span>
-                        </div>
-                        <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
-                            <div
-                                className={`h-full rounded-full transition-all duration-1000 ${goal.progress_percentage >= 100 ? 'bg-gradient-to-r from-green-500 to-green-400' : goal.progress_percentage >= 50 ? 'bg-gradient-to-r from-orange-500 to-orange-400' : 'bg-gradient-to-r from-red-500 to-red-400'}`}
-                                style={{ width: `${Math.min(goal.progress_percentage, 100)}%` }}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Time Progress */}
-                    <div>
-                        <div className="flex justify-between mb-1.5">
-                            <span className="text-[13px] font-semibold text-orange-400 capitalize">Time Elapsed</span>
-                            <span className="text-[13px] font-semibold text-gray-500">{elapsedDays} / {totalDays} days</span>
-                        </div>
-                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
-                            <div
-                                className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-500 transition-all duration-1000"
-                                style={{ width: `${Math.min(timeProgress, 100)}%` }}
-                            />
-                        </div>
-                        {goal.progress_percentage < timeProgress && (
-                            <p className="text-[12px] text-red-500 font-semibold mt-1 flex items-center gap-1">
-                                <AlertTriangle size={12} /> Progress is behind schedule by {timeProgress - goal.progress_percentage}%
-                            </p>
+                        {/* Assignee */}
+                        {assignee && (
+                            <div className="flex items-center justify-between bg-white rounded-sm border border-orange-100 shadow-sm p-4 relative overflow-hidden mt-auto">
+                                <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-orange-50 to-transparent pointer-events-none" />
+                                <div className="flex items-center gap-4 relative z-10">
+                                    <div className="w-12 h-12 rounded-full border-[3px] border-orange-100 bg-orange-50 text-orange-600 flex items-center justify-center text-[15px] font-extrabold overflow-hidden flex-shrink-0 shadow-sm">
+                                        {assignee.profile_picture_url ? (
+                                            <img src={assignee.profile_picture_url} className="w-full h-full object-cover" alt="" />
+                                        ) : (
+                                            (assignee.employee_name || assignee.team_name)?.charAt(0)
+                                        )}
+                                    </div>
+                                    <div>
+                                        <span className="text-[11px] font-extrabold text-orange-500 uppercase tracking-widest block mb-0.5">Assigned To</span>
+                                        <span className="text-[15px] font-extrabold text-gray-800 font-primary capitalize">
+                                            {assignee.employee_name || assignee.team_name}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="bg-orange-50 text-orange-600 px-3 py-1 rounded-sm text-[11px] font-bold uppercase tracking-wider border border-orange-100 relative z-10">
+                                    {goal.employee_id ? 'Employee' : 'Team'}
+                                </div>
+                            </div>
                         )}
                     </div>
 
-                    {/* Timeline */}
-                    <div>
-                        <span className="text-[13px] font-semibold text-orange-400 capitalize block mb-3">Milestone Timeline</span>
-                        <div className="relative">
-                            <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-gray-200" />
-                            <div className="space-y-4">
+                    {/* Right Column: Timeline */}
+                    <div className="bg-white p-6 rounded-sm border border-gray-100 shadow-sm h-full flex flex-col">
+                        <span className="text-[13px] font-extrabold text-gray-700 uppercase tracking-widest flex items-center gap-2 mb-6">
+                            <Activity size={14} className="text-orange-500" /> Milestone Timeline
+                        </span>
+                        <div className="relative pl-1">
+                            <div className="absolute left-[17px] top-4 bottom-4 w-0.5 bg-gray-200" />
+                            <div className="space-y-6">
                                 {checkpoints.map((cp, i) => (
-                                    <div key={i} className="flex items-start gap-3 relative">
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10 ${cp.color} shadow-sm`}>
+                                    <div key={i} className="flex items-start gap-4 relative group">
+                                        <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 relative z-10 border-[3px] shadow-sm transition-transform duration-300 group-hover:scale-110 ${cp.color}`}>
                                             {cp.icon}
                                         </div>
-                                        <div className="flex-1 min-w-0 pt-1">
-                                            <span className={`text-sm font-semibold font-primary ${cp.done ? 'text-gray-800' : 'text-gray-400'}`}>{cp.label}</span>
-                                            <p className={`text-[13px] font-semibold mt-0.5 ${cp.done ? 'text-orange-400' : 'text-gray-300'}`}>{cp.date}</p>
+                                        <div className="flex-1 min-w-0 pt-0.5">
+                                            <span className={`text-[14px] font-extrabold font-primary block ${cp.done ? 'text-gray-800' : 'text-gray-400'}`}>{cp.label}</span>
+                                            <span className={`text-[12px] font-bold mt-0.5 block ${cp.done ? 'text-orange-500' : 'text-gray-400'}`}>{cp.date}</span>
                                         </div>
-                                        {cp.done && <CheckCircle2 size={15} className="text-green-500 mt-1 flex-shrink-0" />}
+                                        {cp.done && (
+                                            <div className="flex-shrink-0 pt-1">
+                                                <CheckCircle2 size={18} className="text-green-500" />
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
                         </div>
                     </div>
-
-                    {/* Assignee */}
-                    {assignee && (
-                        <div className="flex items-center gap-3 bg-slate-50 rounded-sm border border-slate-200 px-4 py-3">
-                            <div className="w-9 h-9 rounded-full border-2 border-orange-100 bg-orange-50 text-orange-600 flex items-center justify-center text-sm font-bold overflow-hidden flex-shrink-0">
-                                {assignee.profile_picture_url ? (
-                                    <img src={assignee.profile_picture_url} className="w-full h-full object-cover" alt="" />
-                                ) : (
-                                    (assignee.employee_name || assignee.team_name)?.charAt(0)
-                                )}
-                            </div>
-                            <div>
-                                <span className="text-[13px] font-semibold text-orange-400 block">Assigned To</span>
-                                <span className="text-sm font-semibold text-gray-800 font-primary capitalize">
-                                    {assignee.employee_name || assignee.team_name}
-                                </span>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>
@@ -294,8 +318,15 @@ const DeleteConfirmModal = ({ goal, onConfirm, onCancel, isDeleting }) => (
     </div>
 );
 
-/* ─── Goal Form Modal (Create / Edit) ─── */
+/* ─── Goal Form Modal (Create / Edit) — 3-Step Wizard ─── */
+const STEPS = [
+    { id: 1, label: "Basic Info", icon: <Target size={16} /> },
+    { id: 2, label: "Schedule & Details", icon: <Calendar size={16} /> },
+    { id: 3, label: "Assign To", icon: <Users size={16} /> },
+];
+
 const GoalFormModal = ({ initialData, onClose, onSubmit, isSubmitting, employees, teams, title }) => {
+    const [step, setStep] = useState(1);
     const [assignTab, setAssignTab] = useState(
         initialData?.team_id ? "team" : initialData?.employee_id ? "individual" : "personal"
     );
@@ -306,13 +337,23 @@ const GoalFormModal = ({ initialData, onClose, onSubmit, isSubmitting, employees
         team_ids: initialData?.team_id ? [initialData.team_id] : [],
     });
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!formData.goal_title || !formData.target_value) { toast.error("Please fill all required fields"); return; }
+    const handleSubmit = () => {
+        if (!formData.goal_title || !formData.target_value) { toast.error("Please fill all required fields"); setStep(1); return; }
         if (assignTab === 'team' && formData.team_ids.length === 0) { toast.error("Please select at least one team"); return; }
         if (assignTab === 'individual' && formData.employee_ids.length === 0) { toast.error("Please select at least one employee"); return; }
         onSubmit({ ...formData, assignTab });
     };
+
+    const validateStep = (s) => {
+        if (s === 1) {
+            if (!formData.goal_title.trim()) { toast.error("Goal title is required"); return false; }
+            if (!formData.target_value) { toast.error("Target value is required"); return false; }
+        }
+        return true;
+    };
+
+    const goNext = () => { if (validateStep(step)) setStep(s => Math.min(s + 1, 3)); };
+    const goBack = () => setStep(s => Math.max(s - 1, 1));
 
     const selectClass = "w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none transition-all text-sm font-semibold bg-white appearance-none cursor-pointer";
     const inputClass = "w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none transition-all text-sm font-semibold bg-white placeholder-gray-400";
@@ -320,7 +361,8 @@ const GoalFormModal = ({ initialData, onClose, onSubmit, isSubmitting, employees
 
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-white rounded-sm shadow-2xl w-full max-w-xl overflow-hidden font-primary text-left">
+            <div className="bg-white rounded-sm shadow-2xl w-full max-w-3xl overflow-hidden font-primary text-left">
+                {/* Header */}
                 <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between z-50 rounded-t-sm shadow-md">
                     <div className="flex items-center gap-4">
                         <div className="bg-white/20 p-2.5 rounded-sm">
@@ -328,192 +370,261 @@ const GoalFormModal = ({ initialData, onClose, onSubmit, isSubmitting, employees
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-white">{title}</h2>
-                            <p className="text-xs text-orange-100 font-semibold opacity-90">Define targets to track and improve performance</p>
+                            <p className="text-xs text-orange-100 font-semibold opacity-90">Step {step} of 3 — {STEPS[step - 1].label}</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="text-white hover:bg-white/20 p-2 transition-all rounded-full"><X size={22} /></button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[85vh] overflow-y-auto custom-scrollbar">
-                    {/* Title */}
-                    <div className="space-y-1.5">
-                        <label className={labelClass}>Goal Title <span className="text-red-500">*</span></label>
-                        <input required type="text" placeholder="e.g. Monthly Call Target" className={inputClass}
-                            value={formData.goal_title} onChange={(e) => setFormData({ ...formData, goal_title: e.target.value })} />
+                {/* Stepper Bar */}
+                <div className="px-8 pt-6 pb-4 bg-orange-50/30 border-b border-orange-100/50">
+                    <div className="flex items-center justify-between relative">
+                        {STEPS.map((s, i) => (
+                            <div key={s.id} className="flex items-center flex-1 relative z-10">
+                                <div className="flex flex-col items-center flex-shrink-0 w-full relative">
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 border-[3px] shadow-sm z-20 bg-white
+                                        ${step > s.id ? 'border-orange-500 text-orange-500' 
+                                        : step === s.id ? 'border-orange-500 bg-orange-50 text-orange-600 shadow-orange-500/20 scale-110' 
+                                        : 'border-gray-200 text-gray-300'}`}>
+                                        {step > s.id ? <CheckCircle2 size={20} className="text-orange-500" /> : s.icon}
+                                    </div>
+                                    <span className={`text-[11px] font-extrabold uppercase tracking-widest mt-3 whitespace-nowrap transition-colors duration-300
+                                        ${step >= s.id ? 'text-orange-600' : 'text-gray-400'}`}>
+                                        {s.label}
+                                    </span>
+                                </div>
+                                {i < STEPS.length - 1 && (
+                                    <div className="absolute top-6 left-1/2 w-full h-[3px] -mt-[1.5px] bg-gray-100 -z-10">
+                                        <div className={`h-full bg-orange-500 transition-all duration-700 ease-in-out ${step > s.id ? 'w-full' : 'w-0'}`} />
+                                    </div>
+                                )}
+                            </div>
+                        ))}
                     </div>
+                </div>
 
-                    {/* Assign To Tabs */}
-                    <div className="space-y-3">
-                        <label className={labelClass}>Assign Target To</label>
-                        <div className="flex p-1 bg-gray-100 rounded-sm">
-                            {["personal", "team", "individual"].map(tab => (
-                                <button key={tab} type="button"
-                                    onClick={() => { setAssignTab(tab); setFormData({ ...formData, employee_id: "", team_id: "" }); }}
-                                    className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-sm transition-all ${assignTab === tab ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-                                    {tab === "individual" ? "Employee" : tab.charAt(0).toUpperCase() + tab.slice(1)}
-                                </button>
-                            ))}
+                {/* Step Content */}
+                <div className="p-6 pt-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
+
+                    {/* ─── Step 1: Basic Info ─── */}
+                    {step === 1 && (
+                        <div className="space-y-5">
+                            <div className="space-y-1.5">
+                                <label className={labelClass}>Goal Title <span className="text-red-500">*</span></label>
+                                <input type="text" placeholder="e.g. Monthly Call Target" className={inputClass}
+                                    value={formData.goal_title} onChange={(e) => setFormData({ ...formData, goal_title: e.target.value })} />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className={labelClass}>Goal Type</label>
+                                    <div className="relative">
+                                        <select className={selectClass} value={formData.goal_type} onChange={(e) => setFormData({ ...formData, goal_type: e.target.value })}>
+                                            <option value="outbound_calls">Total Outbound Calls</option>
+                                            <option value="connected_calls">Connected Calls</option>
+                                            <option value="followups">Follow-up Goals</option>
+                                            <option value="meetings_booked">Meetings Scheduled</option>
+                                            <option value="deals_won">Deals Closed/Won</option>
+                                            <option value="revenue">Revenue Generated</option>
+                                            <option value="leads">New Leads Added</option>
+                                            <option value="proposals">Proposals Sent</option>
+                                        </select>
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><ChevronRight className="rotate-90 text-gray-400" size={16} /></div>
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className={labelClass}>Target Value <span className="text-red-500">*</span></label>
+                                    <input type="number" placeholder="e.g. 100" className={inputClass}
+                                        value={formData.target_value} onChange={(e) => setFormData({ ...formData, target_value: e.target.value })} />
+                                </div>
+                            </div>
                         </div>
+                    )}
 
-                        {assignTab === 'personal' && (
-                            <div className="px-4 py-3 bg-blue-50 text-blue-700 rounded-sm font-bold text-xs border border-blue-100 flex items-center gap-2">
-                                <Zap size={14} /> This goal will be assigned to you.
-                            </div>
-                        )}
-
-                        {assignTab === 'team' && (
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-gray-500 uppercase tracking-tighter">Choose Teams</span>
-                                    <label className="flex items-center gap-2 cursor-pointer group">
-                                        <input type="checkbox" className="hidden"
-                                            onChange={(e) => setFormData({ ...formData, team_ids: e.target.checked ? teams.map(t => t.id) : [] })}
-                                            checked={formData.team_ids.length === teams.length && teams.length > 0} />
-                                        <div className={`w-4 h-4 rounded-sm border-2 flex items-center justify-center transition-all ${formData.team_ids.length === teams.length ? 'bg-orange-500 border-orange-500' : 'border-gray-200 group-hover:border-orange-200'}`}>
-                                            {formData.team_ids.length === teams.length && <CheckCircle2 className="text-white" size={12} />}
-                                        </div>
-                                        <span className="text-xs font-bold text-gray-700">Select All</span>
-                                    </label>
+                    {/* ─── Step 2: Schedule & Details ─── */}
+                    {step === 2 && (
+                        <div className="space-y-5">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className={labelClass}>Periodicity</label>
+                                    <div className="relative">
+                                        <select className={selectClass} value={formData.period} onChange={(e) => setFormData({ ...formData, period: e.target.value })}>
+                                            <option value="daily">Daily</option>
+                                            <option value="weekly">Weekly</option>
+                                            <option value="monthly">Monthly</option>
+                                            <option value="quarterly">Quarterly</option>
+                                            <option value="yearly">Yearly</option>
+                                        </select>
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><ChevronRight className="rotate-90 text-gray-400" size={16} /></div>
+                                    </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 max-h-[160px] overflow-y-auto custom-scrollbar p-1">
-                                    {teams.map(team => (
-                                        <div key={team.id} onClick={() => {
-                                            const exists = formData.team_ids.includes(team.id);
-                                            setFormData({ ...formData, team_ids: exists ? formData.team_ids.filter(id => id !== team.id) : [...formData.team_ids, team.id] });
-                                        }} className={`p-3 rounded-sm border transition-all cursor-pointer flex items-center gap-3 ${formData.team_ids.includes(team.id) ? 'bg-orange-50 border-orange-500 shadow-sm' : 'bg-white border-gray-200 hover:border-orange-300'}`}>
-                                            <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${formData.team_ids.includes(team.id) ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600'}`}><Users size={12} /></div>
-                                            <span className="text-xs font-bold text-gray-700 truncate">{team.team_name}</span>
-                                        </div>
-                                    ))}
+                                <div className="space-y-1.5">
+                                    <label className={labelClass}>Priority</label>
+                                    <div className="relative">
+                                        <select className={selectClass} value={formData.priority} onChange={(e) => setFormData({ ...formData, priority: e.target.value })}>
+                                            <option value="low">Low Priority</option>
+                                            <option value="medium">Medium Priority</option>
+                                            <option value="high">High Priority</option>
+                                        </select>
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><ChevronRight className="rotate-90 text-gray-400" size={16} /></div>
+                                    </div>
                                 </div>
                             </div>
-                        )}
 
-                        {assignTab === 'individual' && (
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-gray-500 uppercase tracking-tighter">Choose Employees</span>
-                                    <label className="flex items-center gap-2 cursor-pointer group">
-                                        <input type="checkbox" className="hidden"
-                                            onChange={(e) => setFormData({ ...formData, employee_ids: e.target.checked ? employees.map(emp => emp.id) : [] })}
-                                            checked={formData.employee_ids.length === employees.length && employees.length > 0} />
-                                        <div className={`w-4 h-4 rounded-sm border-2 flex items-center justify-center transition-all ${formData.employee_ids.length === employees.length ? 'bg-orange-500 border-orange-500' : 'border-gray-200 group-hover:border-orange-200'}`}>
-                                            {formData.employee_ids.length === employees.length && <CheckCircle2 className="text-white" size={12} />}
-                                        </div>
-                                        <span className="text-xs font-bold text-gray-700">Select All</span>
-                                    </label>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className={labelClass}>Start Date</label>
+                                    <input type="date" className={inputClass} value={formData.start_date} onChange={(e) => setFormData({ ...formData, start_date: e.target.value })} />
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto custom-scrollbar p-1">
-                                    {employees.map(emp => (
-                                        <div key={emp.id} onClick={() => {
-                                            const exists = formData.employee_ids.includes(emp.id);
-                                            setFormData({ ...formData, employee_ids: exists ? formData.employee_ids.filter(id => id !== emp.id) : [...formData.employee_ids, emp.id] });
-                                        }} className={`p-3 rounded-sm border transition-all cursor-pointer flex items-center gap-3 ${formData.employee_ids.includes(emp.id) ? 'bg-orange-50 border-orange-500 shadow-sm' : 'bg-white border-gray-200 hover:border-orange-300'}`}>
-                                            <div className={`w-8 h-8 rounded-sm overflow-hidden flex items-center justify-center font-bold text-[10px] uppercase transition-colors ${formData.employee_ids.includes(emp.id) ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600'}`}>
-                                                {emp.profile_picture_url ? <img src={emp.profile_picture_url} alt="" className="w-full h-full object-cover" /> : emp.employee_name?.charAt(0)}
+                                <div className="space-y-1.5">
+                                    <label className={labelClass}>End Date</label>
+                                    <input type="date" className={inputClass} value={formData.end_date} onChange={(e) => setFormData({ ...formData, end_date: e.target.value })} />
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 pt-3 mt-1 border-t border-gray-100">
+                                <div className="w-1 h-5 bg-orange-500 rounded" />
+                                <span className="text-[11px] font-bold uppercase tracking-widest text-orange-500">Additional Details</span>
+                                <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-sm border border-gray-200 ml-1">Optional</span>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className={labelClass}>Reward / Incentive</label>
+                                <input type="text" placeholder="e.g. ₹500 Bonus + Early Friday" className={inputClass}
+                                    value={formData.reward} onChange={(e) => setFormData({ ...formData, reward: e.target.value })} />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className={labelClass}>Description / Notes</label>
+                                <textarea rows="2" placeholder="Add any specific context or instructions..." className={`${inputClass} resize-none`}
+                                    value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ─── Step 3: Assign To ─── */}
+                    {step === 3 && (
+                        <div className="space-y-4">
+                            <div className="flex p-1 bg-gray-100 rounded-sm">
+                                {[
+                                    { key: "personal", label: "Personal", icon: <Star size={14} /> },
+                                    { key: "team", label: "Team", icon: <Users size={14} /> },
+                                    { key: "individual", label: "Employee", icon: <Target size={14} /> },
+                                ].map(tab => (
+                                    <button key={tab.key} type="button"
+                                        onClick={() => { setAssignTab(tab.key); setFormData({ ...formData, employee_ids: [], team_ids: [] }); }}
+                                        className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wider rounded-sm transition-all flex items-center justify-center gap-1.5 ${assignTab === tab.key ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                                        {tab.icon} {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {assignTab === 'personal' && (
+                                <div className="px-4 py-4 bg-blue-50 text-blue-700 rounded-sm font-bold text-sm border border-blue-100 flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0"><Zap size={18} /></div>
+                                    <div>
+                                        <span className="block text-blue-800 font-bold text-sm">Personal Goal</span>
+                                        <span className="text-blue-600 text-xs font-semibold">This goal will be assigned to you.</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {assignTab === 'team' && (
+                                <div className="space-y-3">
+                                    <div className="px-4 py-3 bg-purple-50 text-purple-700 rounded-sm font-bold text-xs border border-purple-100 flex items-center gap-2">
+                                        <Users size={14} /> Select one or more teams to assign this goal.
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-bold text-gray-500 uppercase tracking-tighter">Choose Teams</span>
+                                        <label className="flex items-center gap-2 cursor-pointer group">
+                                            <input type="checkbox" className="hidden"
+                                                onChange={(e) => setFormData({ ...formData, team_ids: e.target.checked ? teams.map(t => t.id) : [] })}
+                                                checked={formData.team_ids.length === teams.length && teams.length > 0} />
+                                            <div className={`w-4 h-4 rounded-sm border-2 flex items-center justify-center transition-all ${formData.team_ids.length === teams.length ? 'bg-orange-500 border-orange-500' : 'border-gray-200 group-hover:border-orange-200'}`}>
+                                                {formData.team_ids.length === teams.length && <CheckCircle2 className="text-white" size={12} />}
                                             </div>
-                                            <span className="text-xs font-bold text-gray-700 truncate">{emp.employee_name}</span>
-                                        </div>
-                                    ))}
+                                            <span className="text-xs font-bold text-gray-700">Select All</span>
+                                        </label>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 max-h-[220px] overflow-y-auto custom-scrollbar p-1">
+                                        {teams.map(team => (
+                                            <div key={team.id} onClick={() => {
+                                                const exists = formData.team_ids.includes(team.id);
+                                                setFormData({ ...formData, team_ids: exists ? formData.team_ids.filter(id => id !== team.id) : [...formData.team_ids, team.id] });
+                                            }} className={`p-3 rounded-sm border transition-all cursor-pointer flex items-center gap-3 ${formData.team_ids.includes(team.id) ? 'bg-orange-50 border-orange-500 shadow-sm' : 'bg-white border-gray-200 hover:border-orange-300'}`}>
+                                                <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${formData.team_ids.includes(team.id) ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600'}`}><Users size={12} /></div>
+                                                <span className="text-xs font-bold text-gray-700 truncate">{team.team_name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                    </div>
+                            )}
 
-                    {/* Goal Type */}
-                    <div className="space-y-1.5">
-                        <label className={labelClass}>Goal Type</label>
-                        <div className="relative">
-                            <select className={selectClass} value={formData.goal_type} onChange={(e) => setFormData({ ...formData, goal_type: e.target.value })}>
-                                <option value="calls">Connected Calls</option>
-                                <option value="revenue">Revenue Goal</option>
-                                <option value="deals_won">Deals Closed/Won</option>
-                                <option value="meetings">Meetings Booked</option>
-                                <option value="leads">New Leads Added</option>
-                                <option value="followups">Follow-up Goals</option>
-                                <option value="proposals">Proposals Sent</option>
-                                <option value="demos">Demos Conducted</option>
-                            </select>
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><ChevronRight className="rotate-90 text-gray-400" size={16} /></div>
+                            {assignTab === 'individual' && (
+                                <div className="space-y-3">
+                                    <div className="px-4 py-3 bg-green-50 text-green-700 rounded-sm font-bold text-xs border border-green-100 flex items-center gap-2">
+                                        <Target size={14} /> Select specific employees to assign this goal.
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-bold text-gray-500 uppercase tracking-tighter">Choose Employees</span>
+                                        <label className="flex items-center gap-2 cursor-pointer group">
+                                            <input type="checkbox" className="hidden"
+                                                onChange={(e) => setFormData({ ...formData, employee_ids: e.target.checked ? employees.map(emp => emp.id) : [] })}
+                                                checked={formData.employee_ids.length === employees.length && employees.length > 0} />
+                                            <div className={`w-4 h-4 rounded-sm border-2 flex items-center justify-center transition-all ${formData.employee_ids.length === employees.length ? 'bg-orange-500 border-orange-500' : 'border-gray-200 group-hover:border-orange-200'}`}>
+                                                {formData.employee_ids.length === employees.length && <CheckCircle2 className="text-white" size={12} />}
+                                            </div>
+                                            <span className="text-xs font-bold text-gray-700">Select All</span>
+                                        </label>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 max-h-[220px] overflow-y-auto custom-scrollbar p-1">
+                                        {employees.map(emp => (
+                                            <div key={emp.id} onClick={() => {
+                                                const exists = formData.employee_ids.includes(emp.id);
+                                                setFormData({ ...formData, employee_ids: exists ? formData.employee_ids.filter(id => id !== emp.id) : [...formData.employee_ids, emp.id] });
+                                            }} className={`p-3 rounded-sm border transition-all cursor-pointer flex items-center gap-3 ${formData.employee_ids.includes(emp.id) ? 'bg-orange-50 border-orange-500 shadow-sm' : 'bg-white border-gray-200 hover:border-orange-300'}`}>
+                                                <div className={`w-8 h-8 rounded-sm overflow-hidden flex items-center justify-center font-bold text-[10px] uppercase transition-colors ${formData.employee_ids.includes(emp.id) ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                                                    {emp.profile_picture_url ? <img src={emp.profile_picture_url} alt="" className="w-full h-full object-cover" /> : emp.employee_name?.charAt(0)}
+                                                </div>
+                                                <span className="text-xs font-bold text-gray-700 truncate">{emp.employee_name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
+                    )}
+                </div>
+
+                {/* Footer Navigation */}
+                <div className="px-6 py-4 border-t border-gray-200 bg-gray-50/50 flex items-center justify-between gap-3">
+                    <button type="button" onClick={step === 1 ? onClose : goBack}
+                        className="px-6 py-3 border border-gray-200 text-gray-500 rounded-sm font-bold text-xs tracking-widest uppercase hover:bg-gray-100 transition-all flex items-center gap-2">
+                        {step === 1 ? "Cancel" : <><ChevronRight className="rotate-180" size={14} /> Back</>}
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-semibold text-gray-400">{step} / 3</span>
                     </div>
 
-                    {/* Target Value */}
-                    <div className="space-y-1.5">
-                        <label className={labelClass}>Target Value <span className="text-red-500">*</span></label>
-                        <input required type="number" placeholder="e.g. 100" className={inputClass}
-                            value={formData.target_value} onChange={(e) => setFormData({ ...formData, target_value: e.target.value })} />
-                    </div>
-
-                    {/* Periodicity + Priority */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                            <label className={labelClass}>Periodicity</label>
-                            <div className="relative">
-                                <select className={selectClass} value={formData.period} onChange={(e) => setFormData({ ...formData, period: e.target.value })}>
-                                    <option value="daily">Daily</option>
-                                    <option value="weekly">Weekly</option>
-                                    <option value="monthly">Monthly</option>
-                                    <option value="quarterly">Quarterly</option>
-                                    <option value="yearly">Yearly</option>
-                                </select>
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><ChevronRight className="rotate-90 text-gray-400" size={16} /></div>
-                            </div>
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className={labelClass}>Priority</label>
-                            <div className="relative">
-                                <select className={selectClass} value={formData.priority} onChange={(e) => setFormData({ ...formData, priority: e.target.value })}>
-                                    <option value="low">Low Priority</option>
-                                    <option value="medium">Medium Priority</option>
-                                    <option value="high">High Priority</option>
-                                </select>
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><ChevronRight className="rotate-90 text-gray-400" size={16} /></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Dates */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                            <label className={labelClass}>Start Date</label>
-                            <input required type="date" className={inputClass} value={formData.start_date} onChange={(e) => setFormData({ ...formData, start_date: e.target.value })} />
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className={labelClass}>End Date</label>
-                            <input required type="date" className={inputClass} value={formData.end_date} onChange={(e) => setFormData({ ...formData, end_date: e.target.value })} />
-                        </div>
-                    </div>
-
-                    {/* Reward */}
-                    <div className="space-y-1.5">
-                        <label className={labelClass}>Reward / Incentive</label>
-                        <input type="text" placeholder="e.g. ₹500 Bonus + Early Friday" className={inputClass}
-                            value={formData.reward} onChange={(e) => setFormData({ ...formData, reward: e.target.value })} />
-                    </div>
-
-                    {/* Description */}
-                    <div className="space-y-1.5">
-                        <label className={labelClass}>Description / Notes</label>
-                        <textarea rows="2" placeholder="Add any specific context or instructions..." className={`${inputClass} resize-none`}
-                            value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
-                    </div>
-
-                    <div className="pt-4 flex gap-3 border-t border-gray-100">
-                        <button type="button" onClick={onClose} className="flex-1 px-6 py-3 border border-gray-200 text-gray-500 rounded-sm font-bold text-xs tracking-widest uppercase hover:bg-gray-50 transition-all">
-                            Cancel
+                    {step < 3 ? (
+                        <button type="button" onClick={goNext}
+                            className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm font-bold text-xs tracking-widest uppercase shadow-md hover:shadow-lg transition-all flex items-center gap-2 active:scale-95">
+                            Next <ChevronRight size={14} />
                         </button>
-                        <button type="submit" disabled={isSubmitting}
-                            className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm font-bold text-xs tracking-widest uppercase shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95">
+                    ) : (
+                        <button type="button" onClick={handleSubmit} disabled={isSubmitting}
+                            className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm font-bold text-xs tracking-widest uppercase shadow-md hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-50 active:scale-95">
                             {isSubmitting ? <RefreshCw className="animate-spin" size={14} /> : <Save size={14} />}
                             {isSubmitting ? "Saving..." : "Save Goal"}
                         </button>
-                    </div>
-                </form>
+                    )}
+                </div>
             </div>
         </div>
     );
 };
+
 
 /* ─── Goal Detail Modal ─── */
 const GoalDetailModal = ({ goal, assignee, onClose, onEdit, onTimeline }) => {
@@ -632,7 +743,7 @@ const GoalSetting = () => {
     const [viewGoal, setViewGoal] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const { data: goals, isLoading } = useGetGoalsQuery();
+    const { data: goals, isLoading, refetch, isFetching } = useGetGoalsQuery();
     const { data: employeesRes } = useGetEmployeesQuery({ limit: 1000 });
     const employees = employeesRes?.employees || [];
     const { data: teamsRes } = useGetTeamsQuery({ limit: 1000 });
@@ -686,115 +797,111 @@ const GoalSetting = () => {
         return `${base}${path.startsWith('/') ? '' : '/'}${path}`;
     };
 
-    /* ─── Single Goal Card (Grid View) ─── */
+    /* ─── Single Goal Card (Grid/List View) ─── */
     const GoalCard = ({ goal }) => {
         const assignee = getAssignee(goal);
         const status = getStatusInfo(goal.progress_percentage);
 
         return (
-            <div className="bg-white rounded-sm border border-gray-200 shadow-sm overflow-hidden relative group hover:border-orange-300 transition-all duration-300 flex flex-col">
-                <div className="p-5">
-                    {/* Header */}
-                    <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-start gap-3">
-                            {goal.employee_id ? (
-                                <div className="w-11 h-11 rounded-full border-2 border-orange-100 flex items-center justify-center text-sm font-bold bg-gray-50 text-orange-600 overflow-hidden shadow-sm flex-shrink-0">
-                                    {assignee?.profile_picture_url ? (
-                                        <img src={getImageUrl(assignee.profile_picture_url)} className="w-full h-full object-cover" alt="" />
-                                    ) : (
-                                        assignee?.employee_name?.charAt(0) || <Users size={18} />
-                                    )}
+            <div className="bg-white rounded-sm border border-gray-200 shadow-sm relative group hover:border-orange-400 transition-all duration-300 flex flex-col md:flex-row items-stretch overflow-hidden">
+                {/* Status Indicator Bar */}
+                <div className={`w-1.5 hidden md:block ${goal.progress_percentage >= 100 ? 'bg-green-500' : goal.progress_percentage >= 50 ? 'bg-orange-500' : 'bg-red-400'}`} />
+
+                {/* Left Section (Goal Details) */}
+                <div className="p-5 flex-1 flex flex-col justify-center border-b md:border-b-0 md:border-r border-gray-100 bg-white">
+                    <div className="flex items-start gap-4">
+                        {goal.employee_id ? (
+                            <div className="w-12 h-12 rounded-full border-2 border-orange-100 flex items-center justify-center text-sm font-bold bg-orange-50 text-orange-600 overflow-hidden shadow-sm flex-shrink-0">
+                                {assignee?.profile_picture_url ? (
+                                    <img src={getImageUrl(assignee.profile_picture_url)} className="w-full h-full object-cover" alt="" />
+                                ) : (
+                                    assignee?.employee_name?.charAt(0) || <Users size={20} />
+                                )}
+                            </div>
+                        ) : goal.team_id ? (
+                            <div className="w-12 h-12 rounded-full border-2 border-blue-100 bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm flex-shrink-0">
+                                <Users size={20} />
+                            </div>
+                        ) : (
+                            <div className="w-12 h-12 rounded-full border-2 border-green-100 bg-green-50 text-green-600 flex items-center justify-center shadow-sm flex-shrink-0">
+                                <Star size={20} />
+                            </div>
+                        )}
+                        
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <h3 className="text-[17px] font-extrabold text-gray-800 line-clamp-1">{goal.goal_title}</h3>
+                                    <p className="text-[13px] font-bold text-orange-500 mt-0.5 capitalize">
+                                        {goal.employee_id ? `Employee: ${assignee?.employee_name}` : goal.team_id ? `Team: ${assignee?.team_name}` : 'Personal Goal'}
+                                    </p>
                                 </div>
-                            ) : goal.team_id ? (
-                                <div className="w-11 h-11 rounded-full border-2 border-blue-100 bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm flex-shrink-0">
-                                    <Users size={20} />
+                                <button onClick={() => setTimelineGoal(goal)} title="View Progress Timeline" 
+                                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm border text-[11px] font-bold uppercase tracking-wider transition-all hover:shadow-sm ${status.bg} ${status.color}`}>
+                                    {status.icon} <span className="hidden sm:inline">{status.label}</span>
+                                </button>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2 mt-3">
+                                <div className="flex items-center gap-1.5 text-[12px] font-bold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-sm capitalize">
+                                    {getMetricIcon(goal.goal_type)} {goal.goal_type?.replace(/_/g, ' ')}
                                 </div>
-                            ) : (
-                                <div className="w-11 h-11 rounded-full border-2 border-orange-100 bg-orange-50 text-orange-600 flex items-center justify-center shadow-sm flex-shrink-0">
-                                    <Star size={20} />
-                                </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                                <h3 className="text-[15px] font-semibold text-gray-800 line-clamp-1 font-primary">{goal.goal_title}</h3>
-                                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                                    <span className="text-[12px] font-semibold px-2 py-0.5 bg-gray-100 text-gray-500 rounded-sm capitalize">{goal.period}</span>
-                                    {goal.priority && (
-                                        <span className={`text-[12px] font-semibold px-2 py-0.5 rounded-sm capitalize ${getPriorityStyle(goal.priority)}`}>{goal.priority}</span>
-                                    )}
-                                </div>
-                                <p className="text-[12px] font-semibold text-orange-400 mt-0.5 capitalize">
-                                    {goal.employee_id ? `Employee: ${assignee?.employee_name}` : goal.team_id ? `Team: ${assignee?.team_name}` : 'Self Assigned'}
-                                </p>
+                                <span className="text-[12px] font-bold px-2.5 py-1 bg-gray-100 text-gray-600 rounded-sm uppercase tracking-wider">{goal.period}</span>
+                                {goal.priority && (
+                                    <span className={`text-[12px] font-bold px-2.5 py-1 rounded-sm uppercase tracking-wider ${getPriorityStyle(goal.priority)}`}>{goal.priority}</span>
+                                )}
                             </div>
                         </div>
-                        {/* Action Buttons - AllDepartment style */}
-                        <div className="flex items-center gap-3 flex-shrink-0 pr-1 opacity-0 group-hover:opacity-100 transition-all">
-                            <ActionGuard permission="goal_read" module="Goal Management" type="read">
-                                <button onClick={() => setViewGoal(goal)} className="text-blue-500 hover:scale-110 transition-transform active:scale-90" title="View Details">
-                                    <Eye size={18} strokeWidth={2} />
-                                </button>
-                            </ActionGuard>
-                            <ActionGuard permission="goal_edit" module="Goal Management" type="update">
-                                <button onClick={() => setEditGoal(goal)} className="text-[#22C55E] hover:scale-110 transition-transform active:scale-90" title="Edit Goal">
-                                    <Edit size={18} strokeWidth={2} />
-                                </button>
-                            </ActionGuard>
-                            <ActionGuard permission="goal_delete" module="Goal Management" type="delete">
-                                <button onClick={() => setDeleteTarget(goal)} className="text-red-500 hover:scale-110 transition-transform active:scale-90" title="Delete Goal">
-                                    <Trash2 size={18} strokeWidth={2} />
-                                </button>
-                            </ActionGuard>
-                        </div>
                     </div>
+                </div>
 
-                    {/* Progress */}
+                {/* Right Section (Progress & Actions) */}
+                <div className="p-5 flex-[1.2] flex flex-col justify-center bg-gray-50/50">
                     <div className="flex items-end justify-between mb-3">
                         <div>
-                            <span className="text-[12px] font-semibold text-orange-400 capitalize block mb-0.5">Progress Status</span>
-                            <span className="text-2xl font-bold text-gray-800 tabular-nums font-primary">{Math.round(goal.current_value)}</span>
-                            <span className="text-gray-400 font-semibold text-sm ml-1">/ {goal.target_value} <span className="capitalize">{goal.goal_type}</span></span>
+                            <span className="text-3xl font-extrabold text-gray-800 tabular-nums leading-none tracking-tight">{Math.round(goal.current_value)}</span>
+                            <span className="text-gray-400 font-bold text-[15px] ml-1.5">/ {goal.target_value}</span>
                         </div>
                         <div className="text-right">
-                            <div className={`text-xl font-bold font-primary ${goal.progress_percentage >= 80 ? 'text-green-600' : 'text-orange-500'}`}>{goal.progress_percentage}%</div>
-                            <span className="text-[12px] font-semibold text-orange-400 capitalize">Achieved</span>
+                            <div className={`text-2xl font-extrabold leading-none tabular-nums ${goal.progress_percentage >= 100 ? 'text-green-600' : goal.progress_percentage >= 50 ? 'text-orange-500' : 'text-red-500'}`}>
+                                {goal.progress_percentage}%
+                            </div>
                         </div>
                     </div>
-
+                    
                     {/* Progress Bar */}
-                    <div className="h-2 w-full bg-gray-50 rounded-full overflow-hidden border border-gray-100">
+                    <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden border border-gray-300 shadow-inner mb-4">
                         <div
                             className={`h-full rounded-full transition-all duration-1000 ease-out ${goal.progress_percentage >= 100 ? 'bg-gradient-to-r from-green-500 to-green-400' : goal.progress_percentage >= 50 ? 'bg-gradient-to-r from-orange-500 to-orange-400' : 'bg-gradient-to-r from-red-500 to-red-400'}`}
                             style={{ width: `${Math.min(goal.progress_percentage, 100)}%` }}
                         />
                     </div>
-
-                    {/* Reward */}
-                    {goal.reward && (
-                        <div className="mt-3 flex items-center gap-2 px-3 py-2 bg-yellow-50/50 border border-yellow-100 rounded-sm">
-                            <div className="p-1 bg-yellow-100 text-yellow-700 rounded-sm"><Award size={14} /></div>
-                            <div className="flex-1 min-w-0">
-                                <span className="text-[12px] font-semibold text-orange-400 capitalize block">Target Incentive</span>
-                                <p className="text-[13px] font-semibold text-gray-700 line-clamp-1 font-primary">{goal.reward}</p>
-                            </div>
+                    
+                    {/* Footer Row */}
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-[12px] font-bold text-gray-500 uppercase tracking-widest">
+                            <Clock size={14} className="text-orange-500" /> 
+                            Ends: <span className="text-gray-700">{new Date(goal.end_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                         </div>
-                    )}
-
-                    {goal.description && (
-                        <p className="mt-3 text-[12px] font-semibold text-gray-400 italic line-clamp-2">{goal.description}</p>
-                    )}
-                </div>
-
-                {/* Footer */}
-                <div className="bg-slate-50/90 px-5 py-3 border-t border-gray-200 flex items-center justify-between mt-auto">
-                    <div className="flex items-center gap-1.5 text-[12px] font-semibold text-gray-400 capitalize">
-                        <Clock size={13} /> Ends {new Date(goal.end_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <ActionGuard permission="goal_read" module="Goal Management" type="read">
+                                <button onClick={() => setViewGoal(goal)} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-sm transition-colors" title="View Details">
+                                    <Eye size={18} strokeWidth={2.5} />
+                                </button>
+                            </ActionGuard>
+                            <ActionGuard permission="goal_edit" module="Goal Management" type="update">
+                                <button onClick={() => setEditGoal(goal)} className="p-1.5 text-green-600 hover:bg-green-100 rounded-sm transition-colors" title="Edit Goal">
+                                    <Edit size={18} strokeWidth={2.5} />
+                                </button>
+                            </ActionGuard>
+                            <ActionGuard permission="goal_delete" module="Goal Management" type="delete">
+                                <button onClick={() => setDeleteTarget(goal)} className="p-1.5 text-red-600 hover:bg-red-100 rounded-sm transition-colors" title="Delete Goal">
+                                    <Trash2 size={18} strokeWidth={2.5} />
+                                </button>
+                            </ActionGuard>
+                        </div>
                     </div>
-                    <button
-                        onClick={() => setTimelineGoal(goal)}
-                        className={`flex items-center gap-1 text-[12px] font-semibold capitalize px-2.5 py-1 rounded-sm border transition-all hover:shadow-sm ${status.bg} ${status.color}`}
-                    >
-                        {status.icon} {status.label}
-                    </button>
                 </div>
             </div>
         );
@@ -919,6 +1026,17 @@ const GoalSetting = () => {
                                     <List size={16} />
                                 </button>
                             </div>
+                            
+                            {/* Refresh Button */}
+                            <button 
+                                onClick={() => refetch()} 
+                                disabled={isFetching}
+                                className="flex items-center justify-center p-2.5 rounded-sm bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-all shadow-sm"
+                                title="Refresh Goals"
+                            >
+                                <RefreshCw size={18} className={isFetching ? "animate-spin text-orange-500" : ""} />
+                            </button>
+
                             <ActionGuard permission="goal_create" module="Goal Management" type="create">
                                 <button onClick={() => setShowAddModal(true)}
                                     className="flex items-center gap-2 px-5 py-2.5 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 active:scale-95 text-sm">
@@ -964,14 +1082,20 @@ const GoalSetting = () => {
                 </div>
 
                 {/* Goals Section */}
-                <div className="space-y-5">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-1.5 h-6 bg-orange-500 rounded-full" />
-                            <h2 className="text-lg font-bold text-gray-700 uppercase tracking-wide">Current Performance Goals</h2>
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between bg-white px-6 py-4 border-l-4 border-l-orange-500 border border-gray-200 rounded-sm shadow-sm relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-orange-50 to-transparent pointer-events-none" />
+                        <div className="flex items-center gap-4 relative z-10">
+                            <div className="p-2 bg-orange-50 rounded-sm text-orange-500">
+                                <Target size={22} />
+                            </div>
+                            <h2 className="text-xl font-extrabold text-gray-800 uppercase tracking-widest">Current Performance Goals</h2>
                         </div>
                         {goals?.length > 0 && (
-                            <span className="text-sm font-semibold text-gray-400">{goals.length} goal{goals.length !== 1 ? 's' : ''}</span>
+                            <div className="relative z-10 flex items-center gap-2 bg-orange-50 border border-orange-200 px-4 py-1.5 rounded-sm">
+                                <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                                <span className="text-[13px] font-bold text-orange-700 uppercase tracking-wider">{goals.length} Active Goal{goals.length !== 1 ? 's' : ''}</span>
+                            </div>
                         )}
                     </div>
 
@@ -993,7 +1117,7 @@ const GoalSetting = () => {
                             </ActionGuard>
                         </div>
                     ) : view === "grid" ? (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <div className="flex flex-col gap-4">
                             {goals.map(goal => <GoalCard key={goal.id} goal={goal} />)}
                         </div>
                     ) : (
@@ -1002,7 +1126,7 @@ const GoalSetting = () => {
                             <table className="w-full border-collapse text-left">
                                 <thead>
                                     <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                                        <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 whitespace-nowrap">Assing to</th>
+                                        <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 whitespace-nowrap">Assign To</th>
                                         <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 whitespace-nowrap">Type</th>
                                         <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 whitespace-nowrap">Period / Priority</th>
                                         <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 whitespace-nowrap">Progress</th>

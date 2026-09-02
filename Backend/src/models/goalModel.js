@@ -53,6 +53,18 @@ const Goal = {
         return rows;
     },
 
+    findMyActiveGoals: async (employeeId, userId) => {
+        const query = `
+            SELECT * FROM goals 
+            WHERE user_id = ? 
+            AND (employee_id = ? OR team_id IN (SELECT team_id FROM team_members WHERE employee_id = ?))
+            AND CURDATE() BETWEEN DATE(start_date) AND DATE(end_date)
+            ORDER BY created_at DESC
+        `;
+        const [rows] = await pool.query(query, [userId, employeeId, employeeId]);
+        return rows;
+    },
+
     findById: async (id, userId) => {
         const [rows] = await pool.query('SELECT * FROM goals WHERE id = ? AND user_id = ?', [id, userId]);
         return rows[0];
@@ -83,73 +95,90 @@ const Goal = {
         let currentValue = 0;
         const { goal_type, start_date, end_date, employee_id } = goal;
 
-        const filterEmp = employee_id ? ' AND (assigned_to = ? OR user_id = ?)' : ''; // Simplified for now
-        const empParam = employee_id ? [employee_id, userId] : [userId];
+        const targetUserId = employee_id || userId;
 
-        if (goal_type === 'calls') {
+        const fmtStart = (typeof start_date === 'string' ? start_date : start_date.toISOString()).split('T')[0];
+        const fmtEnd = (typeof end_date === 'string' ? end_date : end_date.toISOString()).split('T')[0] + ' 23:59:59';
+
+        if (goal_type === 'outbound_calls') {
             const [res] = await pool.query(
-                `SELECT COUNT(*) as count FROM lead_calls 
-                 WHERE user_id = ? ${employee_id ? ' AND user_id = ?' : ''} 
-                 AND created_at BETWEEN ? AND ?`,
-                [userId, ...(employee_id ? [employee_id] : []), start_date, end_date + ' 23:59:59']
+                `SELECT COUNT(lc.id) as count FROM lead_calls lc
+                 JOIN leads l ON lc.lead_id = l.id
+                 WHERE (l.assigned_to = ? OR lc.user_id = ?) 
+                 AND lc.created_at BETWEEN ? AND ?`,
+                [targetUserId, targetUserId, fmtStart, fmtEnd]
+            );
+            currentValue = res[0].count;
+        } else if (goal_type === 'connected_calls') {
+            const [res] = await pool.query(
+                `SELECT COUNT(lc.id) as count FROM lead_calls lc
+                 JOIN leads l ON lc.lead_id = l.id
+                 WHERE (l.assigned_to = ? OR lc.user_id = ?) 
+                 AND LOWER(lc.status) = 'connected'
+                 AND lc.created_at BETWEEN ? AND ?`,
+                [targetUserId, targetUserId, fmtStart, fmtEnd]
             );
             currentValue = res[0].count;
         } else if (goal_type === 'revenue') {
             const [res] = await pool.query(
                 `SELECT SUM(value) as total FROM leads 
-                 WHERE user_id = ? ${employee_id ? ' AND assigned_to = ?' : ''} 
+                 WHERE (assigned_to = ? OR user_id = ?) 
                  AND tag = 'Won' AND updated_at BETWEEN ? AND ?`,
-                [userId, ...(employee_id ? [employee_id] : []), start_date, end_date + ' 23:59:59']
+                [targetUserId, targetUserId, fmtStart, fmtEnd]
             );
             currentValue = res[0].total || 0;
-        } else if (goal_type === 'meetings') {
+        } else if (goal_type === 'meetings_booked') {
             const [res] = await pool.query(
-                `SELECT COUNT(*) as count FROM lead_activities 
-                 WHERE user_id = ? AND activity_type = 'notification' AND title = 'Meeting Scheduled'
-                 AND created_at BETWEEN ? AND ?`,
-                [userId, start_date, end_date + ' 23:59:59']
+                `SELECT COUNT(lm.id) as count FROM lead_meetings lm
+                 JOIN leads l ON lm.lead_id = l.id
+                 WHERE (l.assigned_to = ? OR lm.user_id = ?) 
+                 AND lm.created_at BETWEEN ? AND ?`,
+                [targetUserId, targetUserId, fmtStart, fmtEnd]
             );
             currentValue = res[0].count;
         } else if (goal_type === 'leads') {
             const [res] = await pool.query(
                 `SELECT COUNT(*) as count FROM leads 
-                 WHERE user_id = ? ${employee_id ? ' AND assigned_to = ?' : ''} 
+                 WHERE user_id = ? 
                  AND created_at BETWEEN ? AND ?`,
-                [userId, ...(employee_id ? [employee_id] : []), start_date, end_date + ' 23:59:59']
+                [targetUserId, fmtStart, fmtEnd]
             );
             currentValue = res[0].count;
         } else if (goal_type === 'deals_won') {
             const [res] = await pool.query(
                 `SELECT COUNT(*) as count FROM leads 
-                 WHERE user_id = ? ${employee_id ? ' AND assigned_to = ?' : ''} 
+                 WHERE (assigned_to = ? OR user_id = ?) 
                  AND tag = 'Won' AND updated_at BETWEEN ? AND ?`,
-                [userId, ...(employee_id ? [employee_id] : []), start_date, end_date + ' 23:59:59']
-            );
-            currentValue = res[0].count;
-        } else if (goal_type === 'followups') {
-            const [res] = await pool.query(
-                `SELECT COUNT(*) as count FROM lead_activities 
-                 WHERE user_id = ? ${employee_id ? ' AND user_id = ?' : ''} 
-                 AND title LIKE '%Follow-up%' AND created_at BETWEEN ? AND ?`,
-                [userId, ...(employee_id ? [employee_id] : []), start_date, end_date + ' 23:59:59']
+                [targetUserId, targetUserId, fmtStart, fmtEnd]
             );
             currentValue = res[0].count;
         } else if (goal_type === 'proposals') {
             const [res] = await pool.query(
-                `SELECT COUNT(*) as count FROM lead_activities 
-                 WHERE user_id = ? ${employee_id ? ' AND user_id = ?' : ''} 
-                 AND title LIKE '%Proposal%' AND created_at BETWEEN ? AND ?`,
-                [userId, ...(employee_id ? [employee_id] : []), start_date, end_date + ' 23:59:59']
+                `SELECT COUNT(la.id) as count FROM lead_activities la
+                 JOIN leads l ON la.lead_id = l.id
+                 WHERE (l.assigned_to = ? OR la.user_id = ?) 
+                 AND la.activity_type = 'proposal'
+                 AND la.created_at BETWEEN ? AND ?`,
+                [targetUserId, targetUserId, fmtStart, fmtEnd]
             );
             currentValue = res[0].count;
-        } else if (goal_type === 'demos') {
-            const [res] = await pool.query(
-                `SELECT COUNT(*) as count FROM lead_activities 
-                 WHERE user_id = ? ${employee_id ? ' AND user_id = ?' : ''} 
-                 AND title LIKE '%Demo%' AND created_at BETWEEN ? AND ?`,
-                [userId, ...(employee_id ? [employee_id] : []), start_date, end_date + ' 23:59:59']
+        } else if (goal_type === 'followups') {
+            // A Follow-up is considered as any call logged or explicitly marked follow-up tasks
+            const [resCalls] = await pool.query(
+                `SELECT COUNT(lc.id) as count FROM lead_calls lc
+                 JOIN leads l ON lc.lead_id = l.id
+                 WHERE (l.assigned_to = ? OR lc.user_id = ?) 
+                 AND lc.created_at BETWEEN ? AND ?`,
+                [targetUserId, targetUserId, fmtStart, fmtEnd]
             );
-            currentValue = res[0].count;
+            const [resTasks] = await pool.query(
+                `SELECT COUNT(*) as count FROM tasks 
+                 WHERE user_id = ? 
+                 AND LOWER(category) = 'follow-up'
+                 AND created_at BETWEEN ? AND ?`,
+                [targetUserId, fmtStart, fmtEnd]
+            );
+            currentValue = resCalls[0].count + resTasks[0].count;
         }
 
         return {

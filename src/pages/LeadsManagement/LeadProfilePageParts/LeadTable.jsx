@@ -500,8 +500,8 @@ export default function LeadTabs({
         (activeTab === 'email' ? 'email' : normalizedTab));
 
     const TabHeader = ({ title, showAdd = false, addLabel = "", addType = "", showSort = true }) => (
-      <div className="flex items-center justify-between py-3 px-6 bg-white border-b border-gray-100 rounded-t-sm">
-        <h2 className="text-[15px] font-bold text-gray-800 font-primary capitalize tracking-tight flex items-center gap-2">
+      <div className="flex items-center justify-between py-4 px-6 bg-white border-b border-gray-100 rounded-none">
+        <h2 className="text-lg font-bold text-gray-800 font-primary capitalize tracking-tight flex items-center gap-2">
           {title}
         </h2>
         <div className="flex items-center gap-4">
@@ -510,13 +510,13 @@ export default function LeadTabs({
               <button
                 disabled={isDisabled}
                 onClick={() => !isDisabled && setShowSortDropdown(!showSortDropdown)}
-                className={`flex items-center gap-2 bg-white border border-gray-200 px-4 py-1.5 rounded-none text-[12px] font-bold text-gray-600 transition-all font-primary shadow-sm ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                className={`flex items-center gap-2 bg-white border border-gray-200 px-4 py-2 rounded-none text-xs font-bold text-gray-600 transition-all font-primary shadow-sm hover:shadow ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
               >
                 Sort By : {selectedSort}
                 <ChevronDown size={14} className="text-gray-400" />
               </button>
               {showSortDropdown && (
-                <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-100 rounded-none shadow-xl z-50 py-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-100 rounded-none shadow-xl z-50 py-1.5 animate-fadeIn">
                   {sortOptions.map((opt) => (
                     <button
                       key={opt}
@@ -537,10 +537,10 @@ export default function LeadTabs({
             <button
               disabled={isDisabled}
               onClick={() => !isDisabled && onAddClick(addType)}
-              className={`flex items-center gap-1.5 transition-all font-bold text-[13px] font-primary ${isDisabled ? 'text-gray-300 cursor-not-allowed' : 'text-orange-600 hover:text-orange-700 active:scale-95'}`}
+              className={`flex items-center gap-2 transition-all font-bold text-sm font-primary px-3 py-1.5 rounded-none border ${isDisabled ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-orange-600 border-orange-200 hover:border-orange-400 hover:bg-orange-50 active:scale-95'}`}
             >
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isDisabled ? 'border-gray-200' : 'border-orange-500'}`}>
-                <Plus size={12} className="stroke-[3px]" />
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center ${isDisabled ? 'bg-gray-100' : 'bg-orange-100'}`}>
+                <Plus size={14} className="stroke-[3px]" />
               </div>
               {addLabel}
             </button>
@@ -559,8 +559,8 @@ export default function LeadTabs({
               {upcomingActivities.length > 0 && (
                 <div className="space-y-4 mb-10">
                   <div className="flex items-center gap-2">
-                    <span className="px-3 py-1.5 bg-[#F5ECF8] text-[#9333EA] rounded-none text-sm font-bold font-primary shadow-sm inline-flex items-center gap-2 border border-[#E9D5FF] tracking-wide">
-                      <Calendar size={13} className="text-[#A855F7]" /> Upcoming Activity
+                    <span className="px-4 py-2 bg-purple-50 text-purple-700 rounded-none text-xs font-bold font-primary shadow-sm inline-flex items-center gap-2 border border-purple-100 tracking-wide">
+                      <Calendar size={14} className="text-purple-600" /> Upcoming Activity
                     </span>
                   </div>
 
@@ -572,11 +572,11 @@ export default function LeadTabs({
                           if (upcoming.type === 'meeting') setActiveTab('meeting');
                           else if (upcoming.type === 'follow_up') setActiveTab('calls');
                         }}
-                        className="bg-white rounded-none border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card"
+                        className="bg-white rounded-none border border-gray-100 shadow-sm hover:shadow-md hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card"
                       >
                         <div className="p-6 flex gap-5 items-start">
-                          <div className={`w-14 h-14 ${upcoming.type === 'meeting' ? 'bg-[#9333EA]' : 'bg-orange-500'} rounded-full flex items-center justify-center flex-shrink-0 shadow-xl transition-transform group-hover/card:scale-105`}>
-                            {upcoming.type === 'meeting' ? <Users size={24} className="text-white fill-white/20" /> : <Phone size={24} className="text-white fill-white/20" />}
+                          <div className={`w-12 h-12 ${upcoming.type === 'meeting' ? 'bg-purple-600' : 'bg-orange-500'} rounded-full flex items-center justify-center flex-shrink-0 shadow-md transition-transform group-hover/card:scale-105`}>
+                            {upcoming.type === 'meeting' ? <Users size={20} className="text-white" /> : <Phone size={20} className="text-white" />}
                           </div>
                           <div className="flex-1">
                             <h4 className="font-extrabold text-[#1E293B] text-[17px] leading-tight mb-1.5" title={upcoming.title}>
@@ -618,7 +618,7 @@ export default function LeadTabs({
                 </div>
               ) : activities.length === 0 ? (
                 !activitiesLoading && upcomingActivities.length === 0 && (
-                  <div className="text-center py-24 bg-white rounded-none border-2 border-dashed border-gray-100 mx-6">
+                  <div className="text-center py-24 bg-white rounded-none border-2 border-dashed border-gray-200 mx-6">
                     <Zap size={48} className="mx-auto text-gray-200 mb-4" />
                     <p className="text-gray-400 font-bold font-primary capitalize tracking-wide text-sm">No activity history yet</p>
                   </div>
@@ -642,7 +642,7 @@ export default function LeadTabs({
                             else if (activity.type === 'file') setActiveTab('files');
                             else if (activity.type === 'meeting') setActiveTab('meeting');
                           }}
-                          className="bg-white rounded-none border border-gray-100 p-5 hover:border-orange-200 cursor-pointer transition-all hover:shadow-sm group flex gap-5 items-start"
+                          className="bg-white rounded-none border border-gray-100 p-5 hover:border-orange-200 cursor-pointer transition-all hover:shadow-md shadow-sm group flex gap-5 items-start"
                         >
                           <div className={`w-10 h-10 ${activity.color} rounded-full flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105`}>
                             <activity.icon size={18} className="text-white fill-white/20" />
@@ -683,13 +683,13 @@ export default function LeadTabs({
                   <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
                 </div>
               ) : notes.length === 0 ? (
-                <div className="text-center py-24 bg-white rounded-none border-2 border-dashed border-gray-100 mx-6">
+                <div className="text-center py-24 bg-white rounded-none border-2 border-dashed border-gray-200 mx-6">
                   <FileText size={48} className="mx-auto text-gray-200 mb-4" />
                   <p className="text-gray-400 font-bold font-primary text-sm">Your notebook is empty</p>
                 </div>
               ) : (
                 notes.map((note) => (
-                  <div key={note.id} className="bg-white rounded-none border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
+                  <div key={note.id} className="bg-white rounded-none border border-gray-100 shadow-sm hover:shadow-md hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
                     <div className="p-6">
                       <div className="flex gap-5 items-start mb-6">
                         <div className="w-14 h-14 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-xl transition-transform group-hover/card:scale-105">
@@ -726,7 +726,7 @@ export default function LeadTabs({
 
                       {/* Files Box - Reusing Meeting's Location Box style */}
                       {note.files && note.files.length > 0 && (
-                        <div className="mb-6 p-4 bg-slate-50/80 border border-slate-100 rounded-none group-hover/card:border-orange-200 transition-colors">
+                        <div className="mb-6 p-4 bg-slate-50/80 border border-slate-100 rounded-none mx-6 group-hover/card:border-orange-200 transition-colors">
                           <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-3 italic">Attached Documents</p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {note.files.map((file, fIdx) => (
@@ -867,13 +867,13 @@ export default function LeadTabs({
                   <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                 </div>
               ) : calls.length === 0 ? (
-                <div className="text-center py-24 bg-white rounded-none border-2 border-dashed border-gray-100 mx-6">
+                <div className="text-center py-24 bg-white rounded-none border-2 border-dashed border-gray-200 mx-6">
                   <Phone size={48} className="mx-auto text-gray-200 mb-4" />
                   <p className="text-gray-400 font-bold font-primary text-sm">No calls recorded yet</p>
                 </div>
               ) : (
                 calls.map((call) => (
-                  <div key={call.id} className="bg-white rounded-none border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-blue-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
+                  <div key={call.id} className="bg-white rounded-none border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
                     <div className="p-6">
                       <div className="flex gap-5 items-start mb-6">
                         <div className="w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-xl transition-transform group-hover/card:scale-105">
@@ -906,7 +906,7 @@ export default function LeadTabs({
                               }`}>{call.status}</span>
                           </div>
                           {call.content && call.content !== "No notes" && (
-                            <div className="mt-4 bg-slate-50 border border-slate-100 p-3 rounded-none relative">
+                            <div className="mt-4 bg-slate-50 border border-slate-100 p-3 rounded-none relative overflow-hidden">
                               <div className="absolute top-0 left-0 w-1 h-full bg-blue-400"></div>
                               <div className="flex items-center gap-1.5 mb-1.5 pl-1">
                                 <FileText size={12} className="text-slate-400" />
@@ -922,7 +922,7 @@ export default function LeadTabs({
 
                       {/* Details Box - Reusing Meeting's Location Box style */}
                       {call.nextFollowUp && (
-                        <div className="mb-6 p-4 bg-slate-50/80 border border-slate-100 rounded-none group-hover/card:border-blue-200 transition-colors flex flex-wrap gap-6">
+                        <div className="mb-6 p-4 bg-slate-50/80 border border-slate-100 rounded-none mx-6 group-hover/card:border-blue-200 transition-colors flex flex-wrap gap-6">
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 bg-blue-100 text-blue-600 rounded-none flex items-center justify-center shadow-sm">
                               <CalendarClock size={18} />
@@ -982,13 +982,13 @@ export default function LeadTabs({
                   <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
                 </div>
               ) : files.length === 0 ? (
-                <div className="text-center py-24 bg-white rounded-none border-2 border-dashed border-gray-100 mx-6">
+                <div className="text-center py-24 bg-white rounded-none border-2 border-dashed border-gray-200 mx-6">
                   <File size={48} className="mx-auto text-gray-200 mb-4" />
                   <p className="text-gray-400 font-bold font-primary text-sm">No files uploaded yet</p>
                 </div>
               ) : (
                 files.map((file) => (
-                  <div key={file.id} className="bg-white rounded-none border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
+                  <div key={file.id} className="bg-white rounded-none border border-gray-100 shadow-sm hover:shadow-md hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
                     <div className="p-5">
                       <div className="flex gap-5 items-start ">
                         <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg transition-transform group-hover/card:scale-105">
@@ -1026,7 +1026,7 @@ export default function LeadTabs({
 
                           <div className="mt-3 flex items-center gap-2">
                             <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest font-primary">Owner :</span>
-                            <div className="flex items-center gap-2 bg-slate-50/80 px-2 py-1 rounded-full border border-slate-100 transition-colors group-hover/card:bg-orange-50/50 group-hover/card:border-orange-100">
+                            <div className="flex items-center gap-2 bg-slate-50/80 px-2 py-1 rounded-none border border-slate-100 transition-colors group-hover/card:bg-orange-50/50 group-hover/card:border-orange-100">
                               <UserAvatar name={file.owner} profilePicture={file.profilePicture} size="w-6 h-6 border-white shadow-sm" />
                               <span className="text-[12px] font-bold text-slate-700 capitalize">{file.owner}</span>
                             </div>
@@ -1051,13 +1051,13 @@ export default function LeadTabs({
                   <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                 </div>
               ) : meetings.length === 0 ? (
-                <div className="text-center py-24 bg-white rounded-none border-2 border-dashed border-gray-100 mx-6">
+                <div className="text-center py-24 bg-white rounded-none border-2 border-dashed border-gray-200 mx-6">
                   <Video size={48} className="mx-auto text-gray-200 mb-4" />
                   <p className="text-gray-400 font-bold font-primary text-sm">No upcoming meetings</p>
                 </div>
               ) : (
                 meetings.map((meeting) => (
-                  <div key={meeting.id} className="bg-white rounded-none border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
+                  <div key={meeting.id} className="bg-white rounded-none border border-gray-100 shadow-sm hover:shadow-md hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
                     <div className="p-6">
                       <div className="flex gap-5 items-start mb-6">
                         <div className="w-14 h-14 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-xl transition-transform group-hover/card:scale-105">
@@ -1096,7 +1096,7 @@ export default function LeadTabs({
                       </div>
 
                       {/* Location Box */}
-                      <div className="mb-6 p-4 bg-slate-50/80 border border-slate-100 rounded-none flex items-start gap-4 transition-colors group-hover/card:border-purple-200">
+                      <div className="mb-6 p-4 bg-slate-50/80 border border-slate-100 rounded-none mx-6 flex items-start gap-4 transition-colors group-hover/card:border-purple-200">
                         <div className={`w-10 h-10 rounded-none flex items-center justify-center flex-shrink-0 shadow-sm ${meeting.meeting_type === 'Online' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
                           {meeting.meeting_type === 'Online' ? <Video size={18} /> : <MapPin size={18} />}
                         </div>

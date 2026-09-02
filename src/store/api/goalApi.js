@@ -18,6 +18,10 @@ export const goalApi = createApi({
             query: (employeeId) => (employeeId ? `?employeeId=${employeeId}` : ""),
             providesTags: ['Goal'],
         }),
+        getMyActiveGoals: builder.query({
+            query: (employeeId) => `my-goals?emp=${employeeId}`,
+            providesTags: ['Goal'],
+        }),
         getGoalDetails: builder.query({
             query: (id) => `${id}`,
             providesTags: ['Goal'],
@@ -50,6 +54,7 @@ export const goalApi = createApi({
 
 export const {
     useGetGoalsQuery,
+    useGetMyActiveGoalsQuery,
     useGetGoalDetailsQuery,
     useCreateGoalMutation,
     useUpdateGoalMutation,

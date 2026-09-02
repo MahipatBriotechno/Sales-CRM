@@ -24,6 +24,7 @@ import TrashLeads from "./pages/LeadsManagement/TrashLeads";
 import AssignmentSettings from "./pages/LeadsManagement/AssignmentSettings";
 import LeadRulesConfig from "./pages/LeadsManagement/LeadRulesConfig";
 import WorkStation from "./pages/LeadsManagement/WorkStation";
+import CustomFieldsManager from "./pages/LeadsManagement/CustomFieldsManager";
 
 import LeadProfile from "./pages/LeadsManagement/LeadProfilePageParts/LeadProfile";
 
@@ -196,6 +197,7 @@ function App() {
             <Route path="/crm/leads/team-performance/:id" element={<EmployeePerformanceDetail />} />
             <Route path="/crm/leads/assignment-settings" element={<AssignmentSettings />} />
             <Route path="/crm/leads/lead-rules-config" element={<LeadRulesConfig />} />
+            <Route path="/crm/leads/custom-fields" element={<CustomFieldsManager />} />
             <Route path="/crm/leads/profile/:id" element={<LeadProfile />} />
             <Route path="/crm/leads/add-notes" element={<AddNotes />} />
             <Route path="/crm/leads/dashboard" element={<LeadDashboard />} />

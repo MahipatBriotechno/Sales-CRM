@@ -169,10 +169,21 @@ const updateLead = async (req, res) => {
             activityTitle = `Lead Profile Update: Assigned To ${assignedName}`;
             activityDescription = `Lead was assigned to ${assignedName} by ${req.user.employee_name || req.user.username || 'admin'}.`;
         } else if (changedFields.length === 1) {
-            activityTitle = `Lead Profile Update: ${changedFields[0]} Updated`;
+            let newVal = '';
+            for (const key of Object.keys(fieldLabels)) {
+                if (fieldLabels[key] === changedFields[0]) {
+                    newVal = req.body[key];
+                    break;
+                }
+            }
+            activityTitle = `Lead Profile Update: ${changedFields[0]} Updated to ${newVal}`;
             activityDescription = `${changedFields[0]} was updated by ${req.user.employee_name || req.user.username || 'admin'}.`;
         } else if (changedFields.length > 1) {
-            activityTitle = `Lead Profile Update: ${changedFields.slice(0, 2).join(' & ')} Updated`;
+            let extra = '';
+            if (req.body.tag === 'Follow Up' || req.body.status === 'Follow Up') {
+                extra = ' to Follow Up';
+            }
+            activityTitle = `Lead Profile Update: ${changedFields.slice(0, 2).join(' & ')} Updated${extra}`;
             activityDescription = `${changedFields.join(', ')} were updated by ${req.user.employee_name || req.user.username || 'admin'}.`;
         } else {
             activityTitle = 'Lead Profile Update';

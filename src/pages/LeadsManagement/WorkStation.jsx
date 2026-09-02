@@ -380,7 +380,7 @@ const WorkStationLeadsGridView = ({
           const isTrending = lead.is_trending === 1 || lead.priority === "High" || (lead.tag && (lead.tag === "Trending" || lead.tag === "High Priority"));
           const isFollowUp = lead.tag === "Follow Up" || lead.tag === "Missed";
           const isNotConnected = lead.tag === "Not Connected" && (!lead.next_call_at || safeParseDate(lead.next_call_at) > currentTime);
-          const isNew = lead.tag === "Not Contacted" || lead.tag === "New Lead" || lead.tag === "New Leads" || lead.tag === "Pass" || lead.stage_name === "New" || !lead.tag || (lead.tag === "Not Connected" && lead.next_call_at && safeParseDate(lead.next_call_at) <= currentTime);
+          const isNew = !isTrending && !isFollowUp && !isNotConnected;
 
           if (groupTag === "Trending") return isTrending;
           if (groupTag === "Follow Up") return isFollowUp;

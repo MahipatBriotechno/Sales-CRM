@@ -85,13 +85,18 @@ export default function Login() {
         })
       );
       toast.success("Login successful!");
-      const from = location.state?.from?.pathname
+      let from = location.state?.from?.pathname
         ? location.state.from.pathname + (location.state.from.search || "")
-        : result.user.role === "Super Admin"
-        ? "/superadmin/dashboard"
-        : result.user.role === "Employee"
-        ? "/hrm/dashboard"
-        : "/dashboard";
+        : "";
+
+      // Prevent redirecting back to the logout route after successful login
+      if (!from || from === "/logout") {
+        from = result.user.role === "Super Admin"
+          ? "/superadmin/dashboard"
+          : result.user.role === "Employee"
+          ? "/hrm/dashboard"
+          : "/dashboard";
+      }
 
       navigate(from, { replace: true });
     } catch (err) {
@@ -177,13 +182,18 @@ export default function Login() {
         })
       );
       toast.success("OTP verified successfully!");
-      const from = location.state?.from?.pathname
+      let from = location.state?.from?.pathname
         ? (location.state.from.pathname + (location.state.from.search || ""))
-        : result.user.role === 'Super Admin'
+        : "";
+
+      // Prevent redirecting back to the logout route after successful login
+      if (!from || from === "/logout") {
+        from = result.user.role === 'Super Admin'
           ? "/superadmin/dashboard"
           : result.user.role === 'Employee'
             ? "/hrm/dashboard"
             : "/dashboard";
+      }
 
       navigate(from, { replace: true });
     } catch (err) {
