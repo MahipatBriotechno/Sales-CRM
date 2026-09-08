@@ -26,7 +26,7 @@ import {
 import { useGetEmployeeByIdQuery } from "../../../store/api/employeeApi";
 import { useLocation } from "react-router-dom";
 import { toast } from "react-hot-toast";
-import { Camera, Mic, Volume2, Maximize2, Radio, X } from "lucide-react";
+import { Camera, Mic, Volume2, Maximize2, Radio, X, FileText } from "lucide-react";
 
 const DetailItem = ({ label, value }) => (
   <div className="space-y-1">
@@ -79,19 +79,7 @@ export default function EmployeeProfile() {
     }
   };
 
-  const [expandedSections, setExpandedSections] = useState({
-    about: true,
-    bank: true,
-    family: false,
-    education: true,
-    experience: true,
-    task: true,
-    attendance: true,
-  });
-
-  const toggleSection = (section) => {
-    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
-  };
+  const [activeTab, setActiveTab] = useState("bank");
 
   if (isLoading) {
     return (
@@ -398,23 +386,48 @@ export default function EmployeeProfile() {
               )}
 
 
-              {/* Bank Information */}
-              <div className="bg-white rounded-sm shadow border border-gray-100 overflow-hidden">
-                <div
-                  className="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50 transition-colors border-b border-gray-100"
-                  onClick={() => toggleSection("bank")}
-                >
-                  <h3 className="font-bold text-slate-800 text-lg">
-                    Bank Information
-                  </h3>
-                  <div className="flex items-center gap-3">
-                    <ChevronDown
-                      className={`w-5 h-5 text-slate-400 transition-transform ${expandedSections.bank ? "rotate-180" : ""
-                        }`}
-                    />
-                  </div>
+              {/* Tabs Navigation */}
+              <div className="bg-white rounded-sm shadow border border-gray-100 p-2">
+                <div className="relative flex w-full overflow-x-auto no-scrollbar gap-2 p-1 bg-orange-50/50 rounded-none border border-orange-100">
+                  {/* Sliding Background Block */}
+                  <div 
+                    className="absolute top-1 bottom-1 bg-orange-500 shadow-md shadow-orange-500/20 transition-transform duration-300 ease-in-out z-0 rounded-none"
+                    style={{ 
+                      left: '4px',
+                      width: `calc((100% - 8px - 40px) / 6)`, 
+                      transform: `translateX(calc(${['bank', 'documents', 'tasks', 'attendance', 'education', 'experience'].indexOf(activeTab)} * 100% + ${['bank', 'documents', 'tasks', 'attendance', 'education', 'experience'].indexOf(activeTab)} * 8px))` 
+                    }}
+                  />
+
+                  {[
+                    { id: "bank", label: "Bank Info", Icon: CreditCard },
+                    { id: "documents", label: "Documents", Icon: FileText },
+                    { id: "tasks", label: "Tasks", Icon: ClipboardList },
+                    { id: "attendance", label: "Attendance", Icon: Clock },
+                    { id: "education", label: "Education", Icon: GraduationCap },
+                    { id: "experience", label: "Experience", Icon: Briefcase },
+                  ].map(({ id, label, Icon }) => {
+                    const isActive = activeTab === id;
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => setActiveTab(id)}
+                        className={`relative z-10 flex-1 py-2.5 px-4 font-bold font-primary flex items-center justify-center gap-2 rounded-none transition-colors duration-300 whitespace-nowrap text-sm tracking-wide ${isActive
+                            ? "text-white"
+                            : "text-orange-900/60 hover:text-orange-600 hover:bg-orange-100/50"
+                          }`}
+                      >
+                        <Icon size={16} className={`transition-colors duration-300 ${isActive ? 'text-white' : 'text-orange-400'}`} />
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
-                {expandedSections.bank && (
+              </div>
+
+              {/* Tab Content */}
+              <div className="bg-white rounded-sm shadow border border-gray-100 overflow-hidden min-h-[400px]">
+                {activeTab === "bank" && (
                   <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/30">
                     <DetailItem label="Account Holder" value={employee.account_holder_name} />
                     <DetailItem label="Account Number" value={employee.account_number} />
@@ -422,25 +435,8 @@ export default function EmployeeProfile() {
                     <DetailItem label="Branch Name" value={employee.branch_name} />
                   </div>
                 )}
-              </div>
 
-              {/* Family Information */}
-              <div className="bg-white rounded-sm shadow border border-gray-100 overflow-hidden">
-                <div
-                  className="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50 transition-colors border-b border-gray-100"
-                  onClick={() => toggleSection("family")}
-                >
-                  <h3 className="font-bold text-slate-800 text-lg">
-                    Identity Documents
-                  </h3>
-                  <div className="flex items-center gap-3">
-                    <ChevronDown
-                      className={`w-5 h-5 text-slate-400 transition-transform ${expandedSections.family ? "rotate-180" : ""
-                        }`}
-                    />
-                  </div>
-                </div>
-                {expandedSections.family && (
+                {activeTab === "documents" && (
                   <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 bg-slate-50/30">
                     <div className="space-y-2 text-center">
                       <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Aadhar Front</p>
@@ -462,26 +458,8 @@ export default function EmployeeProfile() {
                     </div>
                   </div>
                 )}
-              </div>
 
-              {/* Task & Attendance Reports */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Task Report */}
-                <div className="bg-white rounded-sm shadow border border-gray-100 overflow-hidden">
-                  <div
-                    className="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50 transition-colors border-b border-gray-100"
-                    onClick={() => toggleSection("task")}
-                  >
-                    <h3 className="font-bold text-slate-800 text-lg">
-                      Task Report
-                    </h3>
-                    <div className="flex items-center gap-3">
-                      <ChevronDown
-                        className={`w-5 h-5 text-slate-400 transition-transform ${expandedSections.task ? "rotate-180" : ""}`}
-                      />
-                    </div>
-                  </div>
-                  {expandedSections.task && (
+                {activeTab === "tasks" && (
                     <div className="p-6 bg-slate-50/30 space-y-4">
                       <div>
                         <div className="flex justify-between text-sm mb-1">
@@ -503,25 +481,9 @@ export default function EmployeeProfile() {
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
+                )}
 
-                {/* Attendance Report */}
-                <div className="bg-white rounded-sm shadow border border-gray-100 overflow-hidden">
-                  <div
-                    className="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50 transition-colors border-b border-gray-100"
-                    onClick={() => toggleSection("attendance")}
-                  >
-                    <h3 className="font-bold text-slate-800 text-lg">
-                      Attendance Report
-                    </h3>
-                    <div className="flex items-center gap-3">
-                      <ChevronDown
-                        className={`w-5 h-5 text-slate-400 transition-transform ${expandedSections.attendance ? "rotate-180" : ""}`}
-                      />
-                    </div>
-                  </div>
-                  {expandedSections.attendance && (
+                {activeTab === "attendance" && (
                     <div className="p-6 bg-slate-50/30 space-y-4">
                       <div>
                         <div className="flex justify-between text-sm mb-1">
@@ -547,78 +509,37 @@ export default function EmployeeProfile() {
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
-              </div>
+                )}
 
-              {/* Education and Experience in Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Education Details */}
-                <div className="bg-white rounded-sm shadow border border-gray-100 overflow-hidden">
-                  <div
-                    className="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50 transition-colors border-b border-gray-100"
-                    onClick={() => toggleSection("education")}
-                  >
-                    <h3 className="font-bold text-slate-800 text-lg">
-                      Education Details
-                    </h3>
-                    <div className="flex items-center gap-3">
-                      <ChevronDown
-                        className={`w-5 h-5 text-slate-400 transition-transform ${expandedSections.education ? "rotate-180" : ""}`}
-                      />
-                    </div>
-                  </div>
-                  {expandedSections.education && (
+                {activeTab === "education" && (
                     <div className="p-6 bg-slate-50/30">
                       <p className="text-gray-400 italic text-sm">No education details available.</p>
                     </div>
-                  )}
-                </div>
+                )}
 
-                {/* Experience Header */}
-                <div className="bg-white rounded-sm shadow border border-gray-100 overflow-hidden">
-                  <div
-                    className="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50 transition-colors border-b border-gray-100"
-                    onClick={() => toggleSection("experience")}
-                  >
-                    <h3 className="font-bold text-slate-800 text-lg">
-                      Experience
-                    </h3>
-                    <div className="flex items-center gap-3">
-                      <ChevronDown
-                        className={`w-5 h-5 text-slate-400 transition-transform ${expandedSections.experience ? "rotate-180" : ""}`}
-                      />
-                    </div>
-                  </div>
-                  {expandedSections.experience && (
+                {activeTab === "experience" && (
+                  <>
                     <div className="p-6 bg-slate-50/30">
                       <p className="text-gray-400 italic text-sm">No experience details available.</p>
                     </div>
-                  )}
-                </div>
+                    <div className="px-6 pt-6 pb-3 border-t border-gray-100">
+                      <div className="flex gap-6 border-b border-gray-100">
+                        <button className="pb-3 text-orange-500 border-b-2 border-orange-500 font-semibold text-sm">
+                          Projects
+                        </button>
+                        <button className="pb-3 text-slate-500 hover:text-slate-700 text-sm">
+                          Assets
+                        </button>
+                      </div>
+                    </div>
+                    <div className="px-6 pb-6 pt-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <p className="col-span-full text-gray-400 italic text-sm py-4">No projects assigned yet.</p>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
-
-              {/* Experience & Projects - Full Width */}
-              {expandedSections.experience && (
-                <div className="bg-white rounded-sm shadow border border-gray-100 overflow-hidden">
-                  <div className="px-6 pt-6 pb-3">
-                    <div className="flex gap-6 border-b border-gray-100">
-                      <button className="pb-3 text-orange-500 border-b-2 border-orange-500 font-semibold text-sm">
-                        Projects
-                      </button>
-                      <button className="pb-3 text-slate-500 hover:text-slate-700 text-sm">
-                        Assets
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="px-6 pb-6 pt-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      <p className="col-span-full text-gray-400 italic text-sm py-4">No projects assigned yet.</p>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 

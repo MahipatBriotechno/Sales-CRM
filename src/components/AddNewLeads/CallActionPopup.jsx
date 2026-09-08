@@ -17,6 +17,8 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
     const [loading, setLoading] = useState(false);
     const [selectedDate, setSelectedDate] = useState("");
     const [selectedTime, setSelectedTime] = useState("");
+    const [activeDateShortcut, setActiveDateShortcut] = useState("Today");
+    const [activeTimeShortcut, setActiveTimeShortcut] = useState("+30 Mins");
 
     const notConnectedStatuses = [
         "Busy", "No Answer", "Switched Off", "Out of Coverage", "Invalid Number",
@@ -64,21 +66,23 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
         return `${year}-${month}-${day}T${hours}:${mins}`;
     };
 
-    const handleDateShortcut = (days) => {
+    const handleDateShortcut = (sc) => {
         const base = new Date();
-        base.setDate(base.getDate() + days);
+        base.setDate(base.getDate() + sc.days);
         const newDate = `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, '0')}-${String(base.getDate()).padStart(2, '0')}`;
         const time = selectedTime || formatDateTime(new Date()).split('T')[1];
         setNextCallAt(`${newDate}T${time}`);
+        setActiveDateShortcut(sc.label);
     };
 
-    const handleTimeShortcut = (val, unit) => {
+    const handleTimeShortcut = (sc) => {
         const now = new Date();
-        if (unit === "minute") now.setMinutes(now.getMinutes() + val);
-        else if (unit === "hour") now.setHours(now.getHours() + val);
+        if (sc.unit === "minute") now.setMinutes(now.getMinutes() + sc.value);
+        else if (sc.unit === "hour") now.setHours(now.getHours() + sc.value);
         const newTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         const date = selectedDate || formatDateTime(new Date()).split('T')[0];
         setNextCallAt(`${date}T${newTime}`);
+        setActiveTimeShortcut(sc.label);
     };
 
     useEffect(() => {
@@ -95,11 +99,13 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
     const handleDateChange = (date) => {
         const time = selectedTime || "09:00";
         setNextCallAt(`${date}T${time}`);
+        setActiveDateShortcut("");
     };
 
     const handleTimeChange = (time) => {
         const date = selectedDate || formatDateTime(new Date()).split('T')[0];
         setNextCallAt(`${date}T${time}`);
+        setActiveTimeShortcut("");
     };
 
     useEffect(() => {
@@ -110,12 +116,18 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
             setResponse(effectiveResponse);
             setStep(2);
             setFinalAction("follow_up");
-            setNextCallAt(formatDateTime(new Date()));
+            const now = new Date();
+            now.setMinutes(now.getMinutes() + 30);
+            setNextCallAt(formatDateTime(now));
+            setActiveDateShortcut("Today");
+            setActiveTimeShortcut("+30 Mins");
         } else {
             setStep(1);
             setResponse("");
             setFinalAction("");
             setNextCallAt("");
+            setActiveDateShortcut("Today");
+            setActiveTimeShortcut("+30 Mins");
             setNotConnectedReason("");
             setRemarks("");
         }
@@ -127,7 +139,11 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
         setStep(2);
         setFinalAction("follow_up");
         setPriority(lead?.priority || "Medium");
-        setNextCallAt(formatDateTime(new Date()));
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + 30);
+        setNextCallAt(formatDateTime(now));
+        setActiveDateShortcut("Today");
+        setActiveTimeShortcut("+30 Mins");
     };
 
     const submitCall = async (data) => {
@@ -194,7 +210,7 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
     );
 
     /* ── Shortcut pill style ── */
-    const pillCls = "px-2.5 py-1.5 bg-white text-gray-700 text-[10px] font-bold rounded-sm border border-gray-200 hover:border-[#FF7B1D] hover:text-[#FF7B1D] hover:bg-orange-50 transition-all shadow-sm active:scale-95 whitespace-nowrap flex-1 text-center";
+    const pillCls = "px-2.5 py-1.5 bg-white text-gray-700 text-[10px] font-bold rounded-sm border hover:border-[#FF7B1D] hover:text-[#FF7B1D] hover:bg-orange-50 transition-all shadow-sm active:scale-95 whitespace-nowrap flex-1 text-center";
 
     return (
         <Modal
@@ -380,7 +396,7 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
                                         {/* Date shortcuts */}
                                         <div className="flex flex-wrap gap-1.5">
                                             {dateShortcuts.map(sc => (
-                                                <button key={sc.label} type="button" onClick={() => handleDateShortcut(sc.days)} className={pillCls}>
+                                                <button key={sc.label} type="button" onClick={() => handleDateShortcut(sc)} className={`${pillCls} ${activeDateShortcut === sc.label ? 'border-[#FF7B1D] text-[#FF7B1D] bg-orange-50' : 'border-gray-200'}`}>
                                                     {sc.label}
                                                 </button>
                                             ))}
@@ -401,7 +417,7 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
                                         {/* Time shortcuts */}
                                         <div className="flex flex-wrap gap-1.5">
                                             {timeShortcuts.map(sc => (
-                                                <button key={sc.label} type="button" onClick={() => handleTimeShortcut(sc.value, sc.unit)} className={pillCls}>
+                                                <button key={sc.label} type="button" onClick={() => handleTimeShortcut(sc)} className={`${pillCls} ${activeTimeShortcut === sc.label ? 'border-[#FF7B1D] text-[#FF7B1D] bg-orange-50' : 'border-gray-200'}`}>
                                                     {sc.label}
                                                 </button>
                                             ))}

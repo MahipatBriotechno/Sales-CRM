@@ -5,6 +5,7 @@ import { useGetBusinessInfoQuery } from "../../store/api/businessApi";
 import { useGetClientsQuery } from "../../store/api/clientApi";
 import Modal from "../../components/common/Modal";
 import { toast } from "react-hot-toast";
+import { useSelector } from "react-redux";
 
 const INDIAN_STATES = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana",
@@ -28,12 +29,26 @@ export default function CreateQuotationModal({
   const itemDropdownRef = useRef(null);
   const clientDropdownRef = useRef(null);
 
+  const { user } = useSelector((state) => state.auth);
+
   const { data: catalogsData } = useGetCatalogsQuery({ limit: 100, status: 'Active' });
   const { data: businessInfo } = useGetBusinessInfoQuery();
   const { data: clientsData } = useGetClientsQuery({ status: 'active' });
 
   const catalogs = catalogsData?.catalogs || [];
   const clients = clientsData?.data || [];
+
+  useEffect(() => {
+    if (showModal && !formData.id && !formData.salesExecutive && user) {
+      const executiveName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.name || '';
+      if (executiveName) {
+        setFormData(prev => ({
+          ...prev,
+          salesExecutive: executiveName
+        }));
+      }
+    }
+  }, [showModal, user, formData.id]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {

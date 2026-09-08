@@ -217,6 +217,23 @@ const syncDatabase = async () => {
         await pool.query(attendanceBreaksSql);
 
         console.log('Database synced: channel_configs, goals, visitors, shifts, and attendance_breaks tables are ready.');
+
+        const tenantCustomFieldsSql = `
+        CREATE TABLE IF NOT EXISTS tenant_custom_fields (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            module_name VARCHAR(100) DEFAULT 'leads',
+            field_label VARCHAR(255) NOT NULL,
+            field_type VARCHAR(100) NOT NULL,
+            options JSON,
+            is_active TINYINT(1) DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        `;
+        await pool.query(tenantCustomFieldsSql);
+        console.log('Database synced: tenant_custom_fields table is ready.');
     } catch (error) {
         console.error('Error syncing database:', error);
     }

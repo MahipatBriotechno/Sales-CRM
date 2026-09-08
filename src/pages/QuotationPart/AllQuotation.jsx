@@ -1240,6 +1240,7 @@ export default function QuotationPage() {
             setShowViewModal={setShowViewModal}
             selectedQuote={selectedQuote}
             getStatusColor={getStatusColor}
+            businessInfo={businessInfo}
           />
 
           <DeleteQuotationModal

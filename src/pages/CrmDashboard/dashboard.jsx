@@ -1049,76 +1049,8 @@ export default function CRMDashboard() {
 
         </div>
 
-        {/* ── Right Slim sidebar: Real-Time Activity Feed ── */}
-        <div className="w-full xl:w-[340px] flex flex-col gap-4">
-          <div className="bg-white rounded-sm shadow-xl overflow-hidden flex flex-col border border-orange-100  sticky top-[84px] h-[calc(100vh-120px)] transition-all duration-300">
-            {/* Sidebar Header */}
-            <div className="bg-slate-50/80 backdrop-blur-md p-5 px-6 flex items-center justify-between border-b border-gray-100">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-100 rounded-sm shadow-sm">
-                  <Zap size={16} className="text-orange-600 fill-orange-600" />
-                </div>
-                <div>
-                  <h2 className="text-gray-900 font-bold text-sm tracking-tight capitalize font-primary">
-                    Live activity log
-                  </h2>
-                  <p className="text-sm text-orange-500 font-semibold capitalize tracking-wide mt-1 font-primary">Real-time pulse</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 bg-white px-2 py-1 rounded-full border border-gray-100 shadow-sm">
-                <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-                <span className="text-[10px] font-semibold text-gray-500 capitalize tracking-wide">Live monitor</span>
-              </div>
-            </div>
-
-            {/* Activity List */}
-            <div className="flex-1 p-5 px-6 space-y-3 overflow-y-auto custom-scrollbar bg-white">
-              {activityFeed.length > 0 ? activityFeed.map((activity, i) => (
-                <div key={i} className="p-3 bg-orange-50/20 border border-orange-100 rounded-sm hover:border-orange-200 transition-all group cursor-pointer flex gap-4 shadow-sm">
-                  {/* Avatar/Icon Container with Badge */}
-                  <div className="relative flex-shrink-0">
-                    <div className="w-9 h-9 rounded-full bg-white border border-gray-200 shadow-sm text-gray-700 flex items-center justify-center font-bold text-[11px] group-hover:border-orange-400 group-hover:bg-orange-50 transition-all duration-300 uppercase overflow-hidden">
-                      {activity.avatar_url ? (
-                        <img
-                          src={activity.avatar_url}
-                          alt={activity.user}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
-                          }}
-                        />
-                      ) : null}
-                      <span style={{ display: activity.avatar_url ? 'none' : 'flex' }}>
-                        {activity.avatar}
-                      </span>
-                    </div>
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-50">
-                      <div className={`w-1.5 h-1.5 rounded-full ${activity.action?.toLowerCase().includes('won') ? 'bg-green-500 shadow-[0_0_5px_#22c55e]' : activity.action?.toLowerCase().includes('conversion') ? 'bg-blue-500 shadow-[0_0_5px_#3b82f6]' : 'bg-orange-500 shadow-[0_0_5px_#f97316]'}`}></div>
-                    </div>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="text-[13px] font-semibold text-gray-800 truncate group-hover:text-orange-600 transition-colors font-primary">{activity.user}</span>
-                      <span className="text-[10px] font-bold text-orange-500 uppercase tracking-tight whitespace-nowrap ml-2 bg-white px-2 py-1 rounded-sm border border-orange-50 shadow-sm">{activity.time}</span>
-                    </div>
-                    <p className="text-[11px] text-gray-500 leading-snug font-medium font-primary">
-                      <span className="capitalize">{activity.action}</span> <span className="text-gray-900 font-semibold">{activity.target}</span>
-                    </p>
-                  </div>
-                </div>
-              )) : (
-                <div className="flex-1 flex items-center justify-center text-center p-10">
-                  <p className="text-gray-400 font-bold">Waiting for real-time activities...</p>
-                </div>
-              )}
-            </div>
 
 
-          </div>
-        </div>
 
       </div>
     </div>

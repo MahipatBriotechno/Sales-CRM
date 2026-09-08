@@ -410,6 +410,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           path: "/crm/channel/settings",
           permission: "Campaign Management"
         },
+        {
+          name: "Custom Fields",
+          icon: <Settings size={22} />,
+          path: "/crm/leads/custom-fields",
+          permission: "System Administration"
+        },
 
       ],
     },
@@ -674,14 +680,14 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       {/* Mobile Backdrop Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[35] xl:hidden transition-all duration-300 animate-fadeIn"
+          className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[998] xl:hidden transition-all duration-300 animate-fadeIn"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Mobile Toggle */}
       <button
-        className={`fixed top-[15px] left-4 z-[60] xl:hidden flex items-center justify-center transition-all duration-300 ${isOpen
+        className={`fixed top-[15px] left-4 z-[1000] xl:hidden flex items-center justify-center transition-all duration-300 ${isOpen
           ? "w-10 h-10 bg-[#FF7B1D] rounded-xl text-white shadow-lg shadow-orange-200"
           : "text-white"
           }`}
@@ -694,7 +700,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       <aside
         onMouseEnter={() => !isLocked && setIsHovered(true)}
         onMouseLeave={() => !isLocked && setIsHovered(false)}
-        className={`fixed top-0 left-0 h-screen bg-white shadow-xl flex transition-all duration-300 z-40 ${isOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed top-0 left-0 h-screen bg-white shadow-xl flex transition-all duration-300 z-[999] ${isOpen ? "translate-x-0" : "-translate-x-full"
           } xl:translate-x-0 w-[280px] ${isLocked || isHovered ? "xl:w-[280px]" : "xl:w-[68px]"}`}
       >
         {/* Module Rail - Left */}

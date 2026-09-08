@@ -27,7 +27,7 @@ import { toast } from "react-hot-toast";
 import { useSelector } from "react-redux";
 
 const inputStyles =
-  "w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300";
+  "w-full px-4 py-3 border border-gray-200 rounded-none focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300";
 
 // Helper function to convert file to base64
 const fileToBase64 = (file) => {
@@ -71,9 +71,6 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
   const [visibility, setVisibility] = useState("Public");
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState("");
-  // Old custom fields (manual key-value)
-  const [customFields, setCustomFields] = useState([{ label: "", value: "" }]);
-  
   // Dynamic fields from DB
   const [dynamicFieldsData, setDynamicFieldsData] = useState({});
   const [contactPersons, setContactPersons] = useState([{
@@ -505,22 +502,6 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
     }
   };
 
-  const handleCustomFieldChange = (index, field, value) => {
-    const updated = [...customFields];
-    updated[index][field] = value;
-    setCustomFields(updated);
-  };
-
-  const addCustomField = () => {
-    setCustomFields([...customFields, { label: "", value: "" }]);
-  };
-
-  const removeCustomField = (index) => {
-    if (customFields.length > 1) {
-      setCustomFields(customFields.filter((_, i) => i !== index));
-    }
-  };
-
   // Validate all mobile fields before form submission
   const validateAllMobiles = () => {
     // Individual fields
@@ -574,13 +555,10 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
   const handleSubmit = async () => {
     if (!validateAllMobiles()) return;
     
-    // Combine manual custom fields and dynamic fields
-    const manualFieldsToSave = customFields.filter(cf => cf.label && cf.value);
-    const dynamicFieldsToSave = Object.keys(dynamicFieldsData)
+    // Prepare dynamic fields
+    const combinedCustomFields = Object.keys(dynamicFieldsData)
         .filter(key => dynamicFieldsData[key])
         .map(key => ({ label: key, value: dynamicFieldsData[key] }));
-        
-    const combinedCustomFields = [...manualFieldsToSave, ...dynamicFieldsToSave];
 
     const payload = {
       ...formData,
@@ -1755,47 +1733,69 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {dbCustomFields.map((field) => (
-                  <div key={field.id} className="group">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                      {field.field_label}
-                    </label>
-                    {field.field_type === 'dropdown' && field.options ? (
-                      <select
-                        className={inputStyles}
-                        value={dynamicFieldsData[field.field_label] || ""}
-                        onChange={(e) => setDynamicFieldsData({...dynamicFieldsData, [field.field_label]: e.target.value})}
-                      >
-                        <option value="">Select {field.field_label}</option>
-                        {field.options.map((opt, i) => (
-                          <option key={i} value={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    ) : field.field_type === 'date' ? (
-                      <div className="relative">
-                        <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500" />
-                        <input
-                          type="date"
-                          className={`${inputStyles} pl-11`}
-                          value={dynamicFieldsData[field.field_label] || ""}
-                          onChange={(e) => setDynamicFieldsData({...dynamicFieldsData, [field.field_label]: e.target.value})}
-                        />
+                  <div key={field.id} className={`group ${field.field_type === 'textarea' ? 'md:col-span-2' : ''}`}>
+                    {field.field_type === 'checkbox' ? (
+                      <div className="flex items-center h-full pt-8">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="w-5 h-5 accent-orange-500 rounded-none cursor-pointer"
+                            checked={dynamicFieldsData[field.field_label] === 'true' || dynamicFieldsData[field.field_label] === true}
+                            onChange={(e) => setDynamicFieldsData({...dynamicFieldsData, [field.field_label]: e.target.checked})}
+                          />
+                          <span className="text-sm font-semibold text-gray-700">{field.field_label}</span>
+                        </label>
                       </div>
-                    ) : field.field_type === 'number' ? (
-                      <input
-                        type="number"
-                        className={inputStyles}
-                        placeholder={`Enter ${field.field_label.toLowerCase()}`}
-                        value={dynamicFieldsData[field.field_label] || ""}
-                        onChange={(e) => setDynamicFieldsData({...dynamicFieldsData, [field.field_label]: e.target.value})}
-                      />
                     ) : (
-                      <input
-                        type="text"
-                        className={inputStyles}
-                        placeholder={`Enter ${field.field_label.toLowerCase()}`}
-                        value={dynamicFieldsData[field.field_label] || ""}
-                        onChange={(e) => setDynamicFieldsData({...dynamicFieldsData, [field.field_label]: e.target.value})}
-                      />
+                      <>
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                          {field.field_label}
+                        </label>
+                        {field.field_type === 'dropdown' && field.options ? (
+                          <select
+                            className={inputStyles}
+                            value={dynamicFieldsData[field.field_label] || ""}
+                            onChange={(e) => setDynamicFieldsData({...dynamicFieldsData, [field.field_label]: e.target.value})}
+                          >
+                            <option value="">Select {field.field_label}</option>
+                            {field.options.map((opt, i) => (
+                              <option key={i} value={opt}>{opt}</option>
+                            ))}
+                          </select>
+                        ) : field.field_type === 'textarea' ? (
+                          <textarea
+                            className={`${inputStyles} min-h-[100px] py-3 resize-y`}
+                            placeholder={`Enter ${field.field_label.toLowerCase()}`}
+                            value={dynamicFieldsData[field.field_label] || ""}
+                            onChange={(e) => setDynamicFieldsData({...dynamicFieldsData, [field.field_label]: e.target.value})}
+                          ></textarea>
+                        ) : field.field_type === 'date' ? (
+                          <div className="relative">
+                            <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                            <input
+                              type="date"
+                              className={`${inputStyles} pl-11`}
+                              value={dynamicFieldsData[field.field_label] || ""}
+                              onChange={(e) => setDynamicFieldsData({...dynamicFieldsData, [field.field_label]: e.target.value})}
+                            />
+                          </div>
+                        ) : field.field_type === 'time' ? (
+                          <input
+                            type="time"
+                            className={inputStyles}
+                            value={dynamicFieldsData[field.field_label] || ""}
+                            onChange={(e) => setDynamicFieldsData({...dynamicFieldsData, [field.field_label]: e.target.value})}
+                          />
+                        ) : (
+                          <input
+                            type={field.field_type === 'number' ? 'number' : field.field_type === 'email' ? 'email' : field.field_type === 'tel' ? 'tel' : field.field_type === 'url' ? 'url' : 'text'}
+                            className={inputStyles}
+                            placeholder={`Enter ${field.field_label.toLowerCase()}`}
+                            value={dynamicFieldsData[field.field_label] || ""}
+                            onChange={(e) => setDynamicFieldsData({...dynamicFieldsData, [field.field_label]: e.target.value})}
+                          />
+                        )}
+                      </>
                     )}
                   </div>
                 ))}
@@ -1803,65 +1803,6 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
             </div>
           )}
 
-          {/* Manual Custom Fields */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <FileText size={20} className="text-[#FF7B1D]" />
-                <h3 className="text-lg font-bold text-gray-800 capitalize">
-                  Manual Custom Fields
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={addCustomField}
-                className="flex items-center gap-2 px-3 py-1.5 bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-colors text-sm font-semibold"
-              >
-                <Plus size={16} />
-                Add Field
-              </button>
-            </div>
-
-            {customFields.map((field, index) => (
-              <div key={index} className="grid grid-cols-2 gap-3 items-end">
-                <div className="group">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    Label
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Enter label"
-                    className={inputStyles}
-                    value={field.label}
-                    onChange={(e) => handleCustomFieldChange(index, 'label', e.target.value)}
-                  />
-                </div>
-                <div className="group flex gap-2">
-                  <div className="flex-1">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                      Value
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Enter value"
-                      className={inputStyles}
-                      value={field.value}
-                      onChange={(e) => handleCustomFieldChange(index, 'value', e.target.value)}
-                    />
-                  </div>
-                  {customFields.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeCustomField(index)}
-                      className="text-red-500 hover:text-red-700 transition-colors self-end pb-3"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Footer */}
