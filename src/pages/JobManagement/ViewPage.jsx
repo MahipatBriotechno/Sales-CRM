@@ -49,7 +49,7 @@ const JobViewModal = ({ job, onClose }) => {
   const applicationFields = getList(job.application_fields);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999] backdrop-blur-sm">
       <div className="bg-white rounded-sm shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto flex flex-col">
         {/* HEADER SECTION - Original Gradient Style */}
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 flex-shrink-0">

@@ -13,8 +13,8 @@ import {
   ForwardModal,
 } from "../../pages/MessengerPart/MessengerComponents";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-const SOCKET_URL = API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const SOCKET_URL = API_BASE_URL ? API_BASE_URL.replace('/api/', '').replace('/api', '') : window.location.origin;
 
 export default function MessengerPage() {
   const { user: currentUser } = useSelector((state) => state.auth);

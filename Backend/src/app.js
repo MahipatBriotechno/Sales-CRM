@@ -18,7 +18,7 @@ const expenseRoutes = require('./routes/expenseRoutes');
 const applicantRoutes = require('./routes/applicantRoutes');
 const path = require('path');
 
-dotenv.config();
+dotenv.config({ override: true });
 
 const app = express();
 

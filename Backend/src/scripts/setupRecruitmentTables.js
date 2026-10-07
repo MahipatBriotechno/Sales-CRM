@@ -23,7 +23,7 @@ async function setupRecruitmentTables() {
                 phone VARCHAR(50),
                 resume VARCHAR(255),
                 application_data JSON,
-                status ENUM('Applied', 'Screening', 'Technical', 'HR', 'Final', 'Selected', 'Rejected', 'Offer Sent') DEFAULT 'Applied',
+                status VARCHAR(255) DEFAULT 'Applied',
                 current_round_index INT DEFAULT 0,
                 interview_feedback JSON,
                 offer_letter_url VARCHAR(255),

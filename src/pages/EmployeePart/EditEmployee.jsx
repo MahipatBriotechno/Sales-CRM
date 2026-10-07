@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { X, Pencil, Save, Loader2, ArrowLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
+import { FiHome } from "react-icons/fi";
+import DashboardLayout from "../../components/DashboardLayout";
 import FormSection from "../../components/Employee/FormSection";
 import { useUpdateEmployeeMutation, useGetEmployeeByIdQuery } from "../../store/api/employeeApi";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
@@ -370,27 +372,17 @@ const EditEmployee = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-10">
-            {/* Header */}
-            <div className="bg-white sticky top-0 z-30 shadow-sm border-b border-gray-200">
-        <div className="max-w-8xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => navigate('/hrm/employee/all')} 
-                className="p-2 hover:bg-gray-100 rounded-none transition-colors border border-transparent hover:border-gray-200 text-gray-600 hover:text-gray-900"
-                title="Back to Employees"
-              >
-                <ArrowLeft size={20} strokeWidth={2.5} />
-              </button>
-              <div>
-                <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Edit Employee</h1>
-                <p className="text-sm text-gray-500 mt-0.5 font-medium">Update employee status and details</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        <DashboardLayout>
+            <div className="min-h-screen ml-6 pt-6">
+                {/* Back Button */}
+                <div className="flex items-center gap-3 mb-6">
+                    <button
+                        onClick={() => navigate('/hrm/employee/all')}
+                        className="flex items-center gap-2 text-orange-500 font-bold hover:text-orange-600 transition-colors"
+                    >
+                        <ArrowLeft className="w-5 h-5" /> Back to Employees
+                    </button>
+                </div>
 
       <div className="max-w-7xl mx-auto px-4 mt-8">
         <div className="bg-white shadow-xl shadow-gray-200/50 border border-gray-200 rounded-none">
@@ -426,8 +418,9 @@ const EditEmployee = () => {
             </button>
           </div>
                 </div>
+                </div>
             </div>
-        </div>
+        </DashboardLayout>
     );
 };
 

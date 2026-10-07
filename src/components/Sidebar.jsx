@@ -503,6 +503,16 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Payroll", icon: <Wallet size={22} />, path: "/hrm/salary", permission: "Financial Management"
         },
         {
+          name: "Job Management",
+          icon: <Briefcase size={22} />,
+          permission: "Recruitment",
+          children: [
+            { name: "Job List", path: "/hrm/job-management", permission: "Recruitment" },
+            { name: "Applicant List", path: "/hrm/applicants", permission: "Recruitment" },
+            { name: "Offer Letter", path: "/hrm/offer-letters", permission: "Offer Letter Management" },
+          ],
+        },
+        {
           name: "Company Policy",
           icon: <FileText size={22} />,
           path: "/hrm/company-policy",
@@ -514,16 +524,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           path: "/hrm/hr-policy",
           permission: "Policy & Compliance"
         },
-        {
-          name: "Job Management",
-          icon: <Briefcase size={22} />,
-          permission: "Recruitment",
-          children: [
-            { name: "Job List", path: "/hrm/job-management", permission: "Recruitment" },
-            { name: "Applicant List", path: "/hrm/applicants", permission: "Recruitment" },
-            { name: "Offer Letter", path: "/hrm/offer-letters", permission: "Offer Letter Management" },
-          ],
-        },
+
       ],
     },
     {

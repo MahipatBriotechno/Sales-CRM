@@ -157,7 +157,11 @@ import TaskReminderPopup from "./components/TaskReminderPopup.jsx";
 import VisitorReminder from "./components/Visitor/VisitorReminder.jsx";
 import DashboardLayout from "./components/DashboardLayout";
 
+import { useSelector } from "react-redux";
+
 function App() {
+  const { isAuthenticated } = useSelector((state) => state.auth);
+
   return (
     <Router>
 
@@ -280,10 +284,14 @@ function App() {
           </Route>
         </Route>
       </Routes>
-      <LeadsReminder />
-      <MeetingReminder />
-      <TaskReminderPopup />
-      <VisitorReminder />
+      {isAuthenticated && (
+        <>
+          <LeadsReminder />
+          <MeetingReminder />
+          <TaskReminderPopup />
+          <VisitorReminder />
+        </>
+      )}
       <GlobalModals />
     </Router>
   );

@@ -844,7 +844,7 @@ export default function JobManagement() {
                         <span className="truncate max-w-[150px]">{job.location}</span>
                       </div>
                     </div>
-                    
+
                     <p className="text-sm text-gray-500 mt-4 line-clamp-3 min-h-[60px] leading-relaxed capitalize">
                       {job.description || "Exciting job opportunity. Join our growing team and make an impact!"}
                     </p>
@@ -934,7 +934,7 @@ export default function JobManagement() {
 
           {/* Add/Edit Job Modal */}
           {showAddModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
               <div className="bg-white rounded-sm shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
                 <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 flex justify-between items-center">
                   <div className="flex items-center gap-3">

@@ -63,6 +63,7 @@ const protect = async (req, res, next) => {
             // Handle Admin (User)
             const user = await User.findById(decoded.id);
             if (!user) {
+                console.error('Auth Error: Admin user not found for ID', decoded.id);
                 return res.status(401).json({ message: 'Not authorized, user not found' });
             }
 
@@ -72,12 +73,13 @@ const protect = async (req, res, next) => {
 
             next();
         } catch (error) {
-            console.error(error);
+            console.error('Auth Error: Token verification failed:', error);
             res.status(401).json({ message: 'Not authorized, token failed' });
         }
     }
 
     if (!token) {
+        console.error('Auth Error: No token provided');
         res.status(401).json({ message: 'Not authorized, no token' });
     }
 };

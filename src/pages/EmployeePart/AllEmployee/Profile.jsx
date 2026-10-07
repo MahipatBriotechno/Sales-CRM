@@ -109,7 +109,7 @@ export default function EmployeeProfile() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen   ml-6">
+      <div className="min-h-screen ml-6 pt-6 pr-6">
         <div className="">
           {/* Back Button */}
           <div className="flex items-center gap-3 mb-6">

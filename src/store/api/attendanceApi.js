@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const attendanceApi = createApi({
     reducerPath: 'attendanceApi',
     baseQuery: fetchBaseQuery({
-        baseUrl: `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/attendance`,
+        baseUrl: `${import.meta.env.VITE_API_BASE_URL}attendance`,
         prepareHeaders: (headers, { getState }) => {
             const token = getState().auth.token;
             if (token) {

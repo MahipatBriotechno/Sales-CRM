@@ -234,6 +234,31 @@ const syncDatabase = async () => {
         `;
         await pool.query(tenantCustomFieldsSql);
         console.log('Database synced: tenant_custom_fields table is ready.');
+
+        try {
+            const [constraints] = await pool.query(`
+                SELECT CONSTRAINT_NAME
+                FROM information_schema.TABLE_CONSTRAINTS
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = 'applicants' 
+                AND CONSTRAINT_TYPE = 'CHECK'
+            `);
+            
+            for (let c of constraints) {
+                await pool.query(`ALTER TABLE applicants DROP CONSTRAINT ${c.CONSTRAINT_NAME}`);
+                console.log(`Database Synced: dropped constraint ${c.CONSTRAINT_NAME}`);
+            }
+        } catch (e) {
+            console.error('Error dropping check constraints:', e);
+        }
+
+        try {
+            await pool.query("ALTER TABLE applicants MODIFY COLUMN status VARCHAR(255) DEFAULT 'Applied'");
+            console.log("Database Synced: applicants table status column modified to VARCHAR(255).");
+        } catch (e) {
+            console.error('Error modifying status column in applicants:', e);
+        }
+
     } catch (error) {
         console.error('Error syncing database:', error);
     }

@@ -16,7 +16,7 @@ export const authErrorMiddleware = (api) => (next) => (action) => {
                 api.dispatch(logout());
                 
                 // Show a deduplicated toast notification to the user
-                toast.error('Session expired. Please log in again.', {
+                toast.error(`Session expired (Failed endpoint: ${action.meta?.arg?.endpointName}). Please log in again.`, {
                     id: 'session-expired-toast', // Prevent duplicate toasts
                 });
             } else if (!state.auth?.token && !isAuthEndpoint) {
